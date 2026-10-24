@@ -15,6 +15,9 @@ publish="$out/core"
 bundle="$out/C64Screensaver.saver"
 dotnet publish "$root/macos/NativeCore/C64Screensaver.NativeCore.csproj" \
   -c Release -r "$rid" -p:PublishAot=true -o "$publish"
+xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -Wall -Wextra -Werror \
+  "$root/macos/NativeHost/CoreSmoke.c" -o "$out/core-smoke"
+"$out/core-smoke" "$publish/C64Screensaver.NativeCore.dylib" "$publish/libSkiaSharp.dylib"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Frameworks" "$bundle/Contents/Resources"
 cp "$publish/C64Screensaver.NativeCore.dylib" "$bundle/Contents/Frameworks/"
 cp "$publish/libSkiaSharp.dylib" "$bundle/Contents/Frameworks/"
