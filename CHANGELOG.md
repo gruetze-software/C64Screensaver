@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — 2026-10-24
+
+- External screensaver setup guidance; no built-in idle monitoring or autostart.
+- Manual-launch Snap packaging draft; not yet built or Store-published.
+
+- Stronger smooth CRT bloom with independent glow spread and a Glowing CRT preset.
+
 ## 1.0.0 — 2026-10-24
 
 First release.

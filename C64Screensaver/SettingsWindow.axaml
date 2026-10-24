@@ -88,6 +88,10 @@
  <Slider Name="GlowSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Phosphor glow"/>
  <TextBlock Name="GlowLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
 </Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Glow spread" VerticalAlignment="Center"/>
+ <Slider Name="GlowSpreadSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Glow spread"/>
+ <TextBlock Name="GlowSpreadLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
  <TextBlock Text="Darkened corners" VerticalAlignment="Center"/>
  <Slider Name="VignetteSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Darkened corners"/>
  <TextBlock Name="VignetteLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
@@ -127,6 +131,7 @@
        <ComboBoxItem Content="Subtle CRT · stable and clear"/>
        <ComboBoxItem Content="Classic monitor · more texture"/>
        <ComboBoxItem Content="Custom"/>
+       <ComboBoxItem Content="Glowing CRT · broad phosphor halo"/>
       </ComboBox>
      </StackPanel>
     </Border>

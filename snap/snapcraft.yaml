@@ -1,0 +1,43 @@
+name: c64screensaver
+base: core24
+adopt-info: c64screensaver
+summary: C64 BASIC animation with adjustable CRT glow
+description: |
+  Watch BASIC being typed, corrected and executed on a simulated C64.
+  Includes a maze, editable company card, starfield and adjustable CRT bloom.
+  This is a fullscreen animation application, not a screen locker.
+grade: devel
+confinement: strict
+license: MIT
+icon: C64Screensaver/Assets/app-icon.png
+platforms:
+  amd64:
+  arm64:
+apps:
+  c64screensaver:
+    command: bin/launch
+    desktop: snap/gui/c64screensaver.desktop
+    extensions: [gnome]
+    plugs: [desktop, desktop-legacy, wayland, x11, opengl]
+parts:
+  c64screensaver:
+    plugin: dump
+    source: snap/local/publish
+    override-build: |
+      test "$(cat BUILD-ARCH)" = "$CRAFT_ARCH_BUILD_FOR"
+      craftctl default
+      craftctl set version="$(cat BUILD-VERSION)"
+    organize:
+      '*': bin/
+    stage-packages:
+      - libicu74
+      - libssl3t64
+      - libkrb5-3
+      - libunwind8
+      - liblttng-ust1t64
+      - libbrotli1
+  launcher:
+    plugin: dump
+    source: snap/local/launcher
+    organize:
+      launch: bin/launch

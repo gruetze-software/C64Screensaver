@@ -26,6 +26,7 @@ public class SaverSettings
     public double MaskStrength { get; set; } = 8;
     public double Softness { get; set; } = 12;
     public double Glow { get; set; } = 12;
+    public double GlowSpread { get; set; } = 30;
     public double Vignette { get; set; } = 15;
     public double Flicker { get; set; }
     public ProgramSelection Programs { get; set; } = ProgramSelection.AllPrograms;
@@ -45,6 +46,7 @@ public class SaverSettings
         MaskStrength = Percent(MaskStrength, 8);
         Softness = Percent(Softness, 12);
         Glow = Percent(Glow, 12);
+        GlowSpread = Percent(GlowSpread, 30);
         Vignette = Percent(Vignette, 15);
         Flicker = Percent(Flicker, 0);
         ProgramDurationSeconds = Math.Clamp(ProgramDurationSeconds, 15, 1800);

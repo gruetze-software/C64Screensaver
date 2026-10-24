@@ -8,17 +8,18 @@ using SkiaSharp;
 namespace C64Screensaver;
 
 public readonly record struct CrtParameters(bool Enabled, bool FillScreen, bool KeepAspectRatio, float Curvature, float Scanlines,
-    float Mask, float Softness, float Glow, float Vignette, float Flicker)
+    float Mask, float Softness, float Glow, float GlowSpread, float Vignette, float Flicker)
 {
     public static CrtParameters From(SaverSettings s) => new(s.CrtEnabled, s.FillScreen, s.UsesFourThree,
         (float)s.Curvature / 100, s.Scanlines ? (float)s.ScanlineStrength / 100 : 0,
         (float)s.MaskStrength / 100, (float)s.Softness / 100,
-        (float)s.Glow / 100, (float)s.Vignette / 100, (float)s.Flicker / 100);
+        (float)s.Glow / 100, (float)s.GlowSpread / 100, (float)s.Vignette / 100, (float)s.Flicker / 100);
 }
 
 public sealed class CrtDrawOperation : ICustomDrawOperation
 {
     private static readonly Lazy<SKRuntimeEffect?> Effect = new(Compile);
+    private static readonly Lazy<SKRuntimeEffect?> EmissionEffect = new(() => SKRuntimeEffect.CreateShader(EmissionShader, out _));
     public static string? ShaderError { get; private set; }
     public static bool ShaderAvailable => Effect.Value != null;
     private readonly SKImage image;
@@ -92,7 +93,11 @@ public sealed class CrtDrawOperation : ICustomDrawOperation
                 ["time"] = (float)time,
                 ["pixelScale"] = Math.Max(0.1f, canvas.TotalMatrix.ScaleX)
             };
-            var children = new SKRuntimeEffectChildren(effect) { ["picture"] = source };
+            using var bloomImage = parameters.Glow > 0 ? CreateBloom(source) : null;
+            uniforms["glow"] = bloomImage == null ? 0f : parameters.Glow;
+            using var bloomSource = (bloomImage ?? image).ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp,
+                new SKSamplingOptions(SKFilterMode.Linear));
+            var children = new SKRuntimeEffectChildren(effect) { ["picture"] = source, ["bloomPicture"] = bloomSource };
             using var shader = effect.ToShader(uniforms, children);
             using var paint = new SKPaint { Shader = shader };
             canvas.DrawRect(0, 0, image.Width, image.Height, paint);
@@ -100,10 +105,32 @@ public sealed class CrtDrawOperation : ICustomDrawOperation
         finally { canvas.RestoreToCount(saved); }
     }
 
+    private SKImage? CreateBloom(SKShader source)
+    {
+        if (EmissionEffect.Value is not { } emission) return null;
+        using var surface = SKSurface.Create(new SKImageInfo(image.Width, image.Height));
+        if (surface == null) return null;
+        var children = new SKRuntimeEffectChildren(emission) { ["picture"] = source };
+        using var shader = emission.ToShader(new SKRuntimeEffectUniforms(emission), children);
+        using var blur = SKImageFilter.CreateBlur(0.5f + parameters.GlowSpread * 3.5f,
+            0.5f + parameters.GlowSpread * 3.5f, SKShaderTileMode.Clamp);
+        using var paint = new SKPaint { Shader = shader, ImageFilter = blur };
+        surface.Canvas.DrawRect(0, 0, image.Width, image.Height, paint);
+        return surface.Snapshot();
+    }
+    private const string EmissionShader = """
+uniform shader picture;
+half4 main(float2 p) {
+    float3 light = pow(max(picture.eval(p).rgb,float3(0)),float3(2.2));
+    float luminance = dot(light,float3(0.2126,0.7152,0.0722));
+    return half4(light * smoothstep(0.06,0.38,luminance),1.0);
+}
+""";
     // Original SKSL implementation. Emulator shaders were studied for their
     // controls and rendering stages; no GPL shader source is incorporated.
     private const string Shader = """
 uniform shader picture;
+uniform shader bloomPicture;
 uniform float previewDetails;
 uniform float curvature;
 uniform float imageWidth;
@@ -114,6 +141,7 @@ uniform float scanlines;
 uniform float mask;
 uniform float softness;
 uniform float glow;
+
 uniform float vignette;
 uniform float flicker;
 uniform float time;
@@ -132,11 +160,7 @@ half4 main(float2 pos) {
     float3 smoothColor = picture.eval(at).rgb;
     float3 color = mix(crisp,smoothColor,softness);
     float3 linear = pow(max(color,float3(0)),float3(2.2));
-    float3 halo = (picture.eval(at+float2(1.2,0)).rgb +
-                   picture.eval(at-float2(1.2,0)).rgb +
-                   picture.eval(at+float2(0,1.2)).rgb +
-                   picture.eval(at-float2(0,1.2)).rgb) * 0.25;
-    linear += max(pow(max(halo,float3(0)),float3(2.2))-linear,float3(0)) * glow * 0.45;
+    float3 bloom = glow > 0.0 ? bloomPicture.eval(at).rgb * glow * 1.7 : float3(0);
     // The small settings thumbnail illustrates details at readable spacing.
     // The enlarged preview and screensaver retain source-row scanline spacing.
     float scanRow = at.y;
@@ -149,6 +173,7 @@ half4 main(float2 pos) {
     float3 grille = stripe < 1.0 ? float3(1.0,0.65,0.65) :
                     stripe < 2.0 ? float3(0.65,1.0,0.65) : float3(0.65,0.65,1.0);
     linear *= mix(float3(1.0),grille,mask);
+    linear += bloom;
     float edge = min(1.0,dot(q,q)*0.5);
     linear *= 1.0 - vignette * 0.35 * edge * edge;
     linear *= 1.0 - flicker * 0.03 * (0.5 + 0.5*sin(time*11.0));

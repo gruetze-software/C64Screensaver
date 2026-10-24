@@ -280,7 +280,7 @@ monitorDialog.Width = 980; monitorDialog.Height = 640;
 monitorDialog.Show();
 Dispatcher.UIThread.RunJobs();
 foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "MaskStrengthSlider", "SoftnessSlider",
-    "GlowSlider", "VignetteSlider", "FlickerSlider" })
+    "GlowSlider", "GlowSpreadSlider", "VignetteSlider", "FlickerSlider" })
 {
     var slider = monitorDialog.FindControl<Slider>(name)!;
     Check(slider.Bounds.Height >= 52, "Slider has enough vertical space: " + name);
@@ -376,10 +376,11 @@ SkiaSharp.SKColor[] SmallPreviewPixels()
 }
 var previewDiffs = new Dictionary<string,int>();
 foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "MaskStrengthSlider",
-    "SoftnessSlider", "GlowSlider", "VignetteSlider", "FlickerSlider" })
+    "SoftnessSlider", "GlowSlider", "GlowSpreadSlider", "VignetteSlider", "FlickerSlider" })
 {
     var slider = probe.FindControl<Slider>(name)!;
     slider.Value = 0;
+    if (name == "GlowSpreadSlider") probe.FindControl<Slider>("GlowSlider")!.Value = 85;
     var before = SmallPreviewPixels();
     slider.Value = 100;
     int changed = 0;
@@ -392,6 +393,7 @@ foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "Ma
     previewDiffs[name] = changed;
     Check(changed > 100, "Settings slider visibly changes small preview: " + name + " (" + changed + " pixels)");
     slider.Value = 0;
+    if (name == "GlowSpreadSlider") probe.FindControl<Slider>("GlowSlider")!.Value = 0;
 }
 probe.FindControl<CheckBox>("ScanlinesCheckBox")!.IsChecked = false;
 Check(!probe.FindControl<Slider>("ScanlineStrengthSlider")!.IsEnabled,
@@ -439,7 +441,7 @@ testedScene.AdvancePreview(0.70, false);
 Check(!testedScene.IsPowerTransitionActive, "Manual effect test finishes and returns to startup");
 Capture(probe, "settings-preview-fixed");
 Console.WriteLine("Small-preview changed pixels: " + string.Join(", ", previewDiffs.Select(p => p.Key + "=" + p.Value)));
-Console.WriteLine("PASS: seven live slider image comparisons, enlarged live view, black/white/line/point power cycle, manual power test; BASIC, typing, RUN gating, 4-second borders at three speeds, company/website, alternating programs, settings and CRT shader; borderless coverage, editable text, icon, three-program rotation, configurable runtime, repeated typing and unclipped slider thumbs at minimum window size.");
+Console.WriteLine("PASS: eight live slider image comparisons, enlarged live view, black/white/line/point power cycle, manual power test; BASIC, typing, RUN gating, 4-second borders at three speeds, company/website, alternating programs, settings and CRT shader; borderless coverage, editable text, icon, three-program rotation, configurable runtime, repeated typing and unclipped slider thumbs at minimum window size.");
 if (args.Contains("--release-screenshots"))
 {
     // Explicit opt-in only: ordinary tests never reset the user's configuration.
@@ -457,6 +459,32 @@ if (args.Contains("--release-screenshots"))
     var monitor = new SettingsWindow(new ConfigManager()) { Height = 960 };
     monitor.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
     Capture(monitor, "settings-monitor");
-    Check(AppInfo.Version == "1.0.0", "Release version is 1.0.0");
+    Check(!string.IsNullOrEmpty(AppInfo.Version), "Release version is populated");
     Console.WriteLine("Release screenshots captured with saved user defaults; previous settings backed up in artifacts.");
 }
+CaptureScene("glow-off", 60, new SaverSettings { Glow = 0, GlowSpread = 65 });
+CaptureScene("glowing-crt", 60, new SaverSettings { Glow = 100, GlowSpread = 65 });
+CaptureScene("glowing-stars", 0, new SaverSettings { Glow = 85, GlowSpread = 65, Programs = ProgramSelection.Stars }, true);
+using (var plain = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "glow-off.png")))
+using (var glowing = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "glowing-crt.png")))
+{
+    int changed = plain.Pixels.Zip(glowing.Pixels).Count(pair => pair.First != pair.Second);
+    Check(changed > 10000, "Glow produces a visible halo on the rendered screen");
+    int haloPixels = 0;
+    for (int y = 60; y < 300; y++)
+    for (int x = 70; x < 890; x++)
+    {
+        var a = plain.GetPixel(x, y); var b = glowing.GetPixel(x, y);
+        if (a.Red < 90 && a.Green < 90 && b.Red + b.Green + b.Blue > a.Red + a.Green + a.Blue + 8) haloPixels++;
+    }
+    Check(haloPixels > 500, "Bloom spreads light into dark pixels around the text");
+}
+var glowDialog = new SettingsWindow(new ConfigManager(configPath) { Settings = new SaverSettings() });
+glowDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 4;
+Check(glowDialog.FindControl<Slider>("GlowSlider")!.Value == 85 &&
+    glowDialog.FindControl<Slider>("GlowSpreadSlider")!.Value == 65 &&
+    glowDialog.FindControl<Slider>("FlickerSlider")!.Value == 0, "Glowing CRT preset has broad stable bloom");
+glowDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
+glowDialog.Height = 1000;
+Capture(glowDialog, "glowing-settings");
+Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");

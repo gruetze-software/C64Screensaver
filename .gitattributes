@@ -1,0 +1,3 @@
+snap/local/launcher/launch text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
