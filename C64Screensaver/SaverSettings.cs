@@ -1,7 +1,5 @@
 using System;
 
-
-
 namespace C64Screensaver;
 
 public class SaverSettings
@@ -56,4 +54,3 @@ public class SaverSettings
             ? Math.Clamp(SpeedMultiplier, MinSpeed, MaxSpeed) : 1;
     }
 }
-
