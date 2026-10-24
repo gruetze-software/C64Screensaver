@@ -11,8 +11,6 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
-    public bool AutoStartEnabled { get; set; }
-    public int IdleDelaySeconds { get; set; } = 300;
     public bool PowerTransition { get; set; } = true;
     public bool FillScreen { get; set; }
     // Missing in older files: retain their framed or borderless presentation.
@@ -40,7 +38,6 @@ public class SaverSettings
 
     public void Validate()
     {
-        IdleDelaySeconds = Math.Clamp(IdleDelaySeconds, 60, 3600);
         CompanyName = BasicPrograms.DisplayText(CompanyName);
         CompanyWebsite = BasicPrograms.DisplayText(CompanyWebsite);
         CompanyTagline = BasicPrograms.DisplayText(CompanyTagline);

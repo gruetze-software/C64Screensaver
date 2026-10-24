@@ -10,4 +10,3 @@ docs/images/*
 snap/local/publish/
 *.snap
 !docs/images/glowing-crt.png
-!docs/images/automatic-start-settings.png

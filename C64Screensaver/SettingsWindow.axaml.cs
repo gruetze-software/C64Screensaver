@@ -22,7 +22,6 @@ public partial class SettingsWindow : Window
         config = configManager;
         LogoImage.Source = SpriteAssets.Instance.Logo;
         VersionLabel.Text = AppInfo.DisplayName;
-        AutomaticTab.IsVisible = OperatingSystem.IsLinux();
         Apply(config.Settings);
         PresetCombo.SelectedIndex = !config.Settings.CrtEnabled ? 0 : (CrtParameters.From(config.Settings) with { FillScreen = false, KeepAspectRatio = true }) == CrtParameters.From(new SaverSettings()) ? 1 : 3;
         if (config.LastError != null) StatusLabel.Text = "Could not load settings. Defaults are being used.";
@@ -101,8 +100,6 @@ public partial class SettingsWindow : Window
     {
         loading = true;
         SetEffects(s);
-        AutoStartCheckBox.IsChecked = s.AutoStartEnabled;
-        IdleMinutesInput.Value = (decimal)s.IdleDelaySeconds / 60;
         FillScreenCheckBox.IsChecked = s.FillScreen;
         AspectCombo.SelectedIndex = s.UsesFourThree ? 0 : 1;
         CompanyNameBox.Text = s.CompanyName;
@@ -118,8 +115,6 @@ public partial class SettingsWindow : Window
     }
     private void ReadInto(SaverSettings s)
     {
-        s.AutoStartEnabled = AutoStartCheckBox.IsChecked == true;
-        s.IdleDelaySeconds = (int)((IdleMinutesInput.Value ?? 5) * 60);
         s.PowerTransition = PowerTransitionCheckBox.IsChecked == true;
         s.FillScreen = FillScreenCheckBox.IsChecked == true;
         s.KeepAspectRatio = AspectCombo.SelectedIndex == 0;
@@ -201,24 +196,8 @@ public partial class SettingsWindow : Window
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
         ReadInto(config.Settings);
-        if (config.SaveSettings())
-        {
-            try
-            {
-                if (OperatingSystem.IsLinux()) LinuxAutostart.Apply(config.Settings.AutoStartEnabled);
-                Close();
-            }
-            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
-            { StatusLabel.Text = "Settings saved, but automatic startup could not be updated: " + ex.Message; }
-        }
+        if (config.SaveSettings()) Close();
         else StatusLabel.Text = $"Could not save settings: {config.LastError}";
-    }
-    private async void CheckIdle_Click(object? sender, RoutedEventArgs e)
-    {
-        CheckIdleButton.IsEnabled = false;
-        IdleStatus.Text = "Checking this desktop…";
-        try { IdleStatus.Text = (await new LinuxSessionProbe().ReadAsync()).Message; }
-        finally { CheckIdleButton.IsEnabled = true; }
     }
     private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
     private async void About_Click(object? sender, RoutedEventArgs e) => await new AboutWindow().ShowDialog(this);

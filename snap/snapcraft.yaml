@@ -5,8 +5,7 @@ summary: C64 BASIC animation with adjustable CRT glow
 description: |
   Watch BASIC being typed, corrected and executed on a simulated C64.
   Includes a maze, editable company card, starfield and adjustable CRT bloom.
-  Automatic activation is experimental. It pauses if idle time, lock state
-  or presentation inhibition status is unavailable. The desktop retains its lock.
+  This is a fullscreen animation application, not a screen locker.
 grade: devel
 confinement: strict
 license: MIT
@@ -18,7 +17,6 @@ apps:
   c64screensaver:
     command: bin/launch
     desktop: snap/gui/c64screensaver.desktop
-    autostart: c64screensaver-idle.desktop
     extensions: [gnome]
     plugs: [desktop, desktop-legacy, wayland, x11, opengl]
 parts:
@@ -32,8 +30,6 @@ parts:
     organize:
       '*': bin/
     stage-packages:
-      - libglib2.0-bin
-      - libxss1
       - libicu74
       - libssl3t64
       - libkrb5-3

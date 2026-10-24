@@ -9,7 +9,6 @@ internal static class Program
 {
     internal static LaunchOptions Options { get; private set; } = new();
     public const string Help = "C64Screensaver: --settings | --about | --windowed | --fullscreen\n" +
-        "Linux automatic activation: --idle-daemon | --diagnose-idle\n" +
         "Linux backend: --x11 | --wayland (default: native Wayland when WAYLAND_DISPLAY is set)\n" +
         "Windows screensaver: /s | /c[:HWND] | /p HWND | /p:HWND\n" +
         "Fullscreen: move the mouse, click or press a key to exit; F toggles FPS.";
@@ -27,12 +26,7 @@ internal static class Program
         }
         Options = options;
         if (options.Mode == LaunchMode.Help) { Console.WriteLine(Help); return 0; }
-        try
-        {
-            if (options.Mode is LaunchMode.IdleDaemon or LaunchMode.DiagnoseIdle)
-                return LinuxIdleDaemon.RunAsync(options.Mode == LaunchMode.DiagnoseIdle).GetAwaiter().GetResult();
-            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-        }
+        try { return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args); }
         catch (Exception ex)
         {
             Trace.WriteLine(ex);
