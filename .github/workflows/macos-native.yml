@@ -1,0 +1,37 @@
+name: Experimental macOS screensaver
+on:
+  push:
+    branches: [codex/macos-native-screensaver]
+  pull_request:
+    paths: ['macos/**', 'C64Screensaver/**', 'tests/NativeBridge/**', '.github/workflows/macos-native.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-saver:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test managed C ABI
+        run: dotnet run --project tests/NativeBridge -c Release
+      - name: Build native screensaver
+        run: bash macos/build-native.sh ${{ matrix.arch }}
+      - name: Preserve bundle permissions and signatures
+        run: |
+          cd artifacts/macos-native/osx-*/
+          ditto -c -k --keepParent C64Screensaver.saver C64Screensaver-experimental-${{ matrix.arch }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: C64Screensaver-native-${{ matrix.arch }}
+          path: artifacts/macos-native/**/*.zip

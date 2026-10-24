@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>de.gruetze-software.C64Screensaver.Native</string>
+<key>CFBundleName</key><string>C64Screensaver</string>
+<key>CFBundleExecutable</key><string>C64Screensaver</string>
+<key>CFBundlePackageType</key><string>BNDL</string>
+<key>CFBundleShortVersionString</key><string>1.1.0</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleIconFile</key><string>app-icon.icns</string>
+<key>NSPrincipalClass</key><string>C64SaverView</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+</dict></plist>
