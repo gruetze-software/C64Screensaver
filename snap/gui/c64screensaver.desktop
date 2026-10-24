@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=C64Screensaver
+Comment=Ghost-typed BASIC and CRT animation
+Exec=c64screensaver
+Icon=${SNAP}/meta/gui/icon.png
+Terminal=false
+Categories=Game;Amusement;

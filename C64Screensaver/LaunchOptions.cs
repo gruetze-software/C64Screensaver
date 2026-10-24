@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace C64Screensaver;
 
-public enum LaunchMode { Fullscreen, Windowed, Settings, About, Preview, Help }
+public enum LaunchMode { Fullscreen, Windowed, Settings, About, Preview, Help, IdleDaemon, DiagnoseIdle }
 public enum LinuxBackend { Auto, X11, Wayland }
 
 public sealed record LaunchOptions(LaunchMode Mode = LaunchMode.Fullscreen,
@@ -29,6 +29,8 @@ public sealed record LaunchOptions(LaunchMode Mode = LaunchMode.Fullscreen,
             modeSet = true;
             switch (arg)
             {
+                case "--idle-daemon": options = options with { Mode = LaunchMode.IdleDaemon }; break;
+                case "--diagnose-idle": options = options with { Mode = LaunchMode.DiagnoseIdle }; break;
                 case "/s": case "--fullscreen": options = options with { Mode = LaunchMode.Fullscreen }; break;
                 case "--windowed": options = options with { Mode = LaunchMode.Windowed }; break;
                 case "/c": case "--settings": options = options with { Mode = LaunchMode.Settings }; break;

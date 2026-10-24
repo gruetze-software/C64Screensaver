@@ -108,3 +108,12 @@ For a later, more elaborate CRT style, useful references are
 beam properties, bloom and diffusion, and
 [Mega Bezel](https://github.com/HyperspaceMadness/Mega_Bezel) for glass and bezel
 reflections. Those complete shader chains have not been integrated here.
+## Broad phosphor glow
+
+The development renderer extracts luminance-gated light into a small offscreen image, applies a Gaussian blur and combines it after scanline/mask modulation.
+Strength and spread are independent. This is spatial only, without flashing
+or temporal persistence. Glowing CRT keeps flicker at zero. Dark-pixel image
+comparisons verify that the halo extends beyond bright glyph pixels.
+
+[cool-retro-term](https://github.com/Swordfish90/cool-retro-term) is a visual
+reference supplied by the user; none of its QML or shader code is incorporated.

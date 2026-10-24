@@ -280,7 +280,7 @@ monitorDialog.Width = 980; monitorDialog.Height = 640;
 monitorDialog.Show();
 Dispatcher.UIThread.RunJobs();
 foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "MaskStrengthSlider", "SoftnessSlider",
-    "GlowSlider", "VignetteSlider", "FlickerSlider" })
+    "GlowSlider", "GlowSpreadSlider", "VignetteSlider", "FlickerSlider" })
 {
     var slider = monitorDialog.FindControl<Slider>(name)!;
     Check(slider.Bounds.Height >= 52, "Slider has enough vertical space: " + name);
@@ -376,10 +376,11 @@ SkiaSharp.SKColor[] SmallPreviewPixels()
 }
 var previewDiffs = new Dictionary<string,int>();
 foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "MaskStrengthSlider",
-    "SoftnessSlider", "GlowSlider", "VignetteSlider", "FlickerSlider" })
+    "SoftnessSlider", "GlowSlider", "GlowSpreadSlider", "VignetteSlider", "FlickerSlider" })
 {
     var slider = probe.FindControl<Slider>(name)!;
     slider.Value = 0;
+    if (name == "GlowSpreadSlider") probe.FindControl<Slider>("GlowSlider")!.Value = 85;
     var before = SmallPreviewPixels();
     slider.Value = 100;
     int changed = 0;
@@ -392,6 +393,7 @@ foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "Ma
     previewDiffs[name] = changed;
     Check(changed > 100, "Settings slider visibly changes small preview: " + name + " (" + changed + " pixels)");
     slider.Value = 0;
+    if (name == "GlowSpreadSlider") probe.FindControl<Slider>("GlowSlider")!.Value = 0;
 }
 probe.FindControl<CheckBox>("ScanlinesCheckBox")!.IsChecked = false;
 Check(!probe.FindControl<Slider>("ScanlineStrengthSlider")!.IsEnabled,
@@ -439,7 +441,7 @@ testedScene.AdvancePreview(0.70, false);
 Check(!testedScene.IsPowerTransitionActive, "Manual effect test finishes and returns to startup");
 Capture(probe, "settings-preview-fixed");
 Console.WriteLine("Small-preview changed pixels: " + string.Join(", ", previewDiffs.Select(p => p.Key + "=" + p.Value)));
-Console.WriteLine("PASS: seven live slider image comparisons, enlarged live view, black/white/line/point power cycle, manual power test; BASIC, typing, RUN gating, 4-second borders at three speeds, company/website, alternating programs, settings and CRT shader; borderless coverage, editable text, icon, three-program rotation, configurable runtime, repeated typing and unclipped slider thumbs at minimum window size.");
+Console.WriteLine("PASS: eight live slider image comparisons, enlarged live view, black/white/line/point power cycle, manual power test; BASIC, typing, RUN gating, 4-second borders at three speeds, company/website, alternating programs, settings and CRT shader; borderless coverage, editable text, icon, three-program rotation, configurable runtime, repeated typing and unclipped slider thumbs at minimum window size.");
 if (args.Contains("--release-screenshots"))
 {
     // Explicit opt-in only: ordinary tests never reset the user's configuration.
@@ -457,6 +459,105 @@ if (args.Contains("--release-screenshots"))
     var monitor = new SettingsWindow(new ConfigManager()) { Height = 960 };
     monitor.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
     Capture(monitor, "settings-monitor");
-    Check(AppInfo.Version == "1.0.0", "Release version is 1.0.0");
+    Check(!string.IsNullOrEmpty(AppInfo.Version), "Release version is populated");
     Console.WriteLine("Release screenshots captured with saved user defaults; previous settings backed up in artifacts.");
 }
+// Desktop calls are injected: verify denied/missing services never trigger animation.
+var calls = new List<string[]>();
+string? idleReply = "(uint64 1000,)", lockReply = "(false,)", inhibitReply = "(false,)";
+Task<string?> FakeDesktop(string[] command)
+{
+    calls.Add(command);
+    string method = command[Array.IndexOf(command, "--method") + 1];
+    return Task.FromResult<string?>(method.EndsWith(".GetIdletime") ? idleReply :
+        method.EndsWith(".GetActive") ? lockReply : inhibitReply);
+}
+var gnomeProbe = new LinuxSessionProbe(FakeDesktop, () => throw new Exception("XWayland idle must never be used"), "ubuntu:GNOME", true);
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample == new IdleSample(1000, false, false), "GNOME Wayland sample");
+Check(calls.All(c => c.Contains("--session")) && calls.Last().Last() == "8", "Session bus and idle-inhibitor flag");
+lockReply = "(true,)";
+int beforeLockCalls = calls.Count;
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample!.Value.Locked && calls.Count == beforeLockCalls + 2,
+    "Locked desktop skips inhibitor query");
+lockReply = null;
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample == null, "Missing lock status pauses activation");
+lockReply = "(false,)"; inhibitReply = null;
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample == null, "Denied inhibitor query pauses activation");
+inhibitReply = "(true,)";
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample!.Value.Inhibited, "Video inhibition detected");
+inhibitReply = "(false,)"; idleReply = "(uint64 9223372036854775808,)";
+Check(gnomeProbe.ReadAsync().GetAwaiter().GetResult().Sample == null, "Overflow idle response rejected");
+Check(LinuxSessionProbe.ParseNumber("(uint64 300000,)") == 300000 &&
+    LinuxSessionProbe.ParseNumber("error 300000") == null, "D-Bus replies validated");
+foreach (string desktop in new[] { "X-Cinnamon", "MATE", "XFCE" })
+{
+    var probeX = new LinuxSessionProbe(FakeDesktop, () => 5000, desktop, false);
+    Check(probeX.ReadAsync().GetAwaiter().GetResult().Sample?.Milliseconds == 5000, desktop + " uses real X11 idle");
+    var probeWayland = new LinuxSessionProbe(FakeDesktop, () => throw new Exception("Not an X11 session"), desktop, true);
+    Check(probeWayland.ReadAsync().GetAwaiter().GetResult().Sample == null, desktop + " unsupported Wayland is explicit");
+}
+Check(new LinuxSessionProbe(FakeDesktop, () => 0, "KDE", true).ReadAsync().GetAwaiter().GetResult().Sample == null,
+    "Unsupported desktop does not guess");
+var idlePolicy = new IdleActivationPolicy();
+Check(idlePolicy.Evaluate(new(0, false, false), true, 300, false) == IdleAction.None, "Active user does not launch");
+Check(idlePolicy.Evaluate(new(299999, false, false), true, 300, false) == IdleAction.None, "Wait for threshold");
+Check(idlePolicy.Evaluate(new(300000, false, false), true, 300, false) == IdleAction.Start, "Launch at threshold");
+Check(idlePolicy.Evaluate(new(301000, false, false), true, 300, false) == IdleAction.None, "No relaunch after dismiss or crash");
+Check(idlePolicy.Evaluate(new(0, false, false), true, 300, true) == IdleAction.Stop, "User activity stops child");
+Check(idlePolicy.Evaluate(new(300000, false, true), true, 300, false) == IdleAction.None, "Video prevents launch");
+Check(idlePolicy.Evaluate(new(301000, false, false), true, 300, false) == IdleAction.Start, "Removing inhibitor allows launch");
+Check(idlePolicy.Evaluate(new(302000, true, false), true, 300, true) == IdleAction.Stop, "Lock stops animation");
+Check(idlePolicy.Evaluate(null, true, 300, true) == IdleAction.Stop, "Bus failure stops animation");
+Check(idlePolicy.Evaluate(new(500000, false, false), true, 300, false) == IdleAction.None, "Recovery requires fresh activity");
+Check(idlePolicy.Evaluate(new(0, false, false), false, 300, true) == IdleAction.Stop, "Disabling stops animation");
+Check(new IdleActivationPolicy().Evaluate(new(999999, false, false), true, 300, false) == IdleAction.None,
+    "Starting daemon while already idle waits for activity first");
+var desktopCommand = new System.Diagnostics.ProcessStartInfo("/home/test user/50%/$name/c64screensaver");
+desktopCommand.ArgumentList.Add("--idle-daemon");
+var entry = LinuxAutostart.BuildEntry(desktopCommand);
+Check(entry.Contains("50%%") && entry.Contains("--idle-daemon") && entry.Contains("Terminal=false"), "Desktop entry quotes paths and percent fields");
+bool rejectedNewline = false;
+try { LinuxAutostart.DesktopQuote("path\nExec=other"); } catch (IOException) { rejectedNewline = true; }
+Check(rejectedNewline, "Desktop entry newline injection rejected");
+var idleLimits = new SaverSettings { IdleDelaySeconds = int.MaxValue };
+idleLimits.Validate();
+Check(idleLimits.IdleDelaySeconds == 3600 && !idleLimits.AutoStartEnabled, "Automatic start opt-in and duration validation");
+Check(LaunchOptions.TryParse(["--idle-daemon"], false, out var daemonMode, out _) && daemonMode.Mode == LaunchMode.IdleDaemon,
+    "Idle daemon command");
+Check(LaunchOptions.TryParse(["--diagnose-idle"], false, out var diagnoseMode, out _) && diagnoseMode.Mode == LaunchMode.DiagnoseIdle,
+    "Idle diagnostic command");
+Console.WriteLine("PASS: GNOME, Cinnamon, MATE, Xfce adapters; lock/inhibition failures; idle policy and autostart escaping.");
+CaptureScene("glow-off", 60, new SaverSettings { Glow = 0, GlowSpread = 65 });
+CaptureScene("glowing-crt", 60, new SaverSettings { Glow = 100, GlowSpread = 65 });
+CaptureScene("glowing-stars", 0, new SaverSettings { Glow = 85, GlowSpread = 65, Programs = ProgramSelection.Stars }, true);
+using (var plain = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "glow-off.png")))
+using (var glowing = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "glowing-crt.png")))
+{
+    int changed = plain.Pixels.Zip(glowing.Pixels).Count(pair => pair.First != pair.Second);
+    Check(changed > 10000, "Glow produces a visible halo on the rendered screen");
+    int haloPixels = 0;
+    for (int y = 60; y < 300; y++)
+    for (int x = 70; x < 890; x++)
+    {
+        var a = plain.GetPixel(x, y); var b = glowing.GetPixel(x, y);
+        if (a.Red < 90 && a.Green < 90 && b.Red + b.Green + b.Blue > a.Red + a.Green + a.Blue + 8) haloPixels++;
+    }
+    Check(haloPixels > 500, "Bloom spreads light into dark pixels around the text");
+}
+var glowDialog = new SettingsWindow(new ConfigManager(configPath) { Settings = new SaverSettings() });
+glowDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 4;
+Check(glowDialog.FindControl<Slider>("GlowSlider")!.Value == 85 &&
+    glowDialog.FindControl<Slider>("GlowSpreadSlider")!.Value == 65 &&
+    glowDialog.FindControl<Slider>("FlickerSlider")!.Value == 0, "Glowing CRT preset has broad stable bloom");
+glowDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
+glowDialog.Height = 1000;
+Capture(glowDialog, "glowing-settings");
+Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");
+var automaticDialog = new SettingsWindow(new ConfigManager(configPath) { Settings = new SaverSettings() }) { Height = 880 };
+Check(automaticDialog.FindControl<TabItem>("AutomaticTab")!.IsVisible == OperatingSystem.IsLinux(), "Automatic-start tab is Linux-only");
+automaticDialog.FindControl<TabItem>("AutomaticTab")!.IsVisible = true;
+automaticDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 2;
+Check(automaticDialog.FindControl<NumericUpDown>("IdleMinutesInput")!.Value == 5 &&
+    automaticDialog.FindControl<CheckBox>("AutoStartCheckBox")!.IsChecked == false,
+    "Automatic-start UI defaults to five minutes and opt-out");
+Capture(automaticDialog, "automatic-start-settings");

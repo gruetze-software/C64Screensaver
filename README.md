@@ -149,3 +149,21 @@ The renderer uses an original Skia shader; emulator references are documented
 in the CRT research notes.
 
 MIT license; see [LICENSE](LICENSE). Independent project, not affiliated with Commodore.
+
+## In development: 1.1
+
+The development branch adds stronger CRT bloom with an independent glow-spread
+slider and a stable **Glowing CRT** preset. The shader implementation is original.
+
+Linux builds offer an opt-in **Automatic start** tab. The helper checks idle
+time, screen-lock state and presentation inhibitors and starts at login after
+being enabled and saved. GNOME X11/Wayland plus Cinnamon, MATE and Xfce X11
+backends are implemented; native desktop validation is pending.
+
+See [Linux integration and Snap research](docs/LINUX-INTEGRATION.md) for setup,
+test status and the strict-Snap inhibitor-access blocker. The Snap recipe is
+a development draft; these features are not in release 1.0.
+
+![Broad CRT phosphor bloom](docs/images/glowing-crt.png)
+
+![Linux automatic-start settings](docs/images/automatic-start-settings.png)

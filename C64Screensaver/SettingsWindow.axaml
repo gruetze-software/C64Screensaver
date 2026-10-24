@@ -88,6 +88,10 @@
  <Slider Name="GlowSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Phosphor glow"/>
  <TextBlock Name="GlowLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
 </Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Glow spread" VerticalAlignment="Center"/>
+ <Slider Name="GlowSpreadSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Glow spread"/>
+ <TextBlock Name="GlowSpreadLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
  <TextBlock Text="Darkened corners" VerticalAlignment="Center"/>
  <Slider Name="VignetteSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Darkened corners"/>
  <TextBlock Name="VignetteLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
@@ -102,6 +106,26 @@
       </StackPanel>
      </Border>
       </StackPanel>
+     </ScrollViewer>
+    </TabItem>
+    <TabItem Name="AutomaticTab" Header="Automatic start" IsVisible="False">
+     <ScrollViewer HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+      <Border Classes="card">
+       <StackPanel Spacing="12">
+        <TextBlock Text="Start after inactivity" FontWeight="SemiBold"/>
+        <CheckBox Name="AutoStartCheckBox" Content="Start automatically when I am away"/>
+        <Grid ColumnDefinitions="*,140" ColumnSpacing="12">
+         <TextBlock Text="Wait time (minutes)" VerticalAlignment="Center"/>
+         <NumericUpDown Name="IdleMinutesInput" Grid.Column="1" Minimum="1" Maximum="60" Increment="1" FormatString="0" ClipValueToMinMax="True"/>
+        </Grid>
+        <TextBlock Classes="hint" Text="Save enables startup at login and starts the background helper now. Turn this off and save to remove it again. Move the installed folder only after disabling automatic start."/>
+        <TextBlock Classes="hint" Text="Your desktop keeps control of screen locking, blanking and suspend. The animation stops when the desktop locks. Choose a wait time shorter than the desktop's screen-blanking delay."/>
+        <TextBlock Classes="hint" Text="Videos and presentations can pause activation through desktop inhibitors. If idle time, lock state or inhibition state cannot be read, automatic activation is paused."/>
+        <Button Name="CheckIdleButton" Content="Check desktop support" Click="CheckIdle_Click" HorizontalAlignment="Left"/>
+        <TextBlock Name="IdleStatus" TextWrapping="Wrap" Foreground="#93DDD1"/>
+        <TextBlock Classes="hint" Text="GNOME: X11 and Wayland. Cinnamon, MATE and Xfce: X11 detection implemented; native testing pending. Other desktops are reported as unsupported."/>
+       </StackPanel>
+      </Border>
      </ScrollViewer>
     </TabItem>
    </TabControl>
@@ -127,6 +151,7 @@
        <ComboBoxItem Content="Subtle CRT · stable and clear"/>
        <ComboBoxItem Content="Classic monitor · more texture"/>
        <ComboBoxItem Content="Custom"/>
+       <ComboBoxItem Content="Glowing CRT · broad phosphor halo"/>
       </ComboBox>
      </StackPanel>
     </Border>

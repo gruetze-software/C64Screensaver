@@ -11,6 +11,8 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
+    public bool AutoStartEnabled { get; set; }
+    public int IdleDelaySeconds { get; set; } = 300;
     public bool PowerTransition { get; set; } = true;
     public bool FillScreen { get; set; }
     // Missing in older files: retain their framed or borderless presentation.
@@ -26,6 +28,7 @@ public class SaverSettings
     public double MaskStrength { get; set; } = 8;
     public double Softness { get; set; } = 12;
     public double Glow { get; set; } = 12;
+    public double GlowSpread { get; set; } = 30;
     public double Vignette { get; set; } = 15;
     public double Flicker { get; set; }
     public ProgramSelection Programs { get; set; } = ProgramSelection.AllPrograms;
@@ -37,6 +40,7 @@ public class SaverSettings
 
     public void Validate()
     {
+        IdleDelaySeconds = Math.Clamp(IdleDelaySeconds, 60, 3600);
         CompanyName = BasicPrograms.DisplayText(CompanyName);
         CompanyWebsite = BasicPrograms.DisplayText(CompanyWebsite);
         CompanyTagline = BasicPrograms.DisplayText(CompanyTagline);
@@ -45,6 +49,7 @@ public class SaverSettings
         MaskStrength = Percent(MaskStrength, 8);
         Softness = Percent(Softness, 12);
         Glow = Percent(Glow, 12);
+        GlowSpread = Percent(GlowSpread, 30);
         Vignette = Percent(Vignette, 15);
         Flicker = Percent(Flicker, 0);
         ProgramDurationSeconds = Math.Clamp(ProgramDurationSeconds, 15, 1800);

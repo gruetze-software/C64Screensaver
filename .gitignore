@@ -7,3 +7,7 @@ docs/images/*
 !docs/images/c64screensaver.png
 !docs/images/settings-playback.png
 !docs/images/settings-monitor.png
+snap/local/publish/
+*.snap
+!docs/images/glowing-crt.png
+!docs/images/automatic-start-settings.png

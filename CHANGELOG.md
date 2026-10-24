@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0-preview.1 — in development
+
+- Stronger smooth CRT bloom with independent glow spread and a Glowing CRT preset.
+- Opt-in Linux idle helper, login autostart, wait time and desktop diagnostics.
+- GNOME X11/Wayland and Cinnamon/MATE/Xfce X11 adapters, pending native desktop validation.
+- Lock and presentation-inhibitor checks; pause activation when information is unavailable.
+- Strict Snap packaging draft and documented inhibitor-access blocker; not Store-ready.
+
 ## 1.0.0 — 2026-10-24
 
 First release.

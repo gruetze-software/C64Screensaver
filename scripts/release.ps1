@@ -23,7 +23,8 @@ foreach ($runtime in ($Runtimes | Select-Object -Unique)) {
     $images = Join-Path $stage 'docs/images'
     New-Item -ItemType Directory -Path $images -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $root 'docs/CRT-RESEARCH.md') -Destination (Join-Path $stage 'docs')
-    foreach ($image in @('c64screensaver.png','settings-playback.png','settings-monitor.png')) {
+    Copy-Item -LiteralPath (Join-Path $root 'docs/LINUX-INTEGRATION.md') -Destination (Join-Path $stage 'docs')
+    foreach ($image in @('c64screensaver.png','settings-playback.png','settings-monitor.png','glowing-crt.png','automatic-start-settings.png')) {
         Copy-Item -LiteralPath (Join-Path $root "docs/images/$image") -Destination $images
     }
     $archive = Join-Path $release "C64Screensaver-$version-$runtime.zip"

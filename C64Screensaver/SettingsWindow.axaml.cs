@@ -14,7 +14,7 @@ public partial class SettingsWindow : Window
     private Window? enlargedPreview;
     private C64Scene? enlargedScene;
     private Slider[] EffectSliders => [CurvatureSlider, ScanlineStrengthSlider, MaskStrengthSlider,
-        SoftnessSlider, GlowSlider, VignetteSlider, FlickerSlider];
+        SoftnessSlider, GlowSlider, GlowSpreadSlider, VignetteSlider, FlickerSlider];
     public SettingsWindow() : this(new ConfigManager()) { }
     public SettingsWindow(ConfigManager configManager)
     {
@@ -22,6 +22,7 @@ public partial class SettingsWindow : Window
         config = configManager;
         LogoImage.Source = SpriteAssets.Instance.Logo;
         VersionLabel.Text = AppInfo.DisplayName;
+        AutomaticTab.IsVisible = OperatingSystem.IsLinux();
         Apply(config.Settings);
         PresetCombo.SelectedIndex = !config.Settings.CrtEnabled ? 0 : (CrtParameters.From(config.Settings) with { FillScreen = false, KeepAspectRatio = true }) == CrtParameters.From(new SaverSettings()) ? 1 : 3;
         if (config.LastError != null) StatusLabel.Text = "Could not load settings. Defaults are being used.";
@@ -62,6 +63,11 @@ public partial class SettingsWindow : Window
                 preset.Curvature = 45; preset.ScanlineStrength = 55; preset.MaskStrength = 38;
                 preset.Softness = 30; preset.Glow = 28; preset.Vignette = 40;
             }
+            if (PresetCombo.SelectedIndex == 4)
+            {
+                preset.Curvature = 25; preset.ScanlineStrength = 25; preset.MaskStrength = 10;
+                preset.Softness = 20; preset.Glow = 85; preset.GlowSpread = 65; preset.Vignette = 35;
+            }
             loading = true;
             SetEffects(preset);
             loading = false;
@@ -86,6 +92,7 @@ public partial class SettingsWindow : Window
         MaskStrengthSlider.Value = s.MaskStrength;
         SoftnessSlider.Value = s.Softness;
         GlowSlider.Value = s.Glow;
+        GlowSpreadSlider.Value = s.GlowSpread;
         VignetteSlider.Value = s.Vignette;
         FlickerSlider.Value = s.Flicker;
         ScanlinesCheckBox.IsChecked = s.Scanlines;
@@ -94,6 +101,8 @@ public partial class SettingsWindow : Window
     {
         loading = true;
         SetEffects(s);
+        AutoStartCheckBox.IsChecked = s.AutoStartEnabled;
+        IdleMinutesInput.Value = (decimal)s.IdleDelaySeconds / 60;
         FillScreenCheckBox.IsChecked = s.FillScreen;
         AspectCombo.SelectedIndex = s.UsesFourThree ? 0 : 1;
         CompanyNameBox.Text = s.CompanyName;
@@ -109,6 +118,8 @@ public partial class SettingsWindow : Window
     }
     private void ReadInto(SaverSettings s)
     {
+        s.AutoStartEnabled = AutoStartCheckBox.IsChecked == true;
+        s.IdleDelaySeconds = (int)((IdleMinutesInput.Value ?? 5) * 60);
         s.PowerTransition = PowerTransitionCheckBox.IsChecked == true;
         s.FillScreen = FillScreenCheckBox.IsChecked == true;
         s.KeepAspectRatio = AspectCombo.SelectedIndex == 0;
@@ -118,7 +129,7 @@ public partial class SettingsWindow : Window
         s.CrtEnabled = CrtCheckBox.IsChecked == true;
         s.Curvature = CurvatureSlider.Value; s.ScanlineStrength = ScanlineStrengthSlider.Value;
         s.MaskStrength = MaskStrengthSlider.Value; s.Softness = SoftnessSlider.Value;
-        s.Glow = GlowSlider.Value; s.Vignette = VignetteSlider.Value; s.Flicker = FlickerSlider.Value;
+        s.Glow = GlowSlider.Value; s.GlowSpread = GlowSpreadSlider.Value; s.Vignette = VignetteSlider.Value; s.Flicker = FlickerSlider.Value;
         s.Scanlines = ScanlinesCheckBox.IsChecked == true;
         s.CycleColors = ColorsCheckBox.IsChecked == true;
         s.SpeedMultiplier = SpeedSlider.Value; s.ShowFps = FpsCheckBox.IsChecked == true;
@@ -130,7 +141,7 @@ public partial class SettingsWindow : Window
     {
         ReadInto(previewSettings);
         var labels = new[] { CurvatureLabel, ScanlineStrengthLabel, MaskStrengthLabel,
-            SoftnessLabel, GlowLabel, VignetteLabel, FlickerLabel };
+            SoftnessLabel, GlowLabel, GlowSpreadLabel, VignetteLabel, FlickerLabel };
         var sliders = EffectSliders;
         for (int i = 0; i < sliders.Length; i++) labels[i].Text = $"{sliders[i].Value:F0}%";
         SpeedLabel.Text = FormattableString.Invariant($"{SpeedSlider.Value:F1}×");
@@ -190,8 +201,24 @@ public partial class SettingsWindow : Window
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
         ReadInto(config.Settings);
-        if (config.SaveSettings()) Close();
+        if (config.SaveSettings())
+        {
+            try
+            {
+                if (OperatingSystem.IsLinux()) LinuxAutostart.Apply(config.Settings.AutoStartEnabled);
+                Close();
+            }
+            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+            { StatusLabel.Text = "Settings saved, but automatic startup could not be updated: " + ex.Message; }
+        }
         else StatusLabel.Text = $"Could not save settings: {config.LastError}";
+    }
+    private async void CheckIdle_Click(object? sender, RoutedEventArgs e)
+    {
+        CheckIdleButton.IsEnabled = false;
+        IdleStatus.Text = "Checking this desktop…";
+        try { IdleStatus.Text = (await new LinuxSessionProbe().ReadAsync()).Message; }
+        finally { CheckIdleButton.IsEnabled = true; }
     }
     private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
     private async void About_Click(object? sender, RoutedEventArgs e) => await new AboutWindow().ShowDialog(this);
