@@ -2,8 +2,6 @@ name: Experimental macOS screensaver
 on:
   push:
     branches: [codex/macos-native-screensaver]
-  pull_request:
-    paths: ['macos/**', 'C64Screensaver/**', 'tests/NativeBridge/**', '.github/workflows/macos-native.yml']
   workflow_dispatch:
 concurrency:
   group: macos-native-prototype

@@ -77,3 +77,6 @@ are not yet confirmed by this prototype.
 
 This prototype uses the public ScreenSaver framework, not undocumented wallpaper extension
 points. No stable release or main-branch integration is implied.
+
+Both architectures have compiled and passed bundle signature verification in GitHub Actions.
+The build additionally runs CoreSmoke.c against the actual NativeAOT exports and Skia dylib.

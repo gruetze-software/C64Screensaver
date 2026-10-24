@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 
-
 namespace C64Screensaver;
 
 public sealed class C64Scene : Control

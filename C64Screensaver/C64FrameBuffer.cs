@@ -41,8 +41,8 @@ public sealed class C64FrameBuffer
             for (int y = 0; y < 8; y++)
                 Array.Fill(pixels, framePalette[14], (44 + cell / 40 * 8 + y) * 384 + 32 + cell % 40 * 8, 8);
         }
-        // Immutable image snapshots belong to their draw operation, allowing Avalonia
-        // to render on its compositor thread without sharing a mutable framebuffer.
+        // The caller owns the immutable snapshot; a compositor or native host can
+        // consume it without sharing a mutable framebuffer.
         using var bitmap = new SKBitmap(new SKImageInfo(384, 288, SKColorType.Bgra8888, SKAlphaType.Premul));
         Marshal.Copy(pixels, 0, bitmap.GetPixels(), pixels.Length);
         bitmap.SetImmutable();
