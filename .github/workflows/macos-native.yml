@@ -5,6 +5,9 @@ on:
   pull_request:
     paths: ['macos/**', 'C64Screensaver/**', 'tests/NativeBridge/**', '.github/workflows/macos-native.yml']
   workflow_dispatch:
+concurrency:
+  group: macos-native-prototype
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
