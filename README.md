@@ -55,6 +55,11 @@ Do not move the SCR file alone into a system folder.
 
 ### Linux and macOS integration
 
+For external automatic-launch options, see the
+[Linux and macOS screensaver setup guide](docs/SCREEN-SAVER-SETUP.md).
+It includes the current Flathub/Snap Store findings and the distinction between
+fullscreen automation and a native macOS screensaver.
+
 On Linux, use --fullscreen through a desktop screensaver command integration
 where supported. Wayland currently uses one display; lock-screen integration
 depends on the desktop environment.
