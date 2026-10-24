@@ -97,7 +97,7 @@ public static class LinuxIdleDaemon
             void Stop()
             {
                 if (animation == null) return;
-                try { if (!animation.HasExited) { animation.Kill(entireProcessTree: true); animation.WaitForExit(2000); } }
+                try { if (!animation.HasExited) { animation.Kill(); animation.WaitForExit(2000); } }
                 catch (InvalidOperationException) { }
                 animation.Dispose();
                 animation = null;
