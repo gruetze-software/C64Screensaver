@@ -1,4 +1,4 @@
-# C64Screensaver 1.0
+# C64Screensaver 1.1
 
 A C64-inspired screensaver for Windows, Linux and macOS, built with .NET 10 and Avalonia 12.
 
@@ -13,7 +13,7 @@ Then the program takes over.
 - Three actual BASIC programs: endless maze, editable company card and twinkling starfield.
 - Play one program or cycle through all three, with adjustable run time and repeated code entry.
 - CRT curvature, scanlines, RGB phosphor mask, softness, glow, darkened corners and optional flicker.
-- Clean pixels, Subtle CRT and Classic monitor presets, individual controls and two live preview sizes.
+- Clean pixels, Subtle CRT, Classic monitor and Glowing CRT presets, individual controls and two live preview sizes.
 - Optional CRT power-off/on transition, collapsing the image into a line and a glowing point.
 - Independent 4:3 or stretched picture proportions and an option to hide the C64 border.
 - Editable company name, website and extra message.
@@ -25,9 +25,9 @@ on a 40×25 grid without requiring a C64 ROM.
 
 ## Download and start
 
-[Download version 1.0.0](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.0.0)
+[Download version 1.1.0](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.1.0)
 
-Version **1.0.0** packages are prepared for Windows, Linux and macOS on x64 and ARM64.
+Version **1.1.0** packages are prepared for Windows, Linux and macOS on x64 and ARM64.
 Each ZIP includes the .NET runtime; a separate .NET installation is not required.
 Extract the **entire** archive into a folder before launching.
 
@@ -133,7 +133,7 @@ Ordinary tests do not reset the user's settings.
     pwsh scripts/release.ps1
 
 Builds and tests Release, then creates self-contained ZIP files for six platforms
-and a SHA-256 checksum list in artifacts/release/1.0.0.
+and a SHA-256 checksum list in artifacts/release/1.1.0.
 To publish one platform:
 
     pwsh scripts/publish.ps1 -Runtime win-x64
@@ -155,9 +155,9 @@ in the CRT research notes.
 
 MIT license; see [LICENSE](LICENSE). Independent project, not affiliated with Commodore.
 
-## In development: 1.1
+## New in 1.1
 
-The development branch adds smooth CRT bloom with an independent glow-spread
+Version 1.1 adds smooth CRT bloom with an independent glow-spread
 slider and a stable **Glowing CRT** preset. The shader implementation is original.
 
 ![Broad CRT phosphor bloom](docs/images/glowing-crt.png)

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0-preview.1 — in development
+## 1.1.0 — 2026-10-24
 
 - External screensaver setup guidance; no built-in idle monitoring or autostart.
 - Manual-launch Snap packaging draft; not yet built or Store-published.
