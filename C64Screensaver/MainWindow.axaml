@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:C64Screensaver"
+        x:Class="C64Screensaver.MainWindow"
+        Title="C64Screensaver" Icon="/Assets/app-icon.ico"
+        WindowState="Normal" WindowDecorations="None" Topmost="True"
+        Background="Black" TransparencyLevelHint="None">
+    <Grid ClipToBounds="True">
+        <local:C64Scene Name="Scene"/>
+        <TextBlock Name="FpsDisplay" Foreground="Yellow" FontSize="14"
+                   HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                   Text="FPS: 0" IsVisible="False" IsHitTestVisible="False"/>
+    </Grid>
+</Window>

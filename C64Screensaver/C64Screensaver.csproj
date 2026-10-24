@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <AssemblyName>c64screensaver</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Authors>Grütze-Software</Authors>
+    <Product>C64Screensaver</Product>
+    <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
+    <Description>A C64 BASIC screensaver with animated CRT effects.</Description>
+    <Copyright>Copyright © 2026 Grütze-Software</Copyright>
+    <Maintainer>schaefer.christoph@posteo.de</Maintainer>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>c64screensaver</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Wayland" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+  </ItemGroup>
+</Project>

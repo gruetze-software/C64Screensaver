@@ -1,0 +1,65 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:C64Screensaver.Controls">
+    <Style Selector="Window.dialog">
+        <Setter Property="Background" Value="#151C21"/>
+        <Setter Property="Foreground" Value="#EAF0F3"/>
+        <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+    <Style Selector="Window.dialog TextBlock.hint">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="#A5B5BD"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Window.dialog Border.card">
+        <Setter Property="Background" Value="#202A30"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="18"/>
+    </Style>
+    <Style Selector="Window.dialog Button">
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="Padding" Value="16,9"/>
+        <Setter Property="CornerRadius" Value="7"/>
+        <Setter Property="Background" Value="#2B383F"/>
+        <Setter Property="Foreground" Value="#EAF0F3"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#3C4C55"/>
+    </Style>
+    <Style Selector="Window.dialog Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#364850"/>
+        <Setter Property="BorderBrush" Value="#68CBBE"/>
+    </Style>
+    <Style Selector="Window.dialog Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#1B4B47"/>
+    </Style>
+    <Style Selector="Window.dialog Button.primary">
+        <Setter Property="Background" Value="#216F69"/>
+        <Setter Property="BorderBrush" Value="#2D8279"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Window.dialog Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#2B8279"/>
+    </Style>
+    <Style Selector="Window.dialog Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#195952"/>
+    </Style>
+    <Style Selector="Window.dialog Button.icon">
+        <Setter Property="ContentTemplate">
+            <DataTemplate x:DataType="x:String">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Path Width="16" Height="16" Stretch="Uniform"
+                          Data="{Binding $parent[Button].(ui:ButtonIcons.Icon)}"
+                          Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="1.8"
+                          StrokeLineCap="Round" StrokeJoin="Round" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding}" VerticalAlignment="Center"
+                               Foreground="{ReflectionBinding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </StackPanel>
+            </DataTemplate>
+        </Setter>
+    </Style>
+</Styles>

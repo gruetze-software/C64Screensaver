@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:C64Screensaver.Controls"
+        x:Class="C64Screensaver.AboutWindow" Classes="dialog"
+        Title="About · C64Screensaver" Icon="/Assets/app-icon.ico"
+        Width="600" MinWidth="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="Auto,Auto" Margin="28">
+        <Border>
+            <StackPanel Spacing="12" Margin="18,0,18,4">
+                <Image Name="ProductLogo" Width="72" Height="72" HorizontalAlignment="Center"
+                       RenderOptions.BitmapInterpolationMode="None"/>
+                <TextBlock Name="ProductName" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <TextBlock Text="READY. RUN." FontSize="15" TextAlignment="Center"/>
+                <TextBlock Text="Real BASIC programs draw an endless maze, a scrolling company card and a twinkling starfield."
+                           TextWrapping="Wrap" TextAlignment="Center" Foreground="#A5B5BD" Margin="8,0"/>
+                <Separator Margin="0,6" Background="#34434C"/>
+                <Grid ColumnDefinitions="100,*" Margin="12,0">
+                    <Image Name="CompanyLogo" Width="88" Height="88" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                    <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="Developed by" Classes="hint"/>
+                        <TextBlock Text="Grütze-Software" FontSize="19" FontWeight="SemiBold"/>
+                        <TextBlock Text="© 2026 Grütze-Software" Classes="hint"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,6">
+                    <Button Classes="icon" Content="Grütze-Software" Tag="https://www.gruetze-software.de"
+                            Click="OpenLink" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.External}"/>
+                </StackPanel>
+                <Separator Margin="0,2" Background="#34434C"/>
+                <TextBlock Text="Enjoying C64Screensaver? A voluntary coffee helps support its development."
+                           TextWrapping="Wrap" TextAlignment="Center" Margin="8,2"/>
+                <Button Classes="icon primary" Content="Support on Ko-fi" Tag="https://ko-fi.com/gruetzesoftware"
+                        Click="OpenLink" HorizontalAlignment="Center" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Coffee}"/>
+                <Separator Margin="0,6" Background="#34434C"/>
+                <TextBlock Name="FrameworkInfo"
+                           Classes="hint" TextAlignment="Center"/>
+                <TextBlock Text="Free software under the MIT license. Includes a small interpreter for the displayed BASIC program. Independent project, not affiliated with the original hardware manufacturers."
+                           Classes="hint" TextAlignment="Center"/>
+                <TextBlock Name="LinkStatus" Foreground="#FFCC80" TextWrapping="Wrap" FontSize="12"/>
+            </StackPanel>
+        </Border>
+        <Button Grid.Row="1" Classes="icon" Content="Close" IsCancel="True" IsDefault="True"
+                Click="CloseDialog" HorizontalAlignment="Center" Margin="0,18,0,0" MinWidth="120"
+                ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Close}"/>
+    </Grid>
+</Window>

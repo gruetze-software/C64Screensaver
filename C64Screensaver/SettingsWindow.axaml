@@ -1,0 +1,164 @@
+<Window xmlns="https://github.com/avaloniaui"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:ui="using:C64Screensaver.Controls" xmlns:local="using:C64Screensaver"
+ x:Class="C64Screensaver.SettingsWindow" Classes="dialog"
+ Title="C64Screensaver · Settings" Icon="/Assets/app-icon.ico"
+ Width="1080" Height="740" MinWidth="980" MinHeight="640" WindowStartupLocation="CenterScreen">
+ <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+  <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,18">
+   <StackPanel Spacing="5">
+    <TextBlock Text="Settings" FontSize="25" FontWeight="SemiBold"/>
+    <TextBlock Text="Your C64. Your monitor." Classes="hint"/>
+   </StackPanel>
+   <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="None"/>
+  </Grid>
+  <Grid Grid.Row="1" ColumnDefinitions="*,420" ColumnSpacing="18">
+   <TabControl Name="SettingsTabs">
+    <TabItem Name="PlaybackTab" Header="Playback">
+     <ScrollViewer HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+      <StackPanel Spacing="14" Margin="0,0,8,8">
+       <Border Classes="card">
+      <StackPanel Spacing="9">
+       <TextBlock Text="BASIC programs" FontWeight="SemiBold"/>
+       <ComboBox Name="ProgramCombo" HorizontalAlignment="Stretch">
+        <ComboBoxItem Content="Play all programs in sequence"/>
+        <ComboBoxItem Content="Endless maze"/>
+        <ComboBoxItem Content="Grütze-Software company card"/>
+        <ComboBoxItem Content="Twinkling starfield"/>
+       </ComboBox>
+       <Grid ColumnDefinitions="*,150" ColumnSpacing="14">
+ <TextBlock Text="Run time per program (seconds)" TextWrapping="Wrap" VerticalAlignment="Center"/>
+ <NumericUpDown Name="DurationInput" Grid.Column="1" Minimum="15" Maximum="1800" Increment="15" FormatString="0" ClipValueToMinMax="True" AutomationProperties.Name="Run time per program in seconds"/>
+</Grid>
+<TextBlock Text="15 seconds to 30 minutes, starting after RUN. Then the screen resets and the next listing is typed again." Classes="hint"/>
+<Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="Animation speed" VerticalAlignment="Center"/>
+        <TextBlock Name="SpeedLabel" Grid.Column="1" Classes="hint"/>
+       </Grid>
+       <Slider Name="SpeedSlider" MinHeight="52" Minimum="0.2" Maximum="5" AutomationProperties.Name="Animation speed"/>
+       <CheckBox Name="ColorsCheckBox" Content="Allow occasional BASIC border colour changes"/>
+       <TextBlock Text="The BASIC timer changes the border about every four seconds. Typing stays slow and readable." Classes="hint"/>
+       <CheckBox Name="PowerTransitionCheckBox" Content="CRT power-off and power-on between programs"/>
+       <Button Name="PowerPreviewButton" Content="Test CRT power effect" Click="PowerPreview_Click" HorizontalAlignment="Left"/>
+       <CheckBox Name="FpsCheckBox" Content="Show frame rate on startup"/>
+      </StackPanel>
+     </Border>
+       <Border Classes="card">
+        <StackPanel Spacing="8">
+         <TextBlock Text="Three little BASIC demos" FontWeight="SemiBold"/>
+         <TextBlock Text="Maze → company card → twinkling stars → maze." Foreground="#93DDD1" TextWrapping="Wrap"/>
+         <TextBlock Text="Each demo starts at the original blue screen. The ghost types its listing, fixes a few mistakes and enters RUN. A single selected demo also restarts after the chosen time." Classes="hint"/>
+        </StackPanel>
+       </Border>
+      </StackPanel>
+     </ScrollViewer>
+    </TabItem>
+    <TabItem Name="MonitorTab" Header="Monitor effects">
+     <ScrollViewer HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+      <StackPanel Margin="0,0,8,12">
+       <Border Classes="card">
+      <StackPanel Spacing="8">
+       <TextBlock Text="Picture proportions"/>
+       <ComboBox Name="AspectCombo" HorizontalAlignment="Stretch">
+        <ComboBoxItem Content="4:3 · original proportions"/>
+        <ComboBoxItem Content="Stretch · fill monitor"/>
+       </ComboBox>
+       <CheckBox Name="FillScreenCheckBox" Content="Hide C64 border"/>
+       <TextBlock Text="Independent of proportions. Stretch + hidden C64 border covers the complete monitor. With 4:3, black bars remain outside the picture. Hiding the border also removes curvature." Classes="hint"/>
+       <CheckBox Name="CrtCheckBox" Content="Enable CRT effects"/>
+       <StackPanel Name="EffectsPanel" Spacing="5">
+        <Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Screen curvature" VerticalAlignment="Center"/>
+ <Slider Name="CurvatureSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Screen curvature"/>
+ <TextBlock Name="CurvatureLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Scanline strength" VerticalAlignment="Center"/>
+ <Slider Name="ScanlineStrengthSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Scanline strength"/>
+ <TextBlock Name="ScanlineStrengthLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Phosphor mask" VerticalAlignment="Center"/>
+ <Slider Name="MaskStrengthSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Phosphor mask"/>
+ <TextBlock Name="MaskStrengthLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Horizontal softness" VerticalAlignment="Center"/>
+ <Slider Name="SoftnessSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Horizontal softness"/>
+ <TextBlock Name="SoftnessLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Phosphor glow" VerticalAlignment="Center"/>
+ <Slider Name="GlowSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Phosphor glow"/>
+ <TextBlock Name="GlowLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Darkened corners" VerticalAlignment="Center"/>
+ <Slider Name="VignetteSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Darkened corners"/>
+ <TextBlock Name="VignetteLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid><Grid ColumnDefinitions="150,*,42" ColumnSpacing="10">
+ <TextBlock Text="Brightness flicker" VerticalAlignment="Center"/>
+ <Slider Name="FlickerSlider" Grid.Column="1" Minimum="0" Maximum="100" MinHeight="52" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="Brightness flicker"/>
+ <TextBlock Name="FlickerLabel" Grid.Column="2" Classes="hint" VerticalAlignment="Center" TextAlignment="Right"/>
+</Grid>
+        <CheckBox Name="ScanlinesCheckBox" Content="Enable scanlines"/>
+       </StackPanel>
+       <TextBlock Text="A stable picture by default. Flicker is optional and starts at zero." Classes="hint"/>
+      </StackPanel>
+     </Border>
+      </StackPanel>
+     </ScrollViewer>
+    </TabItem>
+   </TabControl>
+   <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="14">
+    <Border Classes="card">
+     <StackPanel Spacing="10">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+       <TextBlock Text="Live preview" FontWeight="SemiBold" VerticalAlignment="Center"/>
+       <CheckBox Name="PreviewProgramCheckBox" Grid.Column="1" Content="Running program" IsChecked="True" Margin="0,0,8,0"/>
+       <Button Name="EnlargePreviewButton" Grid.Column="2" Width="32" Height="32" MinHeight="32" Padding="7"
+        Click="EnlargePreview_Click" ToolTip.Tip="Open enlarged live preview · F11 for fullscreen"
+        AutomationProperties.Name="Open enlarged live preview">
+        <Path Data="{x:Static ui:ButtonIcons.External}" Stroke="#EAF0F3" StrokeThickness="1.8" Width="16" Height="16" Stretch="Uniform"/>
+       </Button>
+      </Grid>
+      <Border Background="Black" CornerRadius="6" ClipToBounds="True">
+       <local:C64Scene Name="PreviewScene" Height="200" PreviewDetails="True"/>
+      </Border>
+      <TextBlock Name="PreviewHint" Classes="hint"/>
+      <TextBlock Text="Monitor preset" Classes="hint"/>
+      <ComboBox Name="PresetCombo" HorizontalAlignment="Stretch">
+       <ComboBoxItem Content="Clean pixels · all effects off"/>
+       <ComboBoxItem Content="Subtle CRT · stable and clear"/>
+       <ComboBoxItem Content="Classic monitor · more texture"/>
+       <ComboBoxItem Content="Custom"/>
+      </ComboBox>
+     </StackPanel>
+    </Border>
+    <Border Classes="card">
+     <StackPanel Spacing="6">
+      <TextBlock Text="Company card text" FontWeight="SemiBold"/>
+      <Grid ColumnDefinitions="92,*" ColumnSpacing="8">
+       <TextBlock Text="Company" Classes="hint" VerticalAlignment="Center"/>
+       <TextBox Name="CompanyNameBox" Grid.Column="1" MaxLength="28" AutomationProperties.Name="Company name"/>
+      </Grid>
+      <Grid ColumnDefinitions="92,*" ColumnSpacing="8">
+       <TextBlock Text="Website" Classes="hint" VerticalAlignment="Center"/>
+       <TextBox Name="CompanyWebsiteBox" Grid.Column="1" MaxLength="28" AutomationProperties.Name="Website"/>
+      </Grid>
+      <Grid ColumnDefinitions="92,*" ColumnSpacing="8">
+       <TextBlock Text="Extra text" Classes="hint" VerticalAlignment="Center"/>
+       <TextBox Name="CompanyTaglineBox" Grid.Column="1" MaxLength="28" AutomationProperties.Name="Additional text"/>
+      </Grid>
+      <TextBlock Text="28 characters per line. Displayed in uppercase; umlauts become AE, OE and UE. Changes appear in the preview." Classes="hint"/>
+     </StackPanel>
+    </Border>
+   </StackPanel></ScrollViewer>
+  </Grid>
+  <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,18,0,0">
+   <Button Classes="icon" Content="Reset" Click="Reset_Click" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Reset}"/>
+   <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0">
+    <TextBlock Name="VersionLabel" Classes="hint"/>
+    <TextBlock Name="StatusLabel" Foreground="#FFCC80" FontSize="11" TextWrapping="Wrap"/>
+   </StackPanel>
+   <Button Grid.Column="2" Classes="icon" Content="About" Click="About_Click" Margin="0,0,10,0" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Info}"/>
+   <Button Grid.Column="3" Classes="icon" Content="Cancel" Click="Cancel_Click" IsCancel="True" Margin="0,0,10,0" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Close}"/>
+   <Button Grid.Column="4" Classes="icon primary" Content="Save" Click="Save_Click" IsDefault="True" ui:ButtonIcons.Icon="{x:Static ui:ButtonIcons.Save}"/>
+  </Grid>
+ </Grid>
+</Window>

@@ -1,0 +1,158 @@
+using System;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Rendering.SceneGraph;
+using Avalonia.Skia;
+using SkiaSharp;
+
+namespace C64Screensaver;
+
+public readonly record struct CrtParameters(bool Enabled, bool FillScreen, bool KeepAspectRatio, float Curvature, float Scanlines,
+    float Mask, float Softness, float Glow, float Vignette, float Flicker)
+{
+    public static CrtParameters From(SaverSettings s) => new(s.CrtEnabled, s.FillScreen, s.UsesFourThree,
+        (float)s.Curvature / 100, s.Scanlines ? (float)s.ScanlineStrength / 100 : 0,
+        (float)s.MaskStrength / 100, (float)s.Softness / 100,
+        (float)s.Glow / 100, (float)s.Vignette / 100, (float)s.Flicker / 100);
+}
+
+public sealed class CrtDrawOperation : ICustomDrawOperation
+{
+    private static readonly Lazy<SKRuntimeEffect?> Effect = new(Compile);
+    public static string? ShaderError { get; private set; }
+    public static bool ShaderAvailable => Effect.Value != null;
+    private readonly SKImage image;
+    private readonly CrtParameters parameters;
+    private readonly double time;
+    private readonly bool previewDetails;
+    public Rect Bounds { get; }
+    public CrtDrawOperation(Rect bounds, SKImage image, CrtParameters parameters, double time, bool previewDetails = false)
+    { Bounds = bounds; this.image = image; this.parameters = parameters; this.time = time; this.previewDetails = previewDetails; }
+    public bool HitTest(Point p) => false;
+    public bool Equals(ICustomDrawOperation? other) => false;
+    public void Dispose() => image.Dispose();
+    private static SKRuntimeEffect? Compile()
+    {
+        var effect = SKRuntimeEffect.CreateShader(Shader, out string error);
+        ShaderError = effect == null ? error : null;
+        return effect;
+    }
+    public void Render(ImmediateDrawingContext context)
+    {
+        var feature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
+        if (feature == null) return;
+        using var lease = feature.Lease();
+        var canvas = lease.SkCanvas;
+        int saved = canvas.Save();
+        try
+        {
+            float width = image.Width, height = image.Height;
+            float targetWidth = (float)Bounds.Width, targetHeight = (float)Bounds.Height;
+            float left = 0, top = 0;
+            if (parameters.KeepAspectRatio)
+            {
+                targetWidth = Math.Min(targetWidth, targetHeight * 4 / 3);
+                targetHeight = targetWidth * 3 / 4;
+                if (!parameters.FillScreen)
+                {
+                    // Keep the original breathing space and slow tube movement.
+                    float scale = (float)Math.Min(Bounds.Width / 408, Bounds.Height / 312);
+                    targetWidth = 384 * scale;
+                    targetHeight = 288 * scale;
+                    left = (float)Math.Sin(time / 19) * 3 * scale;
+                    top = (float)Math.Cos(time / 23) * 2 * scale;
+                }
+                left += ((float)Bounds.Width - targetWidth) / 2;
+                top += ((float)Bounds.Height - targetHeight) / 2;
+            }
+            float scaleX = targetWidth / width, scaleY = targetHeight / height;
+            canvas.Translate(left, top);
+            canvas.Scale(scaleX, scaleY);
+            if (!parameters.Enabled || Effect.Value is not { } effect)
+            {
+                canvas.DrawImage(image, 0, 0);
+                return;
+            }
+            using var source = image.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp,
+                new SKSamplingOptions(SKFilterMode.Linear));
+            var uniforms = new SKRuntimeEffectUniforms(effect)
+            {
+                ["previewDetails"] = previewDetails ? 1f : 0f,
+                ["curvature"] = parameters.FillScreen ? 0f : parameters.Curvature,
+                ["imageWidth"] = (float)image.Width,
+                ["imageHeight"] = (float)image.Height,
+                ["edgeFade"] = parameters.FillScreen ? 0f : 1f,
+                ["pixelScaleY"] = Math.Max(0.1f, canvas.TotalMatrix.ScaleY),
+                ["scanlines"] = parameters.Scanlines,
+                ["mask"] = parameters.Mask,
+                ["softness"] = parameters.Softness,
+                ["glow"] = parameters.Glow,
+                ["vignette"] = parameters.Vignette,
+                ["flicker"] = parameters.Flicker,
+                ["time"] = (float)time,
+                ["pixelScale"] = Math.Max(0.1f, canvas.TotalMatrix.ScaleX)
+            };
+            var children = new SKRuntimeEffectChildren(effect) { ["picture"] = source };
+            using var shader = effect.ToShader(uniforms, children);
+            using var paint = new SKPaint { Shader = shader };
+            canvas.DrawRect(0, 0, image.Width, image.Height, paint);
+        }
+        finally { canvas.RestoreToCount(saved); }
+    }
+
+    // Original SKSL implementation. Emulator shaders were studied for their
+    // controls and rendering stages; no GPL shader source is incorporated.
+    private const string Shader = """
+uniform shader picture;
+uniform float previewDetails;
+uniform float curvature;
+uniform float imageWidth;
+uniform float imageHeight;
+uniform float edgeFade;
+uniform float pixelScaleY;
+uniform float scanlines;
+uniform float mask;
+uniform float softness;
+uniform float glow;
+uniform float vignette;
+uniform float flicker;
+uniform float time;
+uniform float pixelScale;
+
+half4 main(float2 pos) {
+    float2 size = float2(imageWidth,imageHeight);
+    float2 q = pos / size * 2.0 - 1.0;
+    float2 bent = q * (1.0 + curvature * 0.12 * float2(q.y*q.y,q.x*q.x));
+    float2 uv = bent * 0.5 + 0.5;
+    if (min(uv.x,uv.y) < 0.0 || max(uv.x,uv.y) > 1.0) return half4(0,0,0,1);
+    float edgeAA = clamp(min(min(uv.x,1.0-uv.x)*size.x,min(uv.y,1.0-uv.y)*size.y)*pixelScale,0.0,1.0);
+    edgeAA = mix(1.0,edgeAA,edgeFade);
+    float2 at = uv * size;
+    float3 crisp = picture.eval(floor(at) + 0.5).rgb;
+    float3 smoothColor = picture.eval(at).rgb;
+    float3 color = mix(crisp,smoothColor,softness);
+    float3 linear = pow(max(color,float3(0)),float3(2.2));
+    float3 halo = (picture.eval(at+float2(1.2,0)).rgb +
+                   picture.eval(at-float2(1.2,0)).rgb +
+                   picture.eval(at+float2(0,1.2)).rgb +
+                   picture.eval(at-float2(0,1.2)).rgb) * 0.25;
+    linear += max(pow(max(halo,float3(0)),float3(2.2))-linear,float3(0)) * glow * 0.45;
+    // The small settings thumbnail illustrates details at readable spacing.
+    // The enlarged preview and screensaver retain source-row scanline spacing.
+    float scanRow = at.y;
+    if (previewDetails > 0.5 && pixelScaleY < 2.5)
+        scanRow = at.y * pixelScaleY / 2.5;
+    float beam = 0.5 + 0.5*cos(6.2831853*(scanRow-0.5));
+    float visibility = previewDetails > 0.5 ? 1.0 : smoothstep(1.2,2.1,pixelScaleY);
+    linear *= 1.0 - scanlines * 0.55 * (1.0-beam) * visibility;
+    float stripe = mod(floor(pos.x*pixelScale),3.0);
+    float3 grille = stripe < 1.0 ? float3(1.0,0.65,0.65) :
+                    stripe < 2.0 ? float3(0.65,1.0,0.65) : float3(0.65,0.65,1.0);
+    linear *= mix(float3(1.0),grille,mask);
+    float edge = min(1.0,dot(q,q)*0.5);
+    linear *= 1.0 - vignette * 0.35 * edge * edge;
+    linear *= 1.0 - flicker * 0.03 * (0.5 + 0.5*sin(time*11.0));
+    return half4(pow(max(linear,float3(0)),float3(1.0/2.2))*edgeAA,1.0);
+}
+""";
+}

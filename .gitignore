@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+artifacts/
+docs/images/*
+!docs/images/c64screensaver.png
+!docs/images/settings-playback.png
+!docs/images/settings-monitor.png
