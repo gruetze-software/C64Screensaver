@@ -54,6 +54,18 @@ int main(int argc, char **argv) {
                 NSButton *button = (NSButton *)control;
                 if ([button.title isEqualToString:@"Cancel"]) cancel = button;
             }
+        BOOL hasVersion = NO, hasHomepage = NO, hasPower = NO, hasPowerTest = NO;
+        for (NSView *control in sheet.contentView.subviews) {
+            if ([control isKindOfClass:NSTextField.class] &&
+                [((NSTextField *)control).stringValue hasPrefix:@"Version "]) hasVersion = YES;
+            if ([control isKindOfClass:NSButton.class]) {
+                NSString *title = ((NSButton *)control).title;
+                if ([title isEqualToString:@"www.gruetze-software.de"]) hasHomepage = YES;
+                if ([title hasPrefix:@"CRT power-off"]) hasPower = YES;
+                if ([title isEqualToString:@"Test CRT"]) hasPowerTest = YES;
+            }
+        }
+        if (!hasVersion || !hasHomepage || !hasPower || !hasPowerTest) return 26;
         if (!cancel) return 8;
         [cancel performClick:nil];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.3]];

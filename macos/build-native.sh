@@ -10,6 +10,7 @@ case "$arch" in
   *) echo "Use arm64 or x86_64" >&2; exit 1 ;;
 esac
 [[ "$(uname -s)" == Darwin ]] || { echo "Build on macOS." >&2; exit 1; }
+bash -n "$root/macos/sign-notarize.sh"
 out="$root/artifacts/macos-native/$rid"
 publish="$out/core"
 bundle="$out/C64Screensaver.saver"
