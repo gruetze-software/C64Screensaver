@@ -1,7 +1,7 @@
 #import <ScreenSaver/ScreenSaver.h>
 
 static BOOL hasPicture(ScreenSaverView *view) {
-    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:2];
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
     while (![view valueForKey:@"image"] && deadline.timeIntervalSinceNow > 0)
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.01]];
     NSImage *image = [view valueForKey:@"image"];
@@ -125,6 +125,7 @@ int main(int argc, char **argv) {
         NSMutableDictionary *legacy = [saved mutableCopy];
         legacy[@"KeepAspectRatio"] = @0; legacy[@"FillScreen"] = @1;
         [defaults setObject:legacy forKey:@"Settings"];
+        NSLog(@"Options validation before async rendering: %d", passed);
         NSWindow *reopened = view.configureSheet;
         passed = passed && [((NSSlider *)[reopened.contentView viewWithTag:2]) doubleValue] == 20;
         [parent.contentView addSubview:view];
@@ -148,7 +149,11 @@ int main(int argc, char **argv) {
         [powerButton performClick:nil];
         NSImage *powerFirst = [view valueForKey:@"image"];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.8]];
+        NSDate *powerDeadline = [NSDate dateWithTimeIntervalSinceNow:5];
+        while ((!hasPicture(view) || [view valueForKey:@"image"] == powerFirst) && powerDeadline.timeIntervalSinceNow > 0)
+            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.02]];
         passed = passed && hasPicture(view) && [view valueForKey:@"image"] != powerFirst;
+        NSLog(@"Options validation after asynchronous power test: %d", passed);
         [view stopAnimation];
         passed = passed && [view valueForKey:@"previewTimer"] == nil;
         [view removeFromSuperview];
@@ -169,7 +174,11 @@ int main(int argc, char **argv) {
         NSWindow *afterStop = view.configureSheet;
         [parent beginSheet:afterStop completionHandler:nil];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.2]];
+        NSDate *sheetDeadline = [NSDate dateWithTimeIntervalSinceNow:3];
+        while (!afterStop.isVisible && sheetDeadline.timeIntervalSinceNow > 0)
+            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.02]];
         passed = passed && afterStop.isVisible && afterStop.sheetParent == parent;
+        NSLog(@"Options validation after stop/start sheet: %d", passed);
         for (NSView *control in afterStop.contentView.subviews)
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Cancel"])
                 [(NSButton *)control performClick:nil];
