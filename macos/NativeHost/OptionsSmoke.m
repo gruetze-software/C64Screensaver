@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         NSPopUpButton *quality = nil;
         for (NSView *control in sheet.contentView.subviews)
             if ([control isKindOfClass:NSPopUpButton.class] &&
-                [((NSPopUpButton *)control).itemTitleArray.firstObject hasPrefix:@"Rendering:"])
+                [[(NSPopUpButton *)control itemTitleAtIndex:0] hasPrefix:@"Rendering:"])
                 quality = (NSPopUpButton *)control;
         if (!quality || quality.numberOfItems != 3) return 27;
         [quality selectItemAtIndex:1];
