@@ -59,7 +59,16 @@ static BOOL loadCore(NSBundle *bundle) {
 }
 - (NSDictionary *)settings {
     NSDictionary *saved = [[self preferences] dictionaryForKey:@"Settings"];
-    return saved ?: @{@"Programs": @0, @"ProgramDurationSeconds": @100, @"KeepAspectRatio": @YES,
+    if (saved) {
+        // Earlier builds boxed C comparisons as NSNumber(int), producing JSON
+        // 0/1 instead of booleans. Repair them before crossing the typed C ABI.
+        NSMutableDictionary *normalized = [saved mutableCopy];
+        for (NSString *key in @[@"KeepAspectRatio", @"FillScreen", @"CrtEnabled",
+                @"Scanlines", @"CycleColors", @"PowerTransition"])
+            if (normalized[key]) normalized[key] = [normalized[key] boolValue] ? @YES : @NO;
+        return normalized;
+    }
+    return @{@"Programs": @0, @"ProgramDurationSeconds": @100, @"KeepAspectRatio": @YES,
         @"CompanyName": @"GRUETZE-SOFTWARE", @"CompanyWebsite": @"WWW.GRUETZE-SOFTWARE.DE",
         @"CompanyTagline": @"SOFTWARE MIT CHARAKTER"};
 }
@@ -232,8 +241,8 @@ static BOOL loadCore(NSBundle *bundle) {
     NSMutableDictionary *settings = [[self settings] mutableCopy];
     [settings addEntriesFromDictionary:@{@"Programs": @(_program.indexOfSelectedItem),
         @"ProgramDurationSeconds": @(MAX(15,MIN(1800,_duration.integerValue))),
-        @"KeepAspectRatio": @(!full && _aspect.state == NSControlStateValueOn),
-        @"FillScreen": @(full || _border.state == NSControlStateValueOn),
+        @"KeepAspectRatio": !full && _aspect.state == NSControlStateValueOn ? @YES : @NO,
+        @"FillScreen": full || _border.state == NSControlStateValueOn ? @YES : @NO,
         @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
         @"Scanlines": @YES, @"CrtEnabled": @YES,

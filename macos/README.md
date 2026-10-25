@@ -17,7 +17,7 @@ NativeAOT library unloading is unsupported.
 The prototype rasterizes at up to 1920×1080 and requests 30 fps. This is a performance cap,
 not a guarantee; CPU usage, Retina scaling and energy use need real Mac measurements.
 Its options include program selection, duration after RUN, 4:3/stretch, border visibility,
-strong glow and the three company texts. Preferences use a separate NSUserDefaults suite;
+phosphor mask, glow, glow spread, scanline strength and the three company texts. An explicit fill-entire-screen option removes both letterboxing and the C64 border. Preferences use a separate NSUserDefaults suite;
 the desktop application's JSON settings are not imported. The native power transition
 currently uses a Skia counterpart of the desktop effect.
 
@@ -80,3 +80,5 @@ points. No stable release or main-branch integration is implied.
 
 Both architectures have compiled and passed bundle signature verification in GitHub Actions.
 The build additionally runs CoreSmoke.c against the actual NativeAOT exports and Skia dylib.
+
+Experimental build 3 repairs numeric boolean settings from build 2 automatically. Native tests cover nonblack frames after saving, view reattachment, stop/start, slider persistence and borderless full-screen. After replacing an installed bundle, restart the Mac to clear the screensaver host cache.

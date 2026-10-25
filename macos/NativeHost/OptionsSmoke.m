@@ -92,6 +92,14 @@ int main(int argc, char **argv) {
             && [saved[@"Glow"] doubleValue] == 20 && [saved[@"GlowSpread"] doubleValue] == 30
             && [saved[@"ScanlineStrength"] doubleValue] == 40
             && ![saved[@"KeepAspectRatio"] boolValue] && [saved[@"FillScreen"] boolValue];
+        NSData *serialized = [NSJSONSerialization dataWithJSONObject:saved options:0 error:nil];
+        NSString *json = [[NSString alloc] initWithData:serialized encoding:NSUTF8StringEncoding];
+        passed = passed && [json containsString:@"\"KeepAspectRatio\":false"]
+            && [json containsString:@"\"FillScreen\":true"];
+        // Simulate settings saved by build 2; creation must recover without reset.
+        NSMutableDictionary *legacy = [saved mutableCopy];
+        legacy[@"KeepAspectRatio"] = @0; legacy[@"FillScreen"] = @1;
+        [defaults setObject:legacy forKey:@"Settings"];
         NSWindow *reopened = view.configureSheet;
         passed = passed && [((NSSlider *)[reopened.contentView viewWithTag:2]) doubleValue] == 20;
         [parent.contentView addSubview:view];
