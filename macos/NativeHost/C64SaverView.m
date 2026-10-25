@@ -119,7 +119,9 @@ static BOOL loadCore(NSBundle *bundle) {
             [timer invalidate];
             return;
         }
-        if (!view.window.isVisible || view.isHiddenOrHasHiddenAncestor) return;
+        // Remote System Settings previews may use an off-screen host window.
+        // Window.isVisible is not a reliable indication of preview visibility.
+        if (view.isHiddenOrHasHiddenAncestor) return;
         [view animateOneFrame];
     }];
     _previewTimer.tolerance = .003;
