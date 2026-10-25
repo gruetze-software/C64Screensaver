@@ -185,7 +185,7 @@ static BOOL loadCore(NSBundle *bundle) {
             CGImageRef frame = NULL;
             if (pixels && renderSession(session, pixels, bytes, width, height, stride, delta)) {
                 // Transfer ownership to CoreGraphics instead of copying the frame.
-                CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, pixels, bytes, kCFAllocatorDefault);
+                CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, pixels, bytes, kCFAllocatorMalloc);
                 CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
                 CGColorSpaceRef colors = CGColorSpaceCreateDeviceRGB();
                 frame = CGImageCreate(width, height, 8, 32, stride, colors,

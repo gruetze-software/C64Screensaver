@@ -155,6 +155,7 @@ int main(int argc, char **argv) {
         if (original) [defaults setObject:original forKey:@"Settings"];
         else [defaults removeObjectForKey:@"Settings"];
         [parent orderOut:nil];
+        [parent orderFront:nil];
         for (int cycle = 0; cycle < 4; cycle++) {
             [parent.contentView addSubview:view];
             [view startAnimation];
