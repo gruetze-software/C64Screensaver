@@ -37,10 +37,11 @@ static BOOL loadCore(NSBundle *bundle) {
     int _capacity;
     CFTimeInterval _previous;
     NSImage *_image;
-    BOOL _failed;
+    BOOL _failed, _stopped;
     NSWindow *_options;
     NSPopUpButton *_program;
-    NSButton *_aspect, *_border, *_glow;
+    NSButton *_aspect, *_border, *_fullScreen;
+    NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
     NSTextField *_company, *_website, *_tagline, *_duration;
 }
 @end
@@ -68,25 +69,45 @@ static BOOL loadCore(NSBundle *bundle) {
     free(_pixels); _pixels = NULL; _capacity = 0;
     _image = nil; _previous = 0;
 }
-- (void)startAnimation {
-    [super startAnimation];
-    [self releaseSession];
+- (BOOL)ensureSession {
+    if (_session) return YES;
+    if (_failed) return NO;
     _failed = !loadCore([NSBundle bundleForClass:self.class]);
     if (!_failed) {
         NSData *json = [NSJSONSerialization dataWithJSONObject:[self settings] options:0 error:nil];
         _session = createSession(json.bytes, (int)json.length, (int)arc4random());
         _failed = !_session;
     }
+    if (_failed) NSLog(@"C64Screensaver: unable to create rendering session");
+    return _session != 0;
+}
+- (void)startAnimation {
+    [super startAnimation];
+    _stopped = NO;
+    _failed = NO;
+    // A host can attach/reparent a preview after startAnimation. Do not discard
+    // a valid session merely because start is called again.
     [self animateOneFrame];
 }
-- (void)stopAnimation { [super stopAnimation]; [self releaseSession]; }
+- (void)stopAnimation {
+    [super stopAnimation];
+    _stopped = YES;
+    [self releaseSession];
+}
 - (void)viewDidMoveToWindow {
     [super viewDidMoveToWindow];
-    if (!self.window) [self releaseSession];
+    if (!self.window) {
+        [self releaseSession];
+    } else {
+        // Reparenting does not necessarily produce another startAnimation call.
+        _stopped = NO;
+        _previous = 0;
+        [self animateOneFrame];
+    }
 }
 - (void)dealloc { [self releaseSession]; }
 - (void)animateOneFrame {
-    if (!_session || self.bounds.size.width <= 0 || self.bounds.size.height <= 0) return;
+    if (_stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
     CGFloat scale = self.window.backingScaleFactor ?: 1;
     double w = self.bounds.size.width * scale, h = self.bounds.size.height * scale;
     double limit = fmin(1, fmin(1920.0 / w, 1080.0 / h));
@@ -115,6 +136,7 @@ static BOOL loadCore(NSBundle *bundle) {
     [self setNeedsDisplay:YES];
 }
 - (void)drawRect:(NSRect)dirty {
+    if (!_image && !_stopped) [self animateOneFrame];
     [[NSColor blackColor] setFill]; NSRectFill(self.bounds);
     if (_failed) {
         [@"C64Screensaver prototype could not load. See Console." drawAtPoint:NSMakePoint(12, 20)
@@ -152,41 +174,77 @@ static BOOL loadCore(NSBundle *bundle) {
         return nil;
     }
 }
+- (NSSlider *)slider:(NSString *)label value:(double)value y:(CGFloat)y tag:(NSInteger)tag {
+    NSTextField *caption = [NSTextField labelWithString:label];
+    caption.frame = NSMakeRect(20,y,145,24); [_options.contentView addSubview:caption];
+    NSSlider *slider = [NSSlider sliderWithValue:fmax(0,fmin(100,value)) minValue:0 maxValue:100
+        target:self action:@selector(sliderChanged:)];
+    slider.frame = NSMakeRect(170,y,245,24); slider.tag = tag;
+    slider.continuous = YES; [_options.contentView addSubview:slider];
+    NSTextField *percent = [NSTextField labelWithString:[NSString stringWithFormat:@"%.0f%%",slider.doubleValue]];
+    percent.frame = NSMakeRect(430,y,50,24); percent.tag = tag + 100;
+    [_options.contentView addSubview:percent];
+    return slider;
+}
+- (void)sliderChanged:(NSSlider *)sender {
+    NSTextField *percent = (NSTextField *)[_options.contentView viewWithTag:sender.tag + 100];
+    percent.stringValue = [NSString stringWithFormat:@"%.0f%%",sender.doubleValue];
+}
+- (void)fullScreenChanged:(id)sender {
+    BOOL full = _fullScreen.state == NSControlStateValueOn;
+    _aspect.enabled = !full; _border.enabled = !full;
+}
 - (NSWindow *)buildConfigureSheet {
     NSDictionary *s = [self settings];
-    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,370)
+    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,620)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
-    _options.title = @"C64Screensaver · Experimental";
-    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,325,460,28) pullsDown:NO];
+    _options.title = @"C64Screensaver · Experimental 3";
+    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,575,460,28) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
     [_program selectItemAtIndex:MAX(0, MIN(3, [s[@"Programs"] integerValue]))];
     [_options.contentView addSubview:_program];
-    _aspect = [self check:@"Original 4:3 proportions" value:s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : YES y:290];
-    _border = [self check:@"Hide C64 border" value:[s[@"FillScreen"] boolValue] y:260];
-    _glow = [self check:@"Strong phosphor glow" value:[s[@"Glow"] doubleValue] > 50 y:230];
-    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:190];
-    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:150];
-    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:110];
-    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:70];
+    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : YES;
+    BOOL border = [s[@"FillScreen"] boolValue];
+    _fullScreen = [self check:@"Fill entire screen — no black bars or C64 border" value:!aspect && border y:540];
+    _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
+    _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:510];
+    _border = [self check:@"Hide C64 border" value:border y:480];
+    [self fullScreenChanged:nil];
+    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:435 tag:1];
+    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:390 tag:2];
+    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:345 tag:3];
+    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:300 tag:4];
+    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:245];
+    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:205];
+    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:165];
+    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:125];
+    NSTextField *hint = [NSTextField wrappingLabelWithString:@"Effects: 0–100%. Save applies changes to the next frame. Full-screen fill stretches the picture to cover the monitor."];
+    hint.frame = NSMakeRect(20,65,460,45); [_options.contentView addSubview:hint];
     NSButton *save = [NSButton buttonWithTitle:@"Save" target:self action:@selector(saveOptions:)];
     save.frame = NSMakeRect(390,20,90,30); save.keyEquivalent = @"\r"; [_options.contentView addSubview:save];
     NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
-    cancel.frame = NSMakeRect(290,20,90,30); [_options.contentView addSubview:cancel];
+    cancel.frame = NSMakeRect(290,20,90,30); cancel.keyEquivalent = @"\e"; [_options.contentView addSubview:cancel];
     return _options;
 }
 - (void)saveOptions:(id)sender {
-    BOOL strong = _glow.state == NSControlStateValueOn;
-    NSDictionary *settings = @{@"Programs": @(_program.indexOfSelectedItem),
+    BOOL full = _fullScreen.state == NSControlStateValueOn;
+    NSMutableDictionary *settings = [[self settings] mutableCopy];
+    [settings addEntriesFromDictionary:@{@"Programs": @(_program.indexOfSelectedItem),
         @"ProgramDurationSeconds": @(MAX(15,MIN(1800,_duration.integerValue))),
-        @"KeepAspectRatio": @(_aspect.state == NSControlStateValueOn),
-        @"FillScreen": @(_border.state == NSControlStateValueOn),
-        @"Glow": strong ? @85 : @12, @"GlowSpread": strong ? @65 : @30,
+        @"KeepAspectRatio": @(!full && _aspect.state == NSControlStateValueOn),
+        @"FillScreen": @(full || _border.state == NSControlStateValueOn),
+        @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
+        @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
+        @"Scanlines": @YES, @"CrtEnabled": @YES,
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
-        @"CompanyTagline": _tagline.stringValue};
+        @"CompanyTagline": _tagline.stringValue}];
     [[self preferences] setObject:settings forKey:@"Settings"];
     [self finishOptions:NSModalResponseOK];
-    if (self.isAnimating) [self startAnimation];
+    // Apply settings even if the host has not started its animation timer yet.
+    [self releaseSession];
+    _failed = NO;
+    if (!_stopped) [self animateOneFrame];
 }
 - (void)finishOptions:(NSModalResponse)response {
     // self.window is the preview window, which need not be the sheet's parent.
