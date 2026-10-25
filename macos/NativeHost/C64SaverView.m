@@ -39,6 +39,9 @@ static BOOL loadCore(NSBundle *bundle) {
     int _capacity;
     CFTimeInterval _previous;
     NSTimer *_previewTimer;
+    dispatch_queue_t _previewQueue;
+    NSUInteger _renderGeneration;
+    BOOL _renderInFlight;
     CGColorSpaceRef _colors;
     NSInteger _renderQuality;
     NSImage *_image;
@@ -57,6 +60,8 @@ static BOOL loadCore(NSBundle *bundle) {
     if (self) {
         self.animationTimeInterval = 1.0 / 30.0;
         _colors = CGColorSpaceCreateDeviceRGB();
+        _previewQueue = dispatch_queue_create("de.gruetze-software.C64Screensaver.preview",
+            dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
     }
     return self;
 }
@@ -81,6 +86,9 @@ static BOOL loadCore(NSBundle *bundle) {
         @"CompanyTagline": @"SOFTWARE MIT CHARAKTER"};
 }
 - (void)releaseSession {
+    // Queued results from an earlier start/stop cycle must never replace a new frame.
+    _renderGeneration++;
+    _renderInFlight = NO;
     if (_session && destroySession) destroySession(_session);
     _session = 0;
     free(_pixels); _pixels = NULL; _capacity = 0;
@@ -105,12 +113,13 @@ static BOOL loadCore(NSBundle *bundle) {
     // Some System Settings hosts render a single frame but do not keep calling
     // animateOneFrame after options close. Own a preview-only clock as fallback.
     __weak C64SaverView *weakSelf = self;
-    _previewTimer = [NSTimer timerWithTimeInterval:self.animationTimeInterval repeats:YES block:^(NSTimer *timer) {
+    _previewTimer = [NSTimer timerWithTimeInterval:1.0 / 20.0 repeats:YES block:^(NSTimer *timer) {
         C64SaverView *view = weakSelf;
         if (!view || !view.window || view->_stopped) {
             [timer invalidate];
             return;
         }
+        if (!view.window.isVisible || view.isHiddenOrHasHiddenAncestor) return;
         [view animateOneFrame];
     }];
     _previewTimer.tolerance = .003;
@@ -150,7 +159,7 @@ static BOOL loadCore(NSBundle *bundle) {
 }
 - (void)dealloc { [self stopPreviewTimer]; [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
 - (void)animateOneFrame {
-    if (_stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
+    if (_renderInFlight || _stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
     CFTimeInterval now = CACurrentMediaTime();
     // AppKit may request multiple draws/start callbacks within one timer tick.
     // Retain the last immutable frame rather than recomputing identical images.
@@ -161,6 +170,44 @@ static BOOL loadCore(NSBundle *bundle) {
     const double maxHeight[] = {540, 720, 1080};
     double limit = fmin(1, fmin(maxWidth[_renderQuality] / w, maxHeight[_renderQuality] / h));
     int width = MAX(1, (int)(w * limit)), height = MAX(1, (int)(h * limit));
+    if (self.isPreview) {
+        // AppKit must remain responsive while the CPU CRT shader runs. The worker
+        // owns its buffer; stopping the view cannot free memory beneath a render.
+        double delta = _previous ? fmin(.25, now - _previous) : 0;
+        _previous = now;
+        NSUInteger generation = _renderGeneration;
+        uint64_t session = _session;
+        _renderInFlight = YES;
+        __weak C64SaverView *weakSelf = self;
+        dispatch_async(_previewQueue, ^{
+            int stride = width * 4, bytes = stride * height;
+            uint8_t *pixels = malloc(bytes);
+            CGImageRef frame = NULL;
+            if (pixels && renderSession(session, pixels, bytes, width, height, stride, delta)) {
+                // Transfer ownership to CoreGraphics instead of copying the frame.
+                CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, pixels, bytes, kCFAllocatorDefault);
+                CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
+                CGColorSpaceRef colors = CGColorSpaceCreateDeviceRGB();
+                frame = CGImageCreate(width, height, 8, 32, stride, colors,
+                    kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, provider, NULL, false, kCGRenderingIntentDefault);
+                CGColorSpaceRelease(colors);
+                CGDataProviderRelease(provider);
+                CFRelease(data);
+            } else free(pixels);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                C64SaverView *view = weakSelf;
+                if (view && generation == view->_renderGeneration) {
+                    view->_renderInFlight = NO;
+                    if (!view->_stopped && frame) {
+                        view->_image = [[NSImage alloc] initWithCGImage:frame size:view.bounds.size];
+                        [view setNeedsDisplay:YES];
+                    }
+                }
+                if (frame) CGImageRelease(frame);
+            });
+        });
+        return;
+    }
     int stride = width * 4, needed = stride * height;
     if (needed != _capacity) {
         void *replacement = realloc(_pixels, needed);

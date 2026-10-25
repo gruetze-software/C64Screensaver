@@ -1,6 +1,9 @@
 #import <ScreenSaver/ScreenSaver.h>
 
 static BOOL hasPicture(ScreenSaverView *view) {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:2];
+    while (![view valueForKey:@"image"] && deadline.timeIntervalSinceNow > 0)
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.01]];
     NSImage *image = [view valueForKey:@"image"];
     if (!image) return NO;
     CGImageRef cg = [image CGImageForProposedRect:NULL context:nil hints:nil];
@@ -152,6 +155,25 @@ int main(int argc, char **argv) {
         if (original) [defaults setObject:original forKey:@"Settings"];
         else [defaults removeObjectForKey:@"Settings"];
         [parent orderOut:nil];
+        for (int cycle = 0; cycle < 4; cycle++) {
+            [parent.contentView addSubview:view];
+            [view startAnimation];
+            [view animateOneFrame];
+            [view stopAnimation];
+            [view removeFromSuperview];
+        }
+        [parent.contentView addSubview:view];
+        [view startAnimation];
+        passed = passed && hasPicture(view);
+        NSWindow *afterStop = view.configureSheet;
+        [parent beginSheet:afterStop completionHandler:nil];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.2]];
+        passed = passed && afterStop.isVisible && afterStop.sheetParent == parent;
+        for (NSView *control in afterStop.contentView.subviews)
+            if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Cancel"])
+                [(NSButton *)control performClick:nil];
+        [view stopAnimation];
+        [view removeFromSuperview];
         if (!passed) return 12;
         NSLog(@"Options smoke: nonblack frames, detach/reattach, stop/start, sheet, CRT sliders, saved values and borderless full-screen passed.");
     }
