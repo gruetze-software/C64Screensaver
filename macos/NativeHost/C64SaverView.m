@@ -11,6 +11,7 @@ typedef void (*DestroyFn)(uint64_t);
 static CreateFn createSession;
 static RenderFn renderSession;
 static DestroyFn destroySession;
+static int (*testPower)(uint64_t);
 static BOOL loadCore(NSBundle *bundle) {
     static dispatch_once_t once;
     static BOOL ready;
@@ -24,7 +25,8 @@ static BOOL loadCore(NSBundle *bundle) {
         createSession = (CreateFn)dlsym(module, "c64_create");
         renderSession = (RenderFn)dlsym(module, "c64_render");
         destroySession = (DestroyFn)dlsym(module, "c64_destroy");
-        if (!version || version() != 1 || !load || !createSession || !renderSession || !destroySession) return;
+        testPower = (int (*)(uint64_t))dlsym(module, "c64_test_power");
+        if (!version || version() != 1 || !load || !createSession || !renderSession || !destroySession || !testPower) return;
         NSData *skia = [[bundle.privateFrameworksPath stringByAppendingPathComponent:@"libSkiaSharp.dylib"] dataUsingEncoding:NSUTF8StringEncoding];
         ready = load(skia.bytes, (int)skia.length) == 1;
     });
@@ -40,7 +42,7 @@ static BOOL loadCore(NSBundle *bundle) {
     BOOL _failed, _stopped;
     NSWindow *_options;
     NSPopUpButton *_program;
-    NSButton *_aspect, *_border, *_fullScreen;
+    NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
     NSTextField *_company, *_website, *_tagline, *_duration;
 }
@@ -208,7 +210,10 @@ static BOOL loadCore(NSBundle *bundle) {
     _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,620)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
-    _options.title = @"C64Screensaver · Experimental 3";
+    NSBundle *bundle = [NSBundle bundleForClass:self.class];
+    NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?";
+    NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?";
+    _options.title = @"C64Screensaver · Settings";
     _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,575,460,28) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
     [_program selectItemAtIndex:MAX(0, MIN(3, [s[@"Programs"] integerValue]))];
@@ -224,12 +229,21 @@ static BOOL loadCore(NSBundle *bundle) {
     _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:390 tag:2];
     _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:345 tag:3];
     _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:300 tag:4];
+    _power = [self check:@"CRT power-off / dot / power-on between programs" value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:270];
     _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:245];
     _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:205];
     _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:165];
     _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:125];
     NSTextField *hint = [NSTextField wrappingLabelWithString:@"Effects: 0–100%. Save applies changes to the next frame. Full-screen fill stretches the picture to cover the monitor."];
-    hint.frame = NSMakeRect(20,65,460,45); [_options.contentView addSubview:hint];
+    hint.frame = NSMakeRect(20,85,460,30); [_options.contentView addSubview:hint];
+    NSTextField *versionLabel = [NSTextField labelWithString:[NSString stringWithFormat:@"Version %@ · Mac preview build %@", version, build]];
+    versionLabel.frame = NSMakeRect(20,54,460,22);
+    [_options.contentView addSubview:versionLabel];
+    NSButton *homepage = [NSButton buttonWithTitle:@"www.gruetze-software.de" target:self action:@selector(openHomepage:)];
+    homepage.frame = NSMakeRect(15,20,175,30); homepage.bordered = NO;
+    [_options.contentView addSubview:homepage];
+    NSButton *powerTest = [NSButton buttonWithTitle:@"Test CRT" target:self action:@selector(testPowerEffect:)];
+    powerTest.frame = NSMakeRect(195,20,85,30); [_options.contentView addSubview:powerTest];
     NSButton *save = [NSButton buttonWithTitle:@"Save" target:self action:@selector(saveOptions:)];
     save.frame = NSMakeRect(390,20,90,30); save.keyEquivalent = @"\r"; [_options.contentView addSubview:save];
     NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
@@ -246,6 +260,7 @@ static BOOL loadCore(NSBundle *bundle) {
         @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
         @"Scanlines": @YES, @"CrtEnabled": @YES,
+        @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
         @"CompanyTagline": _tagline.stringValue}];
     [[self preferences] setObject:settings forKey:@"Settings"];
@@ -254,6 +269,18 @@ static BOOL loadCore(NSBundle *bundle) {
     [self releaseSession];
     _failed = NO;
     if (!_stopped) [self animateOneFrame];
+}
+- (void)openHomepage:(id)sender {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.gruetze-software.de"]];
+}
+- (void)testPowerEffect:(id)sender {
+    [self saveOptions:sender];
+    _stopped = NO;
+    if ([self ensureSession] && testPower) {
+        testPower(_session);
+        _previous = 0;
+        [self animateOneFrame];
+    }
 }
 - (void)finishOptions:(NSModalResponse)response {
     // self.window is the preview window, which need not be the sheet's parent.

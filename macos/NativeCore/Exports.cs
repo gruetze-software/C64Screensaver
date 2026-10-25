@@ -99,6 +99,21 @@ public static unsafe class Exports
         catch { return 0; }
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "c64_test_power", CallConvs = [typeof(CallConvCdecl)])]
+    public static int TestPower(ulong id)
+    {
+        try
+        {
+            if (!Sessions.TryGetValue(id, out var session)) return 0;
+            lock (session.Gate)
+            {
+                if (session.Closed) return 0;
+                session.Screen.BeginTransitionPreview();
+                return 1;
+            }
+        }
+        catch { return 0; }
+    }
     [UnmanagedCallersOnly(EntryPoint = "c64_destroy", CallConvs = [typeof(CallConvCdecl)])]
     public static void Destroy(ulong id)
     {

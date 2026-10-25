@@ -6,6 +6,7 @@ unsafe
     delegate* unmanaged[Cdecl]<int> version = &Exports.Version;
     delegate* unmanaged[Cdecl]<byte*, int, int, ulong> create = &Exports.Create;
     delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> render = &Exports.Render;
+    delegate* unmanaged[Cdecl]<ulong, int> power = &Exports.TestPower;
     delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
     void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
     Check(version() == 1, "ABI version");
@@ -29,6 +30,14 @@ unsafe
             for (int x = w * 4; x < stride; x++) Check(buffer[y * stride + x] == 0xCD, "Stride padding preserved");
         for (int i = 0; i < 320; i++) Check(render(first, p, buffer.Length, w, h, stride, .25) == 1, "Typing and RUN");
         Check(render(second, p, buffer.Length, w, h, stride, 0) == 1, "Second view still renders");
+        Check(power(first) == 1, "Start power test");
+        Check(render(first, p, buffer.Length, w, h, stride, .12) == 1, "Render white flash");
+        Check(buffer[(h / 2) * stride + (w / 2) * 4] == 255, "White power flash");
+        Check(render(first, p, buffer.Length, w, h, stride, .25) == 1, "Collapse vertical beam");
+        Check(render(first, p, buffer.Length, w, h, stride, .25) == 1, "Collapse horizontal beam");
+        Check(render(first, p, buffer.Length, w, h, stride, .12) == 1, "Render central dot");
+        Check(buffer[0] == 0 && buffer[(h / 2) * stride + (w / 2) * 4] > 0, "Dot against black screen");
+        for (int i = 0; i < 4; i++) Check(render(first, p, buffer.Length, w, h, stride, .25) == 1, "Power-on reveal");
         destroy(first);
         destroy(first);
         Check(render(first, p, buffer.Length, w, h, stride, 0) == 0, "Destroyed handle rejected");
