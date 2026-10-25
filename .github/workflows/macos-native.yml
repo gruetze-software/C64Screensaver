@@ -26,6 +26,8 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Test managed C ABI
         run: dotnet run --project tests/NativeBridge -c Release
+      - name: Measure CPU render budgets
+        run: dotnet run --project tests/NativePerformance -c Release
       - name: Build native screensaver
         run: bash macos/build-native.sh ${{ matrix.arch }}
       - name: Preserve bundle permissions and signatures

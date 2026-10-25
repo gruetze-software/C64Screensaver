@@ -38,10 +38,12 @@ static BOOL loadCore(NSBundle *bundle) {
     uint8_t *_pixels;
     int _capacity;
     CFTimeInterval _previous;
+    CGColorSpaceRef _colors;
+    NSInteger _renderQuality;
     NSImage *_image;
     BOOL _failed, _stopped;
     NSWindow *_options;
-    NSPopUpButton *_program;
+    NSPopUpButton *_program, *_quality;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
     NSTextField *_company, *_website, *_tagline, *_duration;
@@ -51,7 +53,10 @@ static BOOL loadCore(NSBundle *bundle) {
 @implementation C64SaverView
 - (instancetype)initWithFrame:(NSRect)frame isPreview:(BOOL)preview {
     self = [super initWithFrame:frame isPreview:preview];
-    if (self) self.animationTimeInterval = 1.0 / 30.0;
+    if (self) {
+        self.animationTimeInterval = 1.0 / 30.0;
+        _colors = CGColorSpaceCreateDeviceRGB();
+    }
     return self;
 }
 - (BOOL)isOpaque { return YES; }
@@ -85,7 +90,9 @@ static BOOL loadCore(NSBundle *bundle) {
     if (_failed) return NO;
     _failed = !loadCore([NSBundle bundleForClass:self.class]);
     if (!_failed) {
-        NSData *json = [NSJSONSerialization dataWithJSONObject:[self settings] options:0 error:nil];
+        NSDictionary *settings = [self settings];
+        _renderQuality = MAX(0, MIN(2, [settings[@"NativeRenderQuality"] integerValue]));
+        NSData *json = [NSJSONSerialization dataWithJSONObject:settings options:0 error:nil];
         _session = createSession(json.bytes, (int)json.length, (int)arc4random());
         _failed = !_session;
     }
@@ -116,12 +123,18 @@ static BOOL loadCore(NSBundle *bundle) {
         [self animateOneFrame];
     }
 }
-- (void)dealloc { [self releaseSession]; }
+- (void)dealloc { [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
 - (void)animateOneFrame {
     if (_stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
+    CFTimeInterval now = CACurrentMediaTime();
+    // AppKit may request multiple draws/start callbacks within one timer tick.
+    // Retain the last immutable frame rather than recomputing identical images.
+    if (_image && _previous && now - _previous < self.animationTimeInterval * .95) return;
     CGFloat scale = self.window.backingScaleFactor ?: 1;
     double w = self.bounds.size.width * scale, h = self.bounds.size.height * scale;
-    double limit = fmin(1, fmin(1920.0 / w, 1080.0 / h));
+    const double maxWidth[] = {960, 1280, 1920};
+    const double maxHeight[] = {540, 720, 1080};
+    double limit = fmin(1, fmin(maxWidth[_renderQuality] / w, maxHeight[_renderQuality] / h));
     int width = MAX(1, (int)(w * limit)), height = MAX(1, (int)(h * limit));
     int stride = width * 4, needed = stride * height;
     if (needed != _capacity) {
@@ -129,7 +142,6 @@ static BOOL loadCore(NSBundle *bundle) {
         if (!replacement) { _failed = YES; [self setNeedsDisplay:YES]; return; }
         _pixels = replacement; _capacity = needed;
     }
-    CFTimeInterval now = CACurrentMediaTime();
     double delta = _previous ? fmin(.25, now - _previous) : 0;
     _previous = now;
     if (!renderSession(_session, _pixels, _capacity, width, height, stride, delta)) {
@@ -138,12 +150,12 @@ static BOOL loadCore(NSBundle *bundle) {
     // Immutable copy: AppKit may retain the frame after the next render starts.
     CFDataRef data = CFDataCreate(kCFAllocatorDefault, _pixels, needed);
     CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
-    CGColorSpaceRef colors = CGColorSpaceCreateDeviceRGB();
-    CGImageRef cg = CGImageCreate(width, height, 8, 32, stride, colors,
+
+    CGImageRef cg = CGImageCreate(width, height, 8, 32, stride, _colors,
         kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, provider, NULL, false, kCGRenderingIntentDefault);
     _image = cg ? [[NSImage alloc] initWithCGImage:cg size:self.bounds.size] : nil;
     if (cg) CGImageRelease(cg);
-    CGColorSpaceRelease(colors); CGDataProviderRelease(provider); CFRelease(data);
+    CGDataProviderRelease(provider); CFRelease(data);
     [self setNeedsDisplay:YES];
 }
 - (void)drawRect:(NSRect)dirty {
@@ -207,7 +219,7 @@ static BOOL loadCore(NSBundle *bundle) {
 }
 - (NSWindow *)buildConfigureSheet {
     NSDictionary *s = [self settings];
-    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,620)
+    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,660)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
@@ -248,6 +260,15 @@ static BOOL loadCore(NSBundle *bundle) {
     save.frame = NSMakeRect(390,20,90,30); save.keyEquivalent = @"\r"; [_options.contentView addSubview:save];
     NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
     cancel.frame = NSMakeRect(290,20,90,30); cancel.keyEquivalent = @"\e"; [_options.contentView addSubview:cancel];
+    for (NSView *control in _options.contentView.subviews) {
+        NSRect frame = control.frame;
+        if (frame.origin.y >= 54) { frame.origin.y += 40; control.frame = frame; }
+    }
+    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,65,460,28) pullsDown:NO];
+    [_quality addItemsWithTitles:@[@"Rendering: Efficient — up to 540p (recommended)",
+        @"Rendering: Balanced — up to 720p", @"Rendering: Detailed — up to 1080p, higher CPU use"]];
+    [_quality selectItemAtIndex:MAX(0,MIN(2,[s[@"NativeRenderQuality"] integerValue]))];
+    [_options.contentView addSubview:_quality];
     return _options;
 }
 - (void)saveOptions:(id)sender {
@@ -260,6 +281,7 @@ static BOOL loadCore(NSBundle *bundle) {
         @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
         @"Scanlines": @YES, @"CrtEnabled": @YES,
+        @"NativeRenderQuality": @(_quality.indexOfSelectedItem),
         @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
         @"CompanyTagline": _tagline.stringValue}];

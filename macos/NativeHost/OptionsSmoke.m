@@ -81,6 +81,13 @@ int main(int argc, char **argv) {
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Save"])
                 save = (NSButton *)control;
         if (!save) return 11;
+        NSPopUpButton *quality = nil;
+        for (NSView *control in sheet.contentView.subviews)
+            if ([control isKindOfClass:NSPopUpButton.class] &&
+                [((NSPopUpButton *)control).itemTitleArray.firstObject hasPrefix:@"Rendering:"])
+                quality = (NSPopUpButton *)control;
+        if (!quality || quality.numberOfItems != 3) return 27;
+        [quality selectItemAtIndex:1];
         for (NSInteger tag = 1; tag <= 4; tag++) {
             NSSlider *slider = (NSSlider *)[sheet.contentView viewWithTag:tag];
             if (![slider isKindOfClass:NSSlider.class]) return 23;
@@ -100,7 +107,7 @@ int main(int argc, char **argv) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.3]];
         BOOL passed = !sheet.isVisible && !sheet.sheetParent && [defaults dictionaryForKey:@"Settings"] != nil;
         NSDictionary *saved = [defaults dictionaryForKey:@"Settings"];
-        passed = passed && [saved[@"MaskStrength"] doubleValue] == 10
+        passed = passed && [saved[@"NativeRenderQuality"] integerValue] == 1 && [saved[@"MaskStrength"] doubleValue] == 10
             && [saved[@"Glow"] doubleValue] == 20 && [saved[@"GlowSpread"] doubleValue] == 30
             && [saved[@"ScanlineStrength"] doubleValue] == 40
             && ![saved[@"KeepAspectRatio"] boolValue] && [saved[@"FillScreen"] boolValue];
@@ -116,7 +123,12 @@ int main(int argc, char **argv) {
         passed = passed && [((NSSlider *)[reopened.contentView viewWithTag:2]) doubleValue] == 20;
         [parent.contentView addSubview:view];
         [view startAnimation];
+        view.frame = NSMakeRect(0,0,1920,1080);
+        [view stopAnimation]; [view startAnimation];
         passed = passed && hasPicture(view);
+        NSImage *capped = [view valueForKey:@"image"];
+        CGImageRef cappedCG = [capped CGImageForProposedRect:NULL context:nil hints:nil];
+        passed = passed && cappedCG && CGImageGetWidth(cappedCG) == 1280 && CGImageGetHeight(cappedCG) == 720;
         [view stopAnimation];
         [view removeFromSuperview];
         if (original) [defaults setObject:original forKey:@"Settings"];
