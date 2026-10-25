@@ -135,9 +135,28 @@ static BOOL loadCore(NSBundle *bundle) {
     [_options.contentView addSubview:button]; return button;
 }
 - (NSWindow *)configureSheet {
+    // macOS can request options independently of the animation view's window.
+    // Keep one sheet alive and perform all AppKit construction on the main thread.
+    if (![NSThread isMainThread]) {
+        __block NSWindow *sheet;
+        dispatch_sync(dispatch_get_main_queue(), ^{ sheet = [self configureSheet]; });
+        return sheet;
+    }
+    if (_options) return _options;
+    NSLog(@"C64Screensaver: creating options sheet");
+    @try {
+        return [self buildConfigureSheet];
+    } @catch (NSException *exception) {
+        NSLog(@"C64Screensaver: options failed: %@ %@", exception.name, exception.reason);
+        _options = nil;
+        return nil;
+    }
+}
+- (NSWindow *)buildConfigureSheet {
     NSDictionary *s = [self settings];
-    _options = [[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,500,370)
+    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,370)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+    _options.releasedWhenClosed = NO;
     _options.title = @"C64Screensaver · Experimental";
     _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,325,460,28) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
@@ -166,8 +185,17 @@ static BOOL loadCore(NSBundle *bundle) {
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
         @"CompanyTagline": _tagline.stringValue};
     [[self preferences] setObject:settings forKey:@"Settings"];
-    [self.window endSheet:_options]; _options = nil;
+    [self finishOptions:NSModalResponseOK];
     if (self.isAnimating) [self startAnimation];
 }
-- (void)cancelOptions:(id)sender { [self.window endSheet:_options]; _options = nil; }
+- (void)finishOptions:(NSModalResponse)response {
+    // self.window is the preview window, which need not be the sheet's parent.
+    // NSApplication owns the ScreenSaver framework's document-modal session.
+    NSWindow *sheet = _options;
+    if (!sheet) return;
+    [NSApp endSheet:sheet returnCode:response];
+    [sheet orderOut:nil];
+    _options = nil;
+}
+- (void)cancelOptions:(id)sender { [self finishOptions:NSModalResponseCancel]; }
 @end

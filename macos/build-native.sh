@@ -33,5 +33,9 @@ codesign --force --sign - "$bundle/Contents/Frameworks/libSkiaSharp.dylib"
 codesign --force --sign - "$bundle/Contents/Frameworks/C64Screensaver.NativeCore.dylib"
 codesign --force --sign - "$bundle"
 codesign --verify --deep --strict "$bundle"
+xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
+  -Wall -Wextra -Werror -framework Cocoa -framework ScreenSaver \
+  "$root/macos/NativeHost/OptionsSmoke.m" -o "$out/options-smoke"
+"$out/options-smoke" "$bundle"
 echo "Experimental bundle: $bundle"
 echo "Inspect dependencies: otool -L \"$bundle/Contents/Frameworks/C64Screensaver.NativeCore.dylib\""
