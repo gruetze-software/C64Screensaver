@@ -36,6 +36,9 @@ int main(int argc, char **argv) {
         [view startAnimation];
         [view animateOneFrame];
         if (!hasPicture(view)) return 20;
+        NSImage *beforeTimer = [view valueForKey:@"image"];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.65]];
+        if ([view valueForKey:@"image"] == beforeTimer) return 28;
         [view removeFromSuperview];
         [parent.contentView addSubview:view];
         [view animateOneFrame];
@@ -130,6 +133,21 @@ int main(int argc, char **argv) {
         CGImageRef cappedCG = [capped CGImageForProposedRect:NULL context:nil hints:nil];
         passed = passed && cappedCG && CGImageGetWidth(cappedCG) == 1280 && CGImageGetHeight(cappedCG) == 720;
         [view stopAnimation];
+        [view removeFromSuperview];
+        [parent beginSheet:reopened completionHandler:nil];
+        NSButton *powerButton = nil;
+        for (NSView *control in reopened.contentView.subviews)
+            if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Test CRT"])
+                powerButton = (NSButton *)control;
+        if (!powerButton) return 29;
+        [parent.contentView addSubview:view];
+        [view startAnimation];
+        [powerButton performClick:nil];
+        NSImage *powerFirst = [view valueForKey:@"image"];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1.8]];
+        passed = passed && hasPicture(view) && [view valueForKey:@"image"] != powerFirst;
+        [view stopAnimation];
+        passed = passed && [view valueForKey:@"previewTimer"] == nil;
         [view removeFromSuperview];
         if (original) [defaults setObject:original forKey:@"Settings"];
         else [defaults removeObjectForKey:@"Settings"];

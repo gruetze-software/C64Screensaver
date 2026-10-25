@@ -38,6 +38,7 @@ static BOOL loadCore(NSBundle *bundle) {
     uint8_t *_pixels;
     int _capacity;
     CFTimeInterval _previous;
+    NSTimer *_previewTimer;
     CGColorSpaceRef _colors;
     NSInteger _renderQuality;
     NSImage *_image;
@@ -99,10 +100,31 @@ static BOOL loadCore(NSBundle *bundle) {
     if (_failed) NSLog(@"C64Screensaver: unable to create rendering session");
     return _session != 0;
 }
+- (void)ensurePreviewTimer {
+    if (!self.isPreview || !self.window || _stopped || _previewTimer) return;
+    // Some System Settings hosts render a single frame but do not keep calling
+    // animateOneFrame after options close. Own a preview-only clock as fallback.
+    __weak C64SaverView *weakSelf = self;
+    _previewTimer = [NSTimer timerWithTimeInterval:self.animationTimeInterval repeats:YES block:^(NSTimer *timer) {
+        C64SaverView *view = weakSelf;
+        if (!view || !view.window || view->_stopped) {
+            [timer invalidate];
+            return;
+        }
+        [view animateOneFrame];
+    }];
+    _previewTimer.tolerance = .003;
+    [[NSRunLoop mainRunLoop] addTimer:_previewTimer forMode:NSRunLoopCommonModes];
+}
+- (void)stopPreviewTimer {
+    [_previewTimer invalidate];
+    _previewTimer = nil;
+}
 - (void)startAnimation {
     [super startAnimation];
     _stopped = NO;
     _failed = NO;
+    [self ensurePreviewTimer];
     // A host can attach/reparent a preview after startAnimation. Do not discard
     // a valid session merely because start is called again.
     [self animateOneFrame];
@@ -110,20 +132,23 @@ static BOOL loadCore(NSBundle *bundle) {
 - (void)stopAnimation {
     [super stopAnimation];
     _stopped = YES;
+    [self stopPreviewTimer];
     [self releaseSession];
 }
 - (void)viewDidMoveToWindow {
     [super viewDidMoveToWindow];
     if (!self.window) {
+        [self stopPreviewTimer];
         [self releaseSession];
     } else {
         // Reparenting does not necessarily produce another startAnimation call.
         _stopped = NO;
         _previous = 0;
+        [self ensurePreviewTimer];
         [self animateOneFrame];
     }
 }
-- (void)dealloc { [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
+- (void)dealloc { [self stopPreviewTimer]; [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
 - (void)animateOneFrame {
     if (_stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
     CFTimeInterval now = CACurrentMediaTime();
@@ -290,6 +315,8 @@ static BOOL loadCore(NSBundle *bundle) {
     // Apply settings even if the host has not started its animation timer yet.
     [self releaseSession];
     _failed = NO;
+    if (self.isPreview && self.window) _stopped = NO;
+    [self ensurePreviewTimer];
     if (!_stopped) [self animateOneFrame];
 }
 - (void)openHomepage:(id)sender {
@@ -301,6 +328,7 @@ static BOOL loadCore(NSBundle *bundle) {
     if ([self ensureSession] && testPower) {
         testPower(_session);
         _previous = 0;
+        [self ensurePreviewTimer];
         [self animateOneFrame];
     }
 }
