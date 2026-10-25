@@ -40,8 +40,8 @@ public static class CrtRenderer
                     float scale = (float)Math.Min(bounds.Width / 408, bounds.Height / 312);
                     targetWidth = 384 * scale;
                     targetHeight = 288 * scale;
-                    left = (float)Math.Sin(time / 19) * 3 * scale;
-                    top = (float)Math.Cos(time / 23) * 2 * scale;
+                    // Keep the raster registered to the glass; drifting by fractions
+                    // of an output pixel creates traveling scanline interference.
                 }
                 left += ((float)bounds.Width - targetWidth) / 2;
                 top += ((float)bounds.Height - targetHeight) / 2;
@@ -136,7 +136,7 @@ half4 main(float2 pos) {
     float edgeAA = clamp(min(min(uv.x,1.0-uv.x)*size.x,min(uv.y,1.0-uv.y)*size.y)*pixelScale,0.0,1.0);
     edgeAA = mix(1.0,edgeAA,edgeFade);
     float2 at = uv * size;
-    float3 crisp = picture.eval(floor(at) + 0.5).rgb;
+    float3 crisp = picture.eval(float2(floor(at.x) + 0.5,at.y)).rgb;
     float3 smoothColor = picture.eval(at).rgb;
     float3 color = mix(crisp,smoothColor,softness);
     float3 linear = pow(max(color,float3(0)),float3(2.2));
@@ -146,7 +146,13 @@ half4 main(float2 pos) {
     float scanRow = at.y;
     if (previewDetails > 0.5 && pixelScaleY < 2.5)
         scanRow = at.y * pixelScaleY / 2.5;
-    float beam = 0.5 + 0.5*cos(6.2831853*(scanRow-0.5));
+    // Integrate the periodic beam over an output pixel, including curvature's
+    // vertical stretch. This suppresses broad moire bands at fractional scaling.
+    float footprint = (1.0 + curvature * 0.12 * q.x*q.x) / max(pixelScaleY,0.1);
+    if (previewDetails > 0.5 && pixelScaleY < 2.5) footprint = 1.0 / 2.5;
+    float phaseWidth = 3.14159265 * min(footprint,1.0);
+    float amplitude = sin(phaseWidth) / max(phaseWidth,0.0001);
+    float beam = 0.5 + 0.5*cos(6.2831853*(scanRow-0.5))*amplitude;
     float visibility = previewDetails > 0.5 ? 1.0 : smoothstep(1.2,2.1,pixelScaleY);
     linear *= 1.0 - scanlines * 0.55 * (1.0-beam) * visibility;
     float stripe = mod(floor(pos.x*pixelScale),3.0);
