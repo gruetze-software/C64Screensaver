@@ -24,6 +24,7 @@ cp "$publish/C64Screensaver.NativeCore.dylib" "$bundle/Contents/Frameworks/"
 cp "$publish/libSkiaSharp.dylib" "$bundle/Contents/Frameworks/"
 cp "$root/macos/NativeHost/Info.plist" "$bundle/Contents/"
 cp "$root/C64Screensaver/Assets/app-icon.icns" "$bundle/Contents/Resources/"
+cp "$root/C64Screensaver/Assets/logogs.png" "$bundle/Contents/Resources/"
 xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
   -Wall -Wextra -Wno-unused-parameter -bundle \
   -framework Cocoa -framework ScreenSaver -framework QuartzCore \

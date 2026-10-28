@@ -33,6 +33,12 @@ static BOOL loadCore(NSBundle *bundle) {
     return ready;
 }
 
+@interface C64HomepageButton : NSButton
+@end
+@implementation C64HomepageButton
+- (void)resetCursorRects { [self addCursorRect:self.bounds cursor:NSCursor.pointingHandCursor]; }
+@end
+
 @interface C64SaverView : ScreenSaverView {
     uint64_t _session;
     uint8_t *_pixels;
@@ -47,6 +53,7 @@ static BOOL loadCore(NSBundle *bundle) {
     NSImage *_image;
     BOOL _failed, _stopped;
     NSWindow *_options;
+    NSView *_optionsBody;
     NSPopUpButton *_program, *_quality;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
@@ -244,14 +251,14 @@ static BOOL loadCore(NSBundle *bundle) {
 - (BOOL)hasConfigureSheet { return YES; }
 - (NSTextField *)field:(NSString *)value label:(NSString *)label y:(CGFloat)y {
     NSTextField *caption = [NSTextField labelWithString:label];
-    caption.frame = NSMakeRect(20, y, 110, 24); [_options.contentView addSubview:caption];
-    NSTextField *field = [[NSTextField alloc] initWithFrame:NSMakeRect(135, y, 345, 24)];
-    field.stringValue = value; [_options.contentView addSubview:field]; return field;
+    caption.frame = NSMakeRect(20, y, 130, 24); [_optionsBody addSubview:caption];
+    NSTextField *field = [[NSTextField alloc] initWithFrame:NSMakeRect(160, y, 365, 24)];
+    field.stringValue = value; [_optionsBody addSubview:field]; return field;
 }
 - (NSButton *)check:(NSString *)label value:(BOOL)value y:(CGFloat)y {
     NSButton *button = [NSButton checkboxWithTitle:label target:nil action:nil];
-    button.frame = NSMakeRect(20, y, 460, 24); button.state = value ? NSControlStateValueOn : NSControlStateValueOff;
-    [_options.contentView addSubview:button]; return button;
+    button.frame = NSMakeRect(20, y, 510, 24); button.state = value ? NSControlStateValueOn : NSControlStateValueOff;
+    [_optionsBody addSubview:button]; return button;
 }
 - (NSWindow *)configureSheet {
     // macOS can request options independently of the animation view's window.
@@ -273,76 +280,128 @@ static BOOL loadCore(NSBundle *bundle) {
 }
 - (NSSlider *)slider:(NSString *)label value:(double)value y:(CGFloat)y tag:(NSInteger)tag {
     NSTextField *caption = [NSTextField labelWithString:label];
-    caption.frame = NSMakeRect(20,y,145,24); [_options.contentView addSubview:caption];
+    caption.frame = NSMakeRect(20,y,155,24); [_optionsBody addSubview:caption];
     NSSlider *slider = [NSSlider sliderWithValue:fmax(0,fmin(100,value)) minValue:0 maxValue:100
         target:self action:@selector(sliderChanged:)];
-    slider.frame = NSMakeRect(170,y,245,24); slider.tag = tag;
-    slider.continuous = YES; [_options.contentView addSubview:slider];
+    slider.frame = NSMakeRect(180,y,270,24); slider.tag = tag;
+    slider.continuous = YES; [_optionsBody addSubview:slider];
     NSTextField *percent = [NSTextField labelWithString:[NSString stringWithFormat:@"%.0f%%",slider.doubleValue]];
-    percent.frame = NSMakeRect(430,y,50,24); percent.tag = tag + 100;
-    [_options.contentView addSubview:percent];
+    percent.frame = NSMakeRect(470,y,50,24); percent.tag = tag + 100;
+    [_optionsBody addSubview:percent];
     return slider;
 }
 - (void)sliderChanged:(NSSlider *)sender {
-    NSTextField *percent = (NSTextField *)[_options.contentView viewWithTag:sender.tag + 100];
+    NSTextField *percent = (NSTextField *)[sender.superview viewWithTag:sender.tag + 100];
     percent.stringValue = [NSString stringWithFormat:@"%.0f%%",sender.doubleValue];
 }
 - (void)fullScreenChanged:(id)sender {
     BOOL full = _fullScreen.state == NSControlStateValueOn;
     _aspect.enabled = !full; _border.enabled = !full;
 }
+- (NSTextField *)label:(NSString *)text frame:(NSRect)frame font:(NSFont *)font {
+    NSTextField *label = [NSTextField wrappingLabelWithString:text];
+    label.frame = frame; label.font = font;
+    [_optionsBody addSubview:label];
+    return label;
+}
+- (void)brandImage:(NSString *)name frame:(NSRect)frame tag:(NSInteger)tag {
+    NSString *path = [[NSBundle bundleForClass:self.class].resourcePath stringByAppendingPathComponent:name];
+    NSImageView *image = [[NSImageView alloc] initWithFrame:frame];
+    image.image = [[NSImage alloc] initWithContentsOfFile:path];
+    image.imageScaling = NSImageScaleProportionallyUpOrDown;
+    image.tag = tag;
+    image.accessibilityLabel = tag == 201 ? @"C64Screensaver app icon" : @"Grütze-Software logo";
+    [_options.contentView addSubview:image];
+}
+- (NSView *)page:(NSString *)name tabs:(NSTabView *)tabs {
+    NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:name];
+    item.label = name;
+    item.view = [[NSView alloc] initWithFrame:NSMakeRect(0,0,550,390)];
+    [tabs addTabViewItem:item];
+    return item.view;
+}
 - (NSWindow *)buildConfigureSheet {
     NSDictionary *s = [self settings];
-    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,500,660)
+    _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,620,620)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
+    _options.title = @"C64Screensaver · Settings";
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
     NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?";
     NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?";
-    _options.title = @"C64Screensaver · Settings";
-    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,575,460,28) pullsDown:NO];
+    _optionsBody = _options.contentView;
+    [self brandImage:@"app-icon.icns" frame:NSMakeRect(22,532,70,70) tag:201];
+    [self brandImage:@"logogs.png" frame:NSMakeRect(520,524,76,80) tag:202];
+    [self label:@"C64Screensaver" frame:NSMakeRect(110,565,390,30) font:[NSFont boldSystemFontOfSize:24]];
+    NSTextField *subtitle = [self label:@"Your C64. Your monitor." frame:NSMakeRect(110,542,390,22) font:[NSFont systemFontOfSize:13]];
+    subtitle.textColor = NSColor.secondaryLabelColor;
+    NSTextField *versionLabel = [self label:[NSString stringWithFormat:@"Version %@ · Mac preview build %@",version,build]
+        frame:NSMakeRect(110,521,390,20) font:[NSFont systemFontOfSize:11]];
+    versionLabel.textColor = NSColor.secondaryLabelColor;
+
+    NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(20,75,580,430)];
+    tabs.tag = 203;
+    [_options.contentView addSubview:tabs];
+    _optionsBody = [self page:@"Playback" tabs:tabs];
+    [self label:@"BASIC programs" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,300,510,30) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
     [_program selectItemAtIndex:MAX(0, MIN(3, [s[@"Programs"] integerValue]))];
-    [_options.contentView addSubview:_program];
-    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : YES;
-    BOOL border = [s[@"FillScreen"] boolValue];
-    _fullScreen = [self check:@"Fill entire screen — no black bars or C64 border" value:!aspect && border y:540];
-    _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
-    _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:510];
-    _border = [self check:@"Hide C64 border" value:border y:480];
-    [self fullScreenChanged:nil];
-    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:435 tag:1];
-    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:390 tag:2];
-    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:345 tag:3];
-    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:300 tag:4];
-    _power = [self check:@"CRT power-off / dot / power-on between programs" value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:270];
-    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:245];
-    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:205];
-    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:165];
-    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:125];
-    NSTextField *hint = [NSTextField wrappingLabelWithString:@"Effects: 0–100%. Save applies changes to the next frame. Full-screen fill stretches the picture to cover the monitor."];
-    hint.frame = NSMakeRect(20,85,460,30); [_options.contentView addSubview:hint];
-    NSTextField *versionLabel = [NSTextField labelWithString:[NSString stringWithFormat:@"Version %@ · Mac preview build %@", version, build]];
-    versionLabel.frame = NSMakeRect(20,54,460,22);
-    [_options.contentView addSubview:versionLabel];
-    NSButton *homepage = [NSButton buttonWithTitle:@"www.gruetze-software.de" target:self action:@selector(openHomepage:)];
-    homepage.frame = NSMakeRect(15,20,175,30); homepage.bordered = NO;
-    [_options.contentView addSubview:homepage];
-    NSButton *powerTest = [NSButton buttonWithTitle:@"Test CRT" target:self action:@selector(testPowerEffect:)];
-    powerTest.frame = NSMakeRect(195,20,85,30); [_options.contentView addSubview:powerTest];
-    NSButton *save = [NSButton buttonWithTitle:@"Save" target:self action:@selector(saveOptions:)];
-    save.frame = NSMakeRect(390,20,90,30); save.keyEquivalent = @"\r"; [_options.contentView addSubview:save];
-    NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
-    cancel.frame = NSMakeRect(290,20,90,30); cancel.keyEquivalent = @"\e"; [_options.contentView addSubview:cancel];
-    for (NSView *control in _options.contentView.subviews) {
-        NSRect frame = control.frame;
-        if (frame.origin.y >= 54) { frame.origin.y += 40; control.frame = frame; }
-    }
-    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,65,460,28) pullsDown:NO];
+    [_optionsBody addSubview:_program];
+    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:250];
+    _power = [self check:@"CRT power-off / dot / power-on between programs"
+        value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:205];
+    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,145,510,30) pullsDown:NO];
     [_quality addItemsWithTitles:@[@"Rendering: Efficient — up to 540p (recommended)",
         @"Rendering: Balanced — up to 720p", @"Rendering: Detailed — up to 1080p, higher CPU use"]];
     [_quality selectItemAtIndex:MAX(0,MIN(2,[s[@"NativeRenderQuality"] integerValue]))];
-    [_options.contentView addSubview:_quality];
+    [_optionsBody addSubview:_quality];
+    NSTextField *playbackHint = [self label:@"The C64 types each listing, corrects its mistakes and enters RUN. The program timer begins after RUN. Efficient rendering uses less CPU."
+        frame:NSMakeRect(20,55,510,65) font:[NSFont systemFontOfSize:12]];
+    playbackHint.textColor = NSColor.secondaryLabelColor;
+
+    _optionsBody = [self page:@"Monitor effects" tabs:tabs];
+    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : YES;
+    BOOL border = [s[@"FillScreen"] boolValue];
+    _fullScreen = [self check:@"Fill entire screen — no black bars or C64 border" value:!aspect && border y:335];
+    _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
+    _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:300];
+    _border = [self check:@"Hide C64 border" value:border y:265];
+    [self fullScreenChanged:nil];
+    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:210 tag:1];
+    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:165 tag:2];
+    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:120 tag:3];
+    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:75 tag:4];
+    NSTextField *monitorHint = [self label:@"Fine-tune the tube from a clear picture to a softly glowing CRT. All effects range from 0 to 100%."
+        frame:NSMakeRect(20,15,510,40) font:[NSFont systemFontOfSize:12]];
+    monitorHint.textColor = NSColor.secondaryLabelColor;
+
+    _optionsBody = [self page:@"Company card" tabs:tabs];
+    [self label:@"Your message on the C64" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:285];
+    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:230];
+    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:175];
+    NSTextField *companyHint = [self label:@"Up to 28 characters per line. Text appears in uppercase; umlauts become AE, OE and UE. Choose Company card or All programs on the Playback tab."
+        frame:NSMakeRect(20,70,510,75) font:[NSFont systemFontOfSize:12]];
+    companyHint.textColor = NSColor.secondaryLabelColor;
+
+    C64HomepageButton *homepage = [[C64HomepageButton alloc] initWithFrame:NSMakeRect(20,20,235,30)];
+    homepage.title = @"www.gruetze-software.de";
+    homepage.target = self; homepage.action = @selector(openHomepage:); homepage.bordered = NO;
+    homepage.alignment = NSTextAlignmentLeft;
+    homepage.attributedTitle = [[NSAttributedString alloc] initWithString:homepage.title attributes:@{
+        NSForegroundColorAttributeName: NSColor.linkColor,
+        NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
+        NSFontAttributeName: [NSFont systemFontOfSize:12]}];
+    homepage.toolTip = @"Open https://www.gruetze-software.de in your browser";
+    [_options.contentView addSubview:homepage];
+    NSButton *powerTest = [NSButton buttonWithTitle:@"Test CRT" target:self action:@selector(testPowerEffect:)];
+    powerTest.frame = NSMakeRect(295,20,90,30); [_options.contentView addSubview:powerTest];
+    NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
+    cancel.frame = NSMakeRect(395,20,90,30); cancel.keyEquivalent = @"\e"; [_options.contentView addSubview:cancel];
+    NSButton *save = [NSButton buttonWithTitle:@"Save" target:self action:@selector(saveOptions:)];
+    save.frame = NSMakeRect(495,20,105,30); save.keyEquivalent = @"\r"; [_options.contentView addSubview:save];
+    _optionsBody = nil;
     return _options;
 }
 - (void)saveOptions:(id)sender {
@@ -368,8 +427,35 @@ static BOOL loadCore(NSBundle *bundle) {
     [self ensurePreviewTimer];
     if (!_stopped) [self animateOneFrame];
 }
+- (void)openHomepageURL:(NSURL *)url completion:(void (^)(NSError *))completion {
+    NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration configuration];
+    configuration.activates = YES;
+    [[NSWorkspace sharedWorkspace] openURL:url configuration:configuration completionHandler:^(NSRunningApplication *app, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(error ?: (app ? nil : [NSError errorWithDomain:@"C64Screensaver" code:1 userInfo:nil]));
+        });
+    }];
+}
 - (void)openHomepage:(id)sender {
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.gruetze-software.de"]];
+    NSURL *url = [NSURL URLWithString:@"https://www.gruetze-software.de"];
+    __weak C64SaverView *weakSelf = self;
+    [self openHomepageURL:url completion:^(NSError *error) {
+        C64SaverView *view = weakSelf;
+        if (!error || !view) return;
+        NSLog(@"C64Screensaver: browser launch failed: %@",error);
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = @"The website could not be opened";
+        alert.informativeText = @"macOS did not open the browser from the screensaver settings. You can copy the address and open it in your browser.";
+        [alert addButtonWithTitle:@"Copy address"];
+        [alert addButtonWithTitle:@"Cancel"];
+        NSWindow *parent = view->_options;
+        if (parent) [alert beginSheetModalForWindow:parent completionHandler:^(NSModalResponse response) {
+            if (response == NSAlertFirstButtonReturn) {
+                [NSPasteboard.generalPasteboard clearContents];
+                [NSPasteboard.generalPasteboard setString:url.absoluteString forType:NSPasteboardTypeString];
+            }
+        }];
+    }];
 }
 - (void)testPowerEffect:(id)sender {
     [self saveOptions:sender];

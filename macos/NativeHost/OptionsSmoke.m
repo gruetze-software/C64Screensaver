@@ -1,4 +1,19 @@
 #import <ScreenSaver/ScreenSaver.h>
+#import <objc/runtime.h>
+
+static NSArray<NSView *> *allControls(NSView *root) {
+    NSMutableOrderedSet *result = [NSMutableOrderedSet orderedSetWithObject:root];
+    for (NSView *child in root.subviews) [result addObjectsFromArray:allControls(child)];
+    if ([root isKindOfClass:NSTabView.class])
+        for (NSTabViewItem *item in ((NSTabView *)root).tabViewItems)
+            [result addObjectsFromArray:allControls(item.view)];
+    return result.array;
+}
+static NSView *findTag(NSView *root, NSInteger tag) {
+    for (NSView *view in allControls(root)) if (view.tag == tag) return view;
+    return nil;
+}
+static NSURL *openedHomepage;
 
 static BOOL hasPicture(ScreenSaverView *view) {
     NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
@@ -29,7 +44,7 @@ int main(int argc, char **argv) {
         ScreenSaverView *view = [[bundle.principalClass alloc] initWithFrame:NSMakeRect(0,0,384,288) isPreview:YES];
         if (!view.hasConfigureSheet) return 4;
         NSWindow *sheet = view.configureSheet;
-        if (!sheet || sheet != view.configureSheet || sheet.contentView.subviews.count < 10) return 5;
+        if (!sheet || sheet != view.configureSheet || [allControls(sheet.contentView) count] < 10) return 5;
         if (view.window != nil) return 6; // Reproduce configuration without preview parent.
         NSWindow *parent = [[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,640,480)
             styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
@@ -55,13 +70,13 @@ int main(int argc, char **argv) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.1]];
         if (sheet.sheetParent != parent || !sheet.isVisible) return 7;
         NSButton *cancel = nil, *save = nil;
-        for (NSView *control in sheet.contentView.subviews)
+        for (NSView *control in allControls(sheet.contentView))
             if ([control isKindOfClass:NSButton.class]) {
                 NSButton *button = (NSButton *)control;
                 if ([button.title isEqualToString:@"Cancel"]) cancel = button;
             }
         BOOL hasVersion = NO, hasHomepage = NO, hasPower = NO, hasPowerTest = NO;
-        for (NSView *control in sheet.contentView.subviews) {
+        for (NSView *control in allControls(sheet.contentView)) {
             if ([control isKindOfClass:NSTextField.class] &&
                 [((NSTextField *)control).stringValue hasPrefix:@"Version "]) hasVersion = YES;
             if ([control isKindOfClass:NSButton.class]) {
@@ -72,6 +87,33 @@ int main(int argc, char **argv) {
             }
         }
         if (!hasVersion || !hasHomepage || !hasPower || !hasPowerTest) return 26;
+        for (NSInteger tag = 201; tag <= 202; tag++) {
+            NSImageView *brand = (NSImageView *)findTag(sheet.contentView,tag);
+            if (![brand isKindOfClass:NSImageView.class] || !brand.image.isValid) return 30;
+        }
+        NSTabView *tabs = (NSTabView *)findTag(sheet.contentView,203);
+        if (![tabs isKindOfClass:NSTabView.class] || tabs.numberOfTabViewItems != 3) return 31;
+        for (NSTabViewItem *item in tabs.tabViewItems) {
+            [tabs selectTabViewItem:item];
+            for (NSView *control in item.view.subviews)
+                if (!NSContainsRect(item.view.bounds,control.frame)) return 32;
+        }
+        // Exercise the actual link button/action without launching a CI browser.
+        SEL openSelector = NSSelectorFromString(@"openHomepageURL:completion:");
+        Method method = class_getInstanceMethod(view.class,openSelector);
+        IMP originalOpen = method_getImplementation(method);
+        IMP fakeOpen = imp_implementationWithBlock(^(id receiver, NSURL *url, void (^completion)(NSError *)) {
+            openedHomepage = url;
+            completion(nil);
+        });
+        method_setImplementation(method,fakeOpen);
+        for (NSView *control in allControls(sheet.contentView))
+            if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"www.gruetze-software.de"])
+                [(NSButton *)control performClick:nil];
+        method_setImplementation(method,originalOpen);
+        imp_removeBlock(fakeOpen);
+        if (![openedHomepage.absoluteString isEqualToString:@"https://www.gruetze-software.de"]) return 33;
+        [tabs selectTabViewItemAtIndex:0];
         if (!cancel) return 8;
         [cancel performClick:nil];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.3]];
@@ -83,27 +125,27 @@ int main(int argc, char **argv) {
         if (!sheet) return 10;
         [parent beginSheet:sheet completionHandler:nil];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.1]];
-        for (NSView *control in sheet.contentView.subviews)
+        for (NSView *control in allControls(sheet.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Save"])
                 save = (NSButton *)control;
         if (!save) return 11;
         NSPopUpButton *quality = nil;
-        for (NSView *control in sheet.contentView.subviews)
+        for (NSView *control in allControls(sheet.contentView))
             if ([control isKindOfClass:NSPopUpButton.class] &&
                 [[(NSPopUpButton *)control itemTitleAtIndex:0] hasPrefix:@"Rendering:"])
                 quality = (NSPopUpButton *)control;
         if (!quality || quality.numberOfItems != 3) return 27;
         [quality selectItemAtIndex:1];
         for (NSInteger tag = 1; tag <= 4; tag++) {
-            NSSlider *slider = (NSSlider *)[sheet.contentView viewWithTag:tag];
+            NSSlider *slider = (NSSlider *)findTag(sheet.contentView,tag);
             if (![slider isKindOfClass:NSSlider.class]) return 23;
             slider.doubleValue = 10 * tag;
             [NSApp sendAction:slider.action to:slider.target from:slider];
-            NSTextField *percent = (NSTextField *)[sheet.contentView viewWithTag:tag+100];
+            NSTextField *percent = (NSTextField *)findTag(sheet.contentView,tag+100);
             if (![percent.stringValue isEqualToString:[NSString stringWithFormat:@"%ld%%", (long)(10*tag)]]) return 24;
         }
         NSButton *full = nil;
-        for (NSView *control in sheet.contentView.subviews)
+        for (NSView *control in allControls(sheet.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title hasPrefix:@"Fill entire screen"])
                 full = (NSButton *)control;
         if (!full) return 25;
@@ -127,7 +169,7 @@ int main(int argc, char **argv) {
         [defaults setObject:legacy forKey:@"Settings"];
         NSLog(@"Options validation before async rendering: %d", passed);
         NSWindow *reopened = view.configureSheet;
-        passed = passed && [((NSSlider *)[reopened.contentView viewWithTag:2]) doubleValue] == 20;
+        passed = passed && [((NSSlider *)findTag(reopened.contentView,2)) doubleValue] == 20;
         [parent.contentView addSubview:view];
         [view startAnimation];
         view.frame = NSMakeRect(0,0,1920,1080);
@@ -140,7 +182,7 @@ int main(int argc, char **argv) {
         [view removeFromSuperview];
         [parent beginSheet:reopened completionHandler:nil];
         NSButton *powerButton = nil;
-        for (NSView *control in reopened.contentView.subviews)
+        for (NSView *control in allControls(reopened.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Test CRT"])
                 powerButton = (NSButton *)control;
         if (!powerButton) return 29;
@@ -179,7 +221,7 @@ int main(int argc, char **argv) {
             [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.02]];
         passed = passed && afterStop.isVisible && afterStop.sheetParent == parent;
         NSLog(@"Options validation after stop/start sheet: %d", passed);
-        for (NSView *control in afterStop.contentView.subviews)
+        for (NSView *control in allControls(afterStop.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Cancel"])
                 [(NSButton *)control performClick:nil];
         [view stopAnimation];
