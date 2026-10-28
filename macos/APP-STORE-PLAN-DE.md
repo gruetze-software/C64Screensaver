@@ -1,96 +1,98 @@
-# Mac App Store: Veröffentlichungsplan
+# Mac App Store: echter System-Bildschirmschoner
 
-Stand: 28. Oktober 2026. Gewünschter Preis: 1,99 USD als einmaliger Kauf,
-kein Abonnement. Noch keine Store-App angelegt, kein Upload und keine Einreichung.
+Stand: 28. Oktober 2026. Gewünschtes Produkt: echter macOS-System-Bildschirmschoner.
+Gewünschter Preis: 1,99 USD einmalig. Eine reine manuell gestartete Vollbild-App
+ist vom Nutzer ausdrücklich nicht gewünscht. Noch keine Store-Einreichung.
 
-## Zuerst die Produktform entscheiden
+## Ergebnis der konkreten Anbieterprüfung
 
-Das vorhandene native Mac-Paket ist ein ScreenSaverView-Plug-in mit der
-Paketart BNDL und der Endung .saver. Das notarisierten DMG ist der
-Distributionsweg für die eigene Homepage, kein App-Store-Upload.
+Ein pauschaler Ausschluss des Mac App Store ist nicht ausreichend begründet.
+Es gibt ein aktuelles Gegenbeispiel, dessen Anleitung echte Systemintegration
+beschreibt:
 
-Für den Mac App Store verlangt Apple eine eigenständige, sandboxed App und
-untersagt das Installieren zusätzlichen Codes in gemeinsam genutzten Orten.
-Eine App, die unser .saver nur nach ~/Library/Screen Savers kopiert oder dort
-durch macOS installieren lässt, ist deshalb kein belastbarer Store-Weg.
-Die geltende Vorgabe ist insbesondere 2.4.5 (i), (ii) und (iv).
+- FlipCloc wird im Mac App Store für 4,99 USD mit zusätzlichen In-App-Käufen
+  angeboten. Laut Hersteller wählt der Käufer beim ersten Start Screensaver.
+  Die App stößt anschließend die Installation an; macOS zeigt den normalen
+  Bestätigungsdialog. Danach wird FlipCloc in den Systemeinstellungen als
+  Bildschirmschoner ausgewählt. Auch Aktualisierungen des Moduls werden laut
+  Anleitung über die App angestoßen.
+- Albumscape verwendet dagegen zwei Vertriebswege. Laut Hersteller gehört der
+  native Bildschirmschoner nur zur direkt vertriebenen Developer-ID-Version,
+  weil die Store-Version kein .saver installieren darf. Pro kostet dort
+  einmalig 8 USD.
 
-Quelle: [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
+Quellen:
+[FlipCloc im App Store](https://apps.apple.com/us/app/flipcloc-clock-screensaver/id6786569507?mt=12)
+[FlipCloc – offizielle Mac-Installationsanleitung](https://flipcloc.com/how-to-use/mac-screensaver)
+[Albumscape – Support und Vertriebsunterschiede](https://albumscape.haogre.com/support)
 
-Die denkbare zusätzliche Store-Variante ist eine eigenständige App:
-- C64-Bildschirm in einem Fenster oder manuell gestarteten Vollbildmodus;
-- vorhandene BASIC-Programme und CRT-Einstellungen;
-- vollständige Funktion innerhalb des eigenen App-Pakets und Containers;
-- kein Installer für einen System-Bildschirmschoner;
-- keine automatische Eintragung als Bildschirmschoner in den Systemeinstellungen.
+Die öffentlich beschriebene FlipCloc-Installation wurde hier nicht selbst
+ausgeführt; die Implementierung und eventuelle individuelle Review-Absprachen
+sind nicht bekannt. Eine vorhandene Store-Zulassung eines anderen Produkts ist
+keine Zusage von Apple für C64Screensaver.
 
-Diese Produktänderung ist noch nicht beauftragt. Sie darf im Store nicht als
-installierter System-Bildschirmschoner versprochen werden. Eine Veröffentlichung
-bleibt von Apples Prüfung abhängig. Die funktionierende .saver-Version soll bei
-diesem Weg für den gesonderten Website-Vertrieb erhalten bleiben.
+## Konsequenz für C64Screensaver
 
-Ein Umbau auf undokumentierte ScreenSaver-App-Extension-Schnittstellen wäre
-ebenfalls kein Store-Weg; Apple erlaubt grundsätzlich nur öffentliche APIs
-(2.5.1). Ein Sandbox-Workaround würde diese Einschränkung nicht lösen.
+Das .saver/DMG bleibt das bestehende, echte Produkt. Ein bloßes Hochladen des
+DMG als App ist weiterhin kein App-Store-Weg.
 
-## Was bereits vorbereitet werden kann
+Zu prüfen ist stattdessen eine sandboxed Begleit-App für Konfiguration und
+Vorschau, die das vorhandene Modul mitliefert und dessen Installation
+ausdrücklich durch den Nutzer über den macOS-Dialog anstoßen lässt. Das ist
+eine zu untersuchende Architektur anhand des belegten Anbieters, noch keine
+als zulässig oder implementiert bestätigte Lösung.
 
-Im Browser App Store Connect öffnen. Als Account Holder unter Business bzw.
-Agreements, Tax and Banking prüfen:
-- Paid Apps Agreement selbst lesen und annehmen;
-- die verlangten Steuer- und Bankdaten persönlich vervollständigen;
-- prüfen, ob die Verträge für kostenpflichtige Apps aktiv sind.
+Der entscheidende Unterschied zur verworfenen Produktidee: Die Begleit-App
+ersetzt den System-Bildschirmschoner nicht durch einen eigenen Vollbildmodus.
+Das tatsächliche .saver bleibt in den Systemeinstellungen auswählbar.
 
-Nicht veröffentlichen oder einen Vertrag bestätigen, dessen Angaben noch nicht
-geprüft sind. Zugangsdaten, Bankdaten und Steuerdaten gehören nicht ins Repository.
+## Offene Store-Regeln und nächster Prüfpunkt
 
-Für den Preis ist später bei der konkreten App einzustellen:
-Monetization → Pricing and Availability → Add Pricing.
-USA als Basisregion und 1,99 USD wählen, sofern der Preis im Menü angeboten wird.
-Die von Apple vorgeschlagenen Preise anderer Länder vor der Bestätigung prüfen;
-1,99 USD ist nicht automatisch 1,99 EUR. Die Gebühren und Steuern beeinflussen
-den tatsächlichen Erlös.
+Apple verlangt unter 2.4.5 unter anderem Sandbox, ein eigenständiges App-Paket
+und keine Installation von Code oder Ressourcen in gemeinsam genutzten Orten.
+Öffentliche APIs sind nach 2.5.1 Pflicht. Diese Regeln dürfen weder durch
+private Extension-Punkte noch durch automatische Dateikopien umgangen werden.
 
-Quelle: [Apple – Set a price](https://developer.apple.com/help/app-store-connect/manage-app-pricing/set-a-price)
+[Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
 
-## Technische Arbeit nach Freigabe der Store-Variante
+Vor einem umfangreichen Umbau sollte der konkrete Begleit-App-Ansatz mit App
+Review geklärt werden. Die Unterschiede zwischen den offiziellen Angaben von
+FlipCloc und Albumscape müssen dabei berücksichtigt werden. Die Behauptung,
+ein vom Nutzer bestätigter Systemdialog sei automatisch eine erlaubte Ausnahme,
+ist derzeit nicht belegt.
 
-1. Eigenständigen Mac-App-Startpunkt und App-Fenster erstellen; Renderer, BASIC und
-   Einstellungen möglichst weiterverwenden.
-2. App Sandbox und ausschließlich benötigte Berechtigungen einrichten. Keine
-   Inaktivitätsüberwachung, Autostart- oder Installerfunktion hinzufügen.
-3. Eigenen App-Bundle-Identifier festlegen und im Developer-Konto registrieren,
-   ohne den bestehenden .saver-Identifier zu überschreiben.
-4. Einen Xcode-basierten Archiv-/Veröffentlichungsweg und passende App-Store-
-   Signierung/Provisionierung vorbereiten. Unser Developer-ID-DMG-Skript ersetzt
-   diesen Weg nicht.
-5. Auf dem Mac die gesamte Store-App testen, insbesondere Start/Beenden,
-   Vollbild/Escape, Optionen, mehrere Displays und CPU-/Speicherverbrauch.
-6. Die endgültige App archivieren, validieren und über Xcode bzw. einen dafür
-   geeigneten Apple-Uploadweg in App Store Connect hochladen.
+Eine mögliche Anfrage, die der Kontoinhaber selbst einreichen kann:
 
-Die jetzigen erfolgreichen .saver-Tests bestätigen keinen App-Sandbox-Betrieb
-einer künftigen Store-App. Ein notarisiertes Website-Paket ist ebenfalls keine
-App-Review-Zulassung.
+Wir entwickeln einen echten macOS-Bildschirmschoner mit dem öffentlichen
+ScreenSaver-Framework. Wir möchten eine sandboxed Mac-App für Konfiguration und
+Vorschau anbieten, die das feste, mitgelieferte .saver-Modul über öffentliche APIs
+dem normalen macOS-Installationsdialog übergibt. Die Installation erfordert
+ausdrückliche Nutzerbestätigung; die App kopiert nicht selbst in Library-Ordner.
+Ist dieser Ablauf unter 2.4.5(ii)/(iv) zulässig? Falls nicht, gibt es einen
+dokumentierten zulässigen Weg für die Verteilung echter System-Bildschirmschoner
+über den Mac App Store? Ein vergleichbarer Installationsablauf wird öffentlich
+in der Mac-Anleitung von FlipCloc beschrieben.
 
-## Store-Seite und Einreichung
+Keine Anfrage wurde aus diesem Projekt heraus an Apple gesendet.
 
-Erst nach der Produktentscheidung belastbare App-Beschreibung und Review Notes
-schreiben. Benötigt werden insbesondere:
-- Name, Untertitel, Beschreibung und Kategorie passend zur tatsächlichen App;
-- Support- und Datenschutzseite mit funktionierenden URLs;
-- zutreffende Datenschutz- und Altersangaben;
-- Screenshots der endgültigen Store-App;
-- Preis und Länderfreigaben;
-- Erklärung der fest eingebauten BASIC-Programme für App Review;
-- Kontaktdaten und gegebenenfalls weitere von App Store Connect geforderte Angaben.
+## Konto, Preis und Medien
 
-Das vorhandene Shop-Video ist 39 Sekunden lang, hat eine geraffte Codeeingabe und
-wurde direkt aus dem Renderer exportiert. Es ist deshalb noch kein fertiges
-App-Store-Preview. Ein Store-Preview muss die aktuellen Medienanforderungen erfüllen
-und die tatsächlich eingereichte App zeigen. Für die Einreichung wird ein passender
-Clip aus der endgültigen Store-App benötigt.
+Vor einem Verkauf über den App Store sind Paid Apps Agreement sowie die von
+Apple geforderten Steuer-/Bankangaben durch den Kontoinhaber zu vervollständigen.
+Später bei der konkret angelegten App USA als Preisbasis und 1,99 USD wählen,
+sofern angeboten, und die übrigen Länderpreise prüfen.
 
-Nach Prüfung aller Angaben zunächst manuelle Veröffentlichung nach Freigabe
-wählen, damit der Verkaufsstart nicht unbemerkt erfolgt. Einreichen und den
-Veröffentlichungszeitpunkt gemeinsam mit dem Kontoinhaber festlegen.
+[Apple – Set a price](https://developer.apple.com/help/app-store-connect/manage-app-pricing/set-a-price)
+
+Eine Store-App benötigt eigene passende App-Signierung, Sandbox, Bundle-ID,
+Provisionierung und einen validierten Upload. Unser Developer-ID-DMG-Skript
+ist weiterhin für Website-Downloads zuständig und ersetzt das nicht.
+
+Das vorhandene Shop-Video ist 39 Sekunden lang, hat eine geraffte Codeeingabe
+und wurde direkt aus dem Renderer exportiert. Es ist kein fertiges
+App-Store-Preview. Für eine Einreichung müssen aktuelle Medienanforderungen
+geprüft und die endgültig eingereichte App korrekt dargestellt werden.
+
+Die technische Freigabe, Produktbeschreibung und Einreichung werden erst auf
+Basis des geklärten Installationswegs vorbereitet. Es wird weder eine
+Store-Zulassung garantiert noch stillschweigend auf eine Vollbild-App umgestellt.
