@@ -9,6 +9,10 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
+    public bool AmigaMode { get; set; }
+    public string ScrollerText { get; set; } = "GRUETZE RETROSAVER - WELCOME TO THE AMIGA!   WWW.GRUETZE-SOFTWARE.DE";
+    public double ScrollerSpeed { get; set; } = 48;
+    public double ScrollerWave { get; set; } = 20;
     public bool PowerTransition { get; set; } = true;
     public bool FillScreen { get; set; }
     // Missing in older files: retain their framed or borderless presentation.
@@ -36,6 +40,11 @@ public class SaverSettings
 
     public void Validate()
     {
+        ScrollerText = (ScrollerText ?? "").Replace("ä", "AE").Replace("ö", "OE").Replace("ü", "UE").Replace("ß", "SS").ToUpperInvariant();
+        ScrollerText = new string(System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(ScrollerText, c => c >= ' ' && c <= '~' ? c : ' ')));
+        if (ScrollerText.Length > 4096) ScrollerText = ScrollerText[..4096];
+        ScrollerSpeed = double.IsFinite(ScrollerSpeed) ? Math.Clamp(ScrollerSpeed, 8, 160) : 48;
+        ScrollerWave = double.IsFinite(ScrollerWave) ? Math.Clamp(ScrollerWave, 0, 48) : 20;
         CompanyName = BasicPrograms.DisplayText(CompanyName);
         CompanyWebsite = BasicPrograms.DisplayText(CompanyWebsite);
         CompanyTagline = BasicPrograms.DisplayText(CompanyTagline);

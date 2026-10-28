@@ -17,7 +17,8 @@ public partial class App : Application
         {
             var options = Program.Options;
             desktop.Exit += (_, _) => SpriteAssets.Release();
-            if (options.Mode == LaunchMode.Settings) desktop.MainWindow = new SettingsWindow();
+            if (options.Mode == LaunchMode.Companion) desktop.MainWindow = new CompanionWindow();
+            else if (options.Mode == LaunchMode.Settings) desktop.MainWindow = new CompanionWindow();
             else if (options.Mode == LaunchMode.About) desktop.MainWindow = new AboutWindow();
             else if (options.Mode == LaunchMode.Preview)
                 desktop.MainWindow = new MainWindow(true, new IntPtr(options.ParentHandle));

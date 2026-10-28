@@ -1,0 +1,105 @@
+using System;
+using System.Diagnostics;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Threading;
+namespace C64Screensaver;
+public sealed class CompanionWindow : Window
+{
+    private readonly ConfigManager config;
+    private readonly C64Scene scene = new() { MinHeight = 280 };
+    private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1.0 / 30) };
+    private readonly Stopwatch clock = new();
+    private double previous;
+    private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap };
+    public CompanionWindow() : this(new ConfigManager()) { }
+    public CompanionWindow(ConfigManager configuration)
+    {
+        config = configuration;
+        Title = "Gruetze RetroSaver";
+        Classes.Add("dialog");
+        using (var iconStream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://C64Screensaver/Assets/app-icon.ico")))
+            Icon = new WindowIcon(iconStream);
+        Width = 1080; Height = 850; MinWidth = 740; MinHeight = 600;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        var system = new ComboBox { ItemsSource = new[] { "Commodore 64", "Amiga · Copper & sine scroller" }, SelectedIndex = config.Settings.AmigaMode ? 1 : 0 };
+        var text = new TextBox { Text = config.Settings.ScrollerText, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 4096, MinHeight = 65 };
+        var speed = new Slider { Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
+        var wave = new Slider { Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
+        var save = new Button { Content = "Save settings" };
+        save.Classes.Add("primary");
+        var about = new Button { Content = "About" };
+        about.Click += async (_, _) => await new AboutWindow().ShowDialog(this);
+        var settings = new Button { Content = "Monitor effects & C64 settings" };
+        var run = new Button { Content = "Start fullscreen preview" };
+        var actions = new WrapPanel { Orientation = Orientation.Horizontal };
+        foreach (var button in new[] { settings, run, save, about }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
+        var body = new StackPanel { Spacing = 10, Margin = new Thickness(28) };
+        var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("70,*,70") };
+        var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 60, Height = 60 };
+        var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 30, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
+        var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 60, Height = 60 };
+        Grid.SetColumn(title, 1); Grid.SetColumn(companyLogo, 2);
+        heading.Children.Add(appLogo); heading.Children.Add(title); heading.Children.Add(companyLogo);
+        body.Children.Add(heading);
+        body.Children.Add(new TextBlock { Text = "Your C64. Your Amiga. Your monitor." });
+        body.Children.Add(system);
+        body.Children.Add(new Border { Background = Brushes.Black, Child = scene, Height = 320 });
+        body.Children.Add(new TextBlock { Text = "Amiga scrolling text" });
+        body.Children.Add(text);
+        body.Children.Add(new TextBlock { Text = "Scrolling speed" });
+        body.Children.Add(speed);
+        body.Children.Add(new TextBlock { Text = "Sine wave height" });
+        body.Children.Add(wave);
+        body.Children.Add(actions);
+        body.Children.Add(new TextBlock { Text = AppInfo.DisplayName, FontSize = 12 });
+        body.Children.Add(status);
+        system.Name = "SystemSelection"; text.Name = "ScrollerText"; speed.Name = "ScrollerSpeed"; wave.Name = "ScrollerWave";
+        save.Name = "SaveSettings"; run.Name = "StartPreview";
+        Content = new ScrollViewer { Content = body };
+        void UpdateAvailability()
+        {
+            text.IsEnabled = speed.IsEnabled = wave.IsEnabled = config.Settings.AmigaMode;
+        }
+        void Restart()
+        {
+            config.Settings.Validate();
+            UpdateAvailability();
+            scene.Initialize(config.Settings, true, 640, 480, Random.Shared);
+        }
+        system.SelectionChanged += (_, _) => { config.Settings.AmigaMode = system.SelectedIndex == 1; Restart(); };
+        text.TextChanged += (_, _) => { config.Settings.ScrollerText = text.Text ?? ""; config.Settings.Validate(); scene.InvalidateVisual(); };
+        speed.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.ScrollerSpeed = speed.Value; };
+        wave.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.ScrollerWave = wave.Value; };
+        void ReadEditor()
+        {
+            config.Settings.AmigaMode = system.SelectedIndex == 1;
+            config.Settings.ScrollerText = text.Text ?? "";
+            config.Settings.ScrollerSpeed = speed.Value;
+            config.Settings.ScrollerWave = wave.Value;
+            config.Settings.Validate();
+        }
+        save.Click += (_, _) => { ReadEditor(); status.Text = config.SaveSettings() ? "Settings saved." : "Could not save: " + config.LastError; };
+        settings.Click += async (_, _) => { ReadEditor(); await new SettingsWindow(config).ShowDialog(this); Restart(); };
+        var previews = new System.Collections.Generic.HashSet<Window>();
+        run.Click += (_, _) =>
+        {
+            ReadEditor();
+            var preview = new MainWindow(false, IntPtr.Zero, settings: System.Text.Json.JsonSerializer.Deserialize<SaverSettings>(System.Text.Json.JsonSerializer.Serialize(config.Settings)));
+            previews.Add(preview);
+            preview.Closed += (_, _) => previews.Remove(preview);
+            preview.Show();
+        };
+        timer.Tick += (_, _) =>
+        {
+            double now = clock.Elapsed.TotalSeconds;
+            if (WindowState != WindowState.Minimized && IsVisible) scene.Advance(640, 480, Math.Clamp(now - previous, 0, .1));
+            previous = now;
+        };
+        Restart();
+        Opened += (_, _) => { clock.Start(); timer.Start(); };
+        Closed += (_, _) => { timer.Stop(); scene.Clear(); foreach (var preview in System.Linq.Enumerable.ToArray(previews)) preview.Close(); };
+    }
+}

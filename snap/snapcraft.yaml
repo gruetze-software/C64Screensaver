@@ -1,10 +1,11 @@
 name: c64screensaver
 base: core24
 adopt-info: c64screensaver
-summary: C64 BASIC animation with adjustable CRT glow
+summary: C64 and Amiga animations with adjustable CRT glow
 description: |
   Watch BASIC being typed, corrected and executed on a simulated C64.
-  Includes a maze, editable company card, starfield and adjustable CRT bloom.
+  Gruetze RetroSaver includes a maze, editable company card, starfield,
+  Amiga Copper bars, an editable sine scroller and adjustable CRT bloom.
   This is a fullscreen animation application, not a screen locker.
 grade: devel
 confinement: strict

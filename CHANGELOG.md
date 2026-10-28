@@ -1,3 +1,15 @@
+# Gruetze RetroSaver development
+
+- Shared .NET 10 / Avalonia 12 companion with C64/Amiga selection, live preview,
+  app/company logos and access to existing monitor settings.
+- Original Amiga Copper bars and editable sine scroller; text up to 4096
+  characters with independent speed and wave-height controls.
+- Normal launch and settings entry points open the companion; explicit
+  fullscreen and Windows screensaver/preview arguments remain supported.
+- Shared Amiga rendering is available to the native macOS core.
+- Future public release preparation targets free Windows/Linux packages.
+  Mac development builds remain possible; Store integration is pending.
+
 # Changelog
 
 ## 1.1.0 — 2026-10-24

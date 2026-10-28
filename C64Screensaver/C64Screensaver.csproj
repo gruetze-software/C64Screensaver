@@ -13,9 +13,9 @@
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
     <Authors>Grütze-Software</Authors>
-    <Product>C64Screensaver</Product>
+    <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
-    <Description>A C64 BASIC screensaver with animated CRT effects.</Description>
+    <Description>C64 BASIC and Amiga demo screensavers with configurable CRT effects.</Description>
     <Copyright>Copyright © 2026 Grütze-Software</Copyright>
     <Maintainer>schaefer.christoph@posteo.de</Maintainer>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

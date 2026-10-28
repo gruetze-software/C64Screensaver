@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=C64Screensaver
-Comment=Ghost-typed BASIC and CRT animation
+Name=Gruetze RetroSaver
+Comment=C64 BASIC and Amiga scroller with CRT effects
 Exec=c64screensaver
 Icon=${SNAP}/meta/gui/icon.png
 Terminal=false

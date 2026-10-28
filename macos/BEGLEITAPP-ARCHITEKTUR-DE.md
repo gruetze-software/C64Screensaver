@@ -1,6 +1,7 @@
 # Architekturentscheidung: Begleit-App, C64 und Amiga
 
-Stand: 28. Oktober 2026. Zielarchitektur, noch keine implementierte Begleit-App.
+Stand: 28. Oktober 2026. Zielarchitektur; den implementierten Zwischenstand
+beschreibt der letzte Abschnitt.
 Der Lauftext ist eine Kernfunktion des Amiga-Modus.
 
 ## Produkt und Prozesse
@@ -112,3 +113,25 @@ Testprogramm ableiten.
 
 Die Architekturentscheidung ändert weder die Store-Freigabe noch den Preis
 automatisch. Eine reine Vollbild-App bleibt ausdrücklich ausgeschlossen.
+
+
+## Implementierter Zwischenstand: Gruetze RetroSaver
+
+Die gemeinsame Avalonia-Begleitoberfläche startet ohne Parameter sowie mit
+--companion oder --settings. Windows /s und --fullscreen bleiben direkte
+Screensaver-Starts. Die Oberfläche enthält die Live-Vorschau, Systemauswahl,
+beide Logos, einen langen editierbaren Amiga-Lauftext sowie Geschwindigkeit und
+Sinusamplitude. Monitor-Einstellungen verwenden weiterhin den vorhandenen
+Editor. C64-Einstellungen und Speicherort bleiben erhalten.
+
+Copper-Balken und Sinus-Lauftext werden selbst gezeichnet. Derselbe Renderer
+ist in die native Mac-Bibliothek eingebunden und über deren JSON-Einstellungen
+mit AmigaMode aktivierbar. Es gibt noch kein separates Amiga.saver-Bundle,
+keine Kickstart-Auswahl, keinen gemeinsamen autorisierten Konfigurationsordner
+und noch keinen Aufruf der Begleit-App aus dem nativen Optionsdialog.
+Die Mac-Sandbox-Integration ist damit ausdrücklich noch nicht bestätigt.
+
+Die öffentliche Release-Vorbereitung erzeugt künftig nur Windows-/Linux-Pakete.
+Lokale Mac-Publishes und native CI-Testartefakte bleiben möglich. Bestehende
+GitHub-Releases wurden nicht gelöscht; ein Store-Link wird erst nach Vorliegen
+einer tatsächlichen Produktseite eingetragen.

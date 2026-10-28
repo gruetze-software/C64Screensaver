@@ -1,4 +1,18 @@
-# C64Screensaver 1.1
+# Gruetze RetroSaver
+
+Development branch: the new .NET 10 / Avalonia 12 companion opens on normal launch
+(or with --companion / --settings). It offers C64 BASIC, an initial Amiga
+Copper-bar/sine-scroller scene, a live preview and editable scrolling text,
+speed and wave height. --fullscreen and Windows /s still launch the screensaver
+directly. Existing settings stay in their original location.
+
+Windows and Linux public release packages remain free. New public release
+packaging excludes macOS; local Mac builds remain available for development.
+The intended Mac distribution is the App Store. Store submission, the native
+screensaver/companion settings bridge and separate Amiga module are still pending.
+The historical downloads described below are version 1.1.0 of C64Screensaver.
+
+## Existing C64 release 1.1
 
 A C64-inspired screensaver for Windows, Linux and macOS, built with .NET 10 and Avalonia 12.
 
@@ -6,7 +20,7 @@ The familiar blue startup screen comes to life: an invisible typist enters real
 BASIC, makes mistakes, corrects them with Backspace and finally types RUN.
 Then the program takes over.
 
-![Ghost-typed BASIC on a curved CRT display](docs/images/c64screensaver.png)
+![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
 ## Features
 

@@ -46,3 +46,25 @@ unsafe
     destroy(second);
     Console.WriteLine("Native bridge: ABI, JSON, bounds, stride, typing, independent sessions and disposal passed.");
 }
+
+unsafe
+{
+    delegate* unmanaged[Cdecl]<byte*, int, int, ulong> createAmiga = &Exports.Create;
+    delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> renderAmiga = &Exports.Render;
+    delegate* unmanaged[Cdecl]<ulong, void> destroyAmiga = &Exports.Destroy;
+    byte[] json = System.Text.Encoding.UTF8.GetBytes("""{"AmigaMode":true,"ScrollerText":"GRUETZE RETROSAVER","CrtEnabled":false}""");
+    ulong id;
+    fixed (byte* p = json) id = createAmiga(p, json.Length, 42);
+    if (id == 0) throw new Exception("Native Amiga session failed");
+    byte[] before = new byte[384 * 288 * 4], after = new byte[before.Length];
+    fixed (byte* a = before)
+    fixed (byte* b = after)
+    {
+        if (renderAmiga(id, a, before.Length, 384, 288, 384 * 4, 0) != 1 ||
+            renderAmiga(id, b, after.Length, 384, 288, 384 * 4, .25) != 1)
+            throw new Exception("Native Amiga render failed");
+    }
+    if (System.Linq.Enumerable.SequenceEqual(before, after)) throw new Exception("Native Amiga frame did not advance");
+    destroyAmiga(id);
+    Console.WriteLine("Native Amiga: animated frames through the shared ABI passed.");
+}

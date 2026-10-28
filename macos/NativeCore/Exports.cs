@@ -21,6 +21,7 @@ public static unsafe class Exports
         internal readonly ScreenSession Screen = new(new Random(seed), settings.Programs, settings);
         internal readonly C64FrameBuffer Frame = new();
         internal bool Closed;
+        internal double Elapsed;
     }
 
     private static readonly ConcurrentDictionary<ulong, Session> Sessions = new();
@@ -85,11 +86,14 @@ public static unsafe class Exports
                 using var surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Bgra8888,
                     SKAlphaType.Premul), (IntPtr)pixels, stride);
                 if (surface == null) return 0;
-                session.Screen.Advance(Math.Min(seconds, .25), session.Settings.SpeedMultiplier);
-                using var image = session.Frame.Capture(session.Screen, session.Settings, session.Screen.Elapsed);
+                session.Elapsed += Math.Min(seconds, .25);
+                if (!session.Settings.AmigaMode || session.Screen.TransitionTime.HasValue) session.Screen.Advance(Math.Min(seconds, .25), session.Settings.SpeedMultiplier);
+                using var image = session.Settings.AmigaMode
+                    ? AmigaFrameBuffer.Capture(session.Settings, session.Elapsed)
+                    : session.Frame.Capture(session.Screen, session.Settings, session.Screen.Elapsed);
                 surface.Canvas.Clear(SKColors.Black);
                 CrtRenderer.Draw(surface.Canvas, new SKRect(0, 0, width, height), image,
-                    CrtParameters.From(session.Settings), session.Screen.Elapsed);
+                    CrtParameters.From(session.Settings), session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed);
                 if (session.Screen.TransitionTime is double transition)
                     CrtPowerRenderer.Draw(surface.Canvas, width, height, transition);
                 surface.Canvas.Flush();
