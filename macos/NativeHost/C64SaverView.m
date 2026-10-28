@@ -340,7 +340,7 @@ static BOOL loadCore(NSBundle *bundle) {
     versionLabel.textColor = NSColor.secondaryLabelColor;
 
     NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(20,75,580,430)];
-    tabs.tag = 203;
+    tabs.identifier = @"C64SettingsTabs";
     [_options.contentView addSubview:tabs];
     _optionsBody = [self page:@"Playback" tabs:tabs];
     [self label:@"BASIC programs" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];

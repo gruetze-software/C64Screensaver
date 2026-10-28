@@ -10,7 +10,10 @@ static NSArray<NSView *> *allControls(NSView *root) {
     return result.array;
 }
 static NSView *findTag(NSView *root, NSInteger tag) {
-    for (NSView *view in allControls(root)) if (view.tag == tag) return view;
+    for (NSView *view in allControls(root)) {
+        if (view.tag == tag) return view;
+        if (tag == 203 && [view.identifier isEqualToString:@"C64SettingsTabs"]) return view;
+    }
     return nil;
 }
 static NSURL *openedHomepage;
