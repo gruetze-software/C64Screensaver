@@ -12,6 +12,8 @@ The intended Mac distribution is the App Store. Store submission, the native
 screensaver/companion settings bridge and separate Amiga module are still pending.
 The historical downloads described below are version 1.1.0 of C64Screensaver.
 
+![Gruetze RetroSaver companion with editable Amiga scroller](docs/images/retrosaver-companion.png)
+
 ## Existing C64 release 1.1
 
 A C64-inspired screensaver for Windows, Linux and macOS, built with .NET 10 and Avalonia 12.
