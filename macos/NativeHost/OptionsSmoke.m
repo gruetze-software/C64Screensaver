@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
             NSString *directory = [NSString stringWithUTF8String:argv[2]];
             [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
             for (NSInteger index = 0; index < 3; index++) {
-                [tabs selectTabViewItemAtIndex:index];
+                [(NSButton *)findTag(sheet.contentView,501+index) performClick:nil];
                 [sheet displayIfNeeded];
                 [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
                 NSView *content = sheet.contentView;

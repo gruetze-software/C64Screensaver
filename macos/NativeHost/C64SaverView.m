@@ -60,6 +60,8 @@ static BOOL loadCore(NSBundle *bundle) {
     BOOL _failed, _stopped;
     NSWindow *_options;
     NSView *_optionsBody;
+    NSTabView *_settingsTabs;
+    NSArray<NSButton *> *_settingsTabButtons;
     NSPopUpButton *_program, *_quality;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
@@ -326,6 +328,13 @@ static BOOL loadCore(NSBundle *bundle) {
     [tabs addTabViewItem:item];
     return item.view;
 }
+- (void)selectSettingsTab:(NSButton *)sender {
+    NSInteger index = sender.tag - 501;
+    if (index < 0 || index >= _settingsTabs.numberOfTabViewItems) return;
+    [_settingsTabs selectTabViewItemAtIndex:index];
+    for (NSButton *button in _settingsTabButtons)
+        button.state = button == sender ? NSControlStateValueOn : NSControlStateValueOff;
+}
 - (NSWindow *)buildConfigureSheet {
     NSDictionary *s = [self settings];
     _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,620,620)
@@ -346,7 +355,22 @@ static BOOL loadCore(NSBundle *bundle) {
         frame:NSMakeRect(110,521,390,20) font:[NSFont systemFontOfSize:11]];
     versionLabel.textColor = NSColor.secondaryLabelColor;
 
-    NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(20,75,580,430)];
+    NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(20,75,580,395)];
+    tabs.tabViewType = NSNoTabsNoBorder;
+    _settingsTabs = tabs;
+    NSMutableArray<NSButton *> *navigation = [NSMutableArray array];
+    NSArray<NSString *> *titles = @[@"Playback",@"Monitor effects",@"Company card"];
+    for (NSInteger index = 0; index < 3; index++) {
+        NSButton *button = [NSButton buttonWithTitle:titles[index] target:self action:@selector(selectSettingsTab:)];
+        button.frame = NSMakeRect(105 + index*140,477,130,30);
+        button.bezelStyle = NSBezelStyleRounded;
+        [button setButtonType:NSButtonTypePushOnPushOff];
+        button.state = index == 0 ? NSControlStateValueOn : NSControlStateValueOff;
+        button.tag = 501 + index;
+        [_options.contentView addSubview:button];
+        [navigation addObject:button];
+    }
+    _settingsTabButtons = navigation;
     tabs.identifier = @"C64SettingsTabs";
     [_options.contentView addSubview:tabs];
     _optionsBody = [self page:@"Playback" tabs:tabs];
