@@ -33,6 +33,12 @@ static BOOL loadCore(NSBundle *bundle) {
     return ready;
 }
 
+@interface C64SettingsBackground : NSView
+@end
+@implementation C64SettingsBackground
+- (void)drawRect:(NSRect)dirty { [NSColor.windowBackgroundColor setFill]; NSRectFill(dirty); }
+@end
+
 @interface C64HomepageButton : NSButton
 @end
 @implementation C64HomepageButton
@@ -325,6 +331,7 @@ static BOOL loadCore(NSBundle *bundle) {
     _options = [[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,620,620)
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
+    _options.contentView = [[C64SettingsBackground alloc] initWithFrame:NSMakeRect(0,0,620,620)];
     _options.title = @"C64Screensaver · Settings";
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
     NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?";

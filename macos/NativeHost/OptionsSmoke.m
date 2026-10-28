@@ -125,8 +125,13 @@ int main(int argc, char **argv) {
                 [sheet displayIfNeeded];
                 [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
                 NSView *content = sheet.contentView;
-                NSBitmapImageRep *image = [content bitmapImageRepForCachingDisplayInRect:content.bounds];
-                [content cacheDisplayInRect:content.bounds toBitmapImageRep:image];
+                NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+                    pixelsWide:(NSInteger)content.bounds.size.width pixelsHigh:(NSInteger)content.bounds.size.height
+                    bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
+                    colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+                NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:image];
+                for (NSView *control in allControls(content)) [control setNeedsDisplay:YES];
+                [content displayRectIgnoringOpacity:content.bounds inContext:context];
                 NSString *file = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"settings-%ld.png",(long)index]];
                 if (![[image representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:file atomically:YES]) return 34;
             }
