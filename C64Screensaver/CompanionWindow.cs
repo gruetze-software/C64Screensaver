@@ -41,8 +41,18 @@ public sealed class CompanionWindow : Window
         var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 60, Height = 60 };
         var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 30, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
         var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 60, Height = 60 };
-        Grid.SetColumn(title, 1); Grid.SetColumn(companyLogo, 2);
-        heading.Children.Add(appLogo); heading.Children.Add(title); heading.Children.Add(companyLogo);
+        var companyInfo = new Button
+        {
+            Name = "CompanyInfo", Content = companyLogo, Width = 70, Height = 70,
+            Padding = new Thickness(0), Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+        };
+        ToolTip.SetTip(companyInfo, "Grütze-Software · Homepage, copyright & Ko-fi");
+        Avalonia.Automation.AutomationProperties.SetName(companyInfo, "About Grütze-Software");
+        companyInfo.Click += async (_, _) => await new CompanyInfoWindow().ShowDialog(this);
+        Grid.SetColumn(title, 1); Grid.SetColumn(companyInfo, 2);
+        heading.Children.Add(appLogo); heading.Children.Add(title); heading.Children.Add(companyInfo);
         body.Children.Add(heading);
         body.Children.Add(new TextBlock { Text = "Your C64. Your Amiga. Your monitor." });
         body.Children.Add(system);
