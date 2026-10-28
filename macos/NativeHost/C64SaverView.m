@@ -62,7 +62,7 @@ static BOOL loadCore(NSBundle *bundle) {
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
     NSArray<NSButton *> *_settingsTabButtons;
-    NSPopUpButton *_program, *_quality;
+    NSPopUpButton *_program, *_quality, *_borderColors;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
     NSTextField *_company, *_website, *_tagline, *_duration;
@@ -305,6 +305,7 @@ static BOOL loadCore(NSBundle *bundle) {
 - (void)fullScreenChanged:(id)sender {
     BOOL full = _fullScreen.state == NSControlStateValueOn;
     _aspect.enabled = !full; _border.enabled = !full;
+    _borderColors.enabled = !full && _border.state != NSControlStateValueOn;
 }
 - (NSTextField *)label:(NSString *)text frame:(NSRect)frame font:(NSFont *)font {
     NSTextField *label = [NSTextField wrappingLabelWithString:text];
@@ -398,13 +399,20 @@ static BOOL loadCore(NSBundle *bundle) {
     _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
     _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:300];
     _border = [self check:@"Hide C64 border" value:border y:265];
+    _border.target = self; _border.action = @selector(fullScreenChanged:);
+    _borderColors = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,228,510,26) pullsDown:NO];
+    _borderColors.tag = 204;
+    [_borderColors addItemsWithTitles:@[@"C64 border: Original blue", @"C64 border: Colors from the BASIC program"]];
+    [_borderColors selectItemAtIndex:(s[@"CycleColors"] ? [s[@"CycleColors"] boolValue] : YES) ? 1 : 0];
+    _borderColors.toolTip = @"The boot screen always keeps its original blue border. Program-controlled colors start after RUN.";
+    [_optionsBody addSubview:_borderColors];
     [self fullScreenChanged:nil];
-    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:210 tag:1];
-    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:165 tag:2];
-    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:120 tag:3];
-    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:75 tag:4];
+    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:190 tag:1];
+    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:145 tag:2];
+    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:100 tag:3];
+    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:55 tag:4];
     NSTextField *monitorHint = [self label:@"Fine-tune the tube from a clear picture to a softly glowing CRT. All effects range from 0 to 100%."
-        frame:NSMakeRect(20,15,510,40) font:[NSFont systemFontOfSize:12]];
+        frame:NSMakeRect(20,5,510,35) font:[NSFont systemFontOfSize:12]];
     monitorHint.textColor = NSColor.secondaryLabelColor;
 
     _optionsBody = [self page:@"Company card" tabs:tabs];
@@ -446,6 +454,7 @@ static BOOL loadCore(NSBundle *bundle) {
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
         @"Scanlines": @YES, @"CrtEnabled": @YES,
         @"NativeRenderQuality": @(_quality.indexOfSelectedItem),
+        @"CycleColors": _borderColors.indexOfSelectedItem == 1 ? @YES : @NO,
         @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
         @"CompanyTagline": _tagline.stringValue}];

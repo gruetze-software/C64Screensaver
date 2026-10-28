@@ -172,15 +172,19 @@ int main(int argc, char **argv) {
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title hasPrefix:@"Fill entire screen"])
                 full = (NSButton *)control;
         if (!full) return 25;
+        NSPopUpButton *borderColors = (NSPopUpButton *)findTag(sheet.contentView,204);
+        if (![borderColors isKindOfClass:NSPopUpButton.class] || borderColors.numberOfItems != 2) return 35;
+        [borderColors selectItemAtIndex:0];
         full.state = NSControlStateValueOff;
         [full performClick:nil];
+        if (borderColors.enabled) return 36;
         [save performClick:nil];
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.3]];
         BOOL passed = !sheet.isVisible && !sheet.sheetParent && [defaults dictionaryForKey:@"Settings"] != nil;
         NSDictionary *saved = [defaults dictionaryForKey:@"Settings"];
         passed = passed && [saved[@"NativeRenderQuality"] integerValue] == 1 && [saved[@"MaskStrength"] doubleValue] == 10
             && [saved[@"Glow"] doubleValue] == 20 && [saved[@"GlowSpread"] doubleValue] == 30
-            && [saved[@"ScanlineStrength"] doubleValue] == 40
+            && [saved[@"ScanlineStrength"] doubleValue] == 40 && ![saved[@"CycleColors"] boolValue]
             && ![saved[@"KeepAspectRatio"] boolValue] && [saved[@"FillScreen"] boolValue];
         NSData *serialized = [NSJSONSerialization dataWithJSONObject:saved options:0 error:nil];
         NSString *json = [[NSString alloc] initWithData:serialized encoding:NSUTF8StringEncoding];
@@ -193,6 +197,7 @@ int main(int argc, char **argv) {
         NSLog(@"Options validation before async rendering: %d", passed);
         NSWindow *reopened = view.configureSheet;
         passed = passed && [((NSSlider *)findTag(reopened.contentView,2)) doubleValue] == 20;
+        passed = passed && ((NSPopUpButton *)findTag(reopened.contentView,204)).indexOfSelectedItem == 0;
         [parent.contentView addSubview:view];
         [view startAnimation];
         view.frame = NSMakeRect(0,0,1920,1080);
