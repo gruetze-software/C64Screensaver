@@ -106,6 +106,7 @@ int main(int argc, char **argv) {
         Method method = class_getInstanceMethod(view.class,openSelector);
         IMP originalOpen = method_getImplementation(method);
         IMP fakeOpen = imp_implementationWithBlock(^(id receiver, NSURL *url, void (^completion)(NSError *)) {
+            (void)receiver;
             openedHomepage = url;
             completion(nil);
         });
