@@ -36,7 +36,7 @@ static BOOL hasPicture(ScreenSaverView *view) {
 // presents it as a sheet, exercises Cancel and Save, then restores user defaults.
 int main(int argc, char **argv) {
     @autoreleasepool {
-        if (argc != 2) return 2;
+        if (argc < 2 || argc > 3) return 2;
         [NSApplication sharedApplication];
         NSBundle *bundle = [NSBundle bundleWithPath:[NSString stringWithUTF8String:argv[1]]];
         NSError *error = nil;
@@ -113,6 +113,20 @@ int main(int argc, char **argv) {
         method_setImplementation(method,originalOpen);
         imp_removeBlock(fakeOpen);
         if (![openedHomepage.absoluteString isEqualToString:@"https://www.gruetze-software.de"]) return 33;
+        if (argc == 3) {
+            NSString *directory = [NSString stringWithUTF8String:argv[2]];
+            [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
+            for (NSInteger index = 0; index < 3; index++) {
+                [tabs selectTabViewItemAtIndex:index];
+                [sheet displayIfNeeded];
+                [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
+                NSView *content = sheet.contentView;
+                NSBitmapImageRep *image = [content bitmapImageRepForCachingDisplayInRect:content.bounds];
+                [content cacheDisplayInRect:content.bounds toBitmapImageRep:image];
+                NSString *file = [directory stringByAppendingPathComponent:[NSString stringWithFormat:@"settings-%ld.png",(long)index]];
+                if (![[image representationUsingType:NSBitmapImageFileTypePNG properties:@{}] writeToFile:file atomically:YES]) return 34;
+            }
+        }
         [tabs selectTabViewItemAtIndex:0];
         if (!cancel) return 8;
         [cancel performClick:nil];

@@ -38,6 +38,6 @@ codesign --verify --deep --strict "$bundle"
 xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
   -Wall -Wextra -Werror -framework Cocoa -framework ScreenSaver \
   "$root/macos/NativeHost/OptionsSmoke.m" -o "$out/options-smoke"
-"$out/options-smoke" "$bundle"
+"$out/options-smoke" "$bundle" "$out/screenshots"
 echo "Experimental bundle: $bundle"
 echo "Inspect dependencies: otool -L \"$bundle/Contents/Frameworks/C64Screensaver.NativeCore.dylib\""
