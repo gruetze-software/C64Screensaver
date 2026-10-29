@@ -547,7 +547,6 @@ static BOOL loadCore(NSBundle *bundle) {
         @"FillScreen": full || _border.state == NSControlStateValueOn ? @YES : @NO,
         @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
-        @"Scanlines": @YES, @"CrtEnabled": @YES,
         @"NativeRenderQuality": @(_quality.indexOfSelectedItem),
         @"CycleColors": _borderColors.indexOfSelectedItem == 1 ? @YES : @NO,
         @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
