@@ -14,7 +14,7 @@ out="$root/artifacts/macos-companion/$rid"
 app="$out/Gruetze RetroSaver.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 dotnet publish "$root/C64Screensaver/C64Screensaver.csproj" -c Release -r "$rid" --self-contained true \
-  -p:DebugType=None -p:DebugSymbols=false -o "$app/Contents/MacOS"
+  -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "$app/Contents/MacOS"
 cp "$root/macos/Companion-Info.plist" "$app/Contents/Info.plist"
 plutil -replace CFBundleShortVersionString -string "$version" "$app/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$version" "$app/Contents/Info.plist"
