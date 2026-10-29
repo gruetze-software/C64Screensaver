@@ -95,7 +95,7 @@ public sealed class AmigaFrameBuffer : IDisposable
             }
             double scrollTime = Math.Floor(time / length) * settings.AmigaDurationSeconds
                 + (revealNext ? settings.AmigaDurationSeconds : Math.Clamp(phase - boot, 0, settings.AmigaDurationSeconds));
-            DrawScroller(canvas, settings, scrollTime, demo == AmigaDemo.Copper ? 135 : Math.Min(226, 261 - (float)settings.ScrollerWave));
+            if (settings.ShowAmigaScroller) DrawScroller(canvas, settings, scrollTime, demo == AmigaDemo.Copper ? 135 : Math.Min(226, 261 - (float)settings.ScrollerWave));
         }
         return surface.Snapshot();
     }

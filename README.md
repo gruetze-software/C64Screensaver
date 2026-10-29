@@ -1,9 +1,9 @@
 # Gruetze RetroSaver
 
 Development branch: the new .NET 10 / Avalonia 12 companion opens on normal launch
-(or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe, plasma and an autoplay jump-and-run scene with shaded rock tiles, a woodland panorama and an eight-pose character,
+(or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe, plasma and an autoplay jump-and-run scene with shaded rock tiles, two independently scrolling woodland layers and an eight-pose character,
 a live preview and editable scrolling text,
-speed and wave height. Choose the historical Kickstart 1.3, 2.0 or 3.1 startup screen, or skip startup. Cycle all demos or repeat one with
+speed and wave height. The Amiga scrolling text can be switched on or off. Choose the historical Kickstart 1.3, 2.0 or 3.1 startup screen, or skip startup. Cycle all demos or repeat one with
 configurable runtime and CRT power transitions. An optional soft red disk-activity
 reflection pulses on the glass during Kickstart startup. The demos are procedurally drawn; the startup screens use historical captures
 with their original artwork and animation. No Kickstart ROM is loaded.

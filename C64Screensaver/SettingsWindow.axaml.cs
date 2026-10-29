@@ -26,6 +26,7 @@ public partial class SettingsWindow : Window
         previewSettings.AmigaAnimation = config.Settings.AmigaAnimation;
         previewSettings.AmigaDurationSeconds = config.Settings.AmigaDurationSeconds;
         previewSettings.NativeRenderQuality = config.Settings.NativeRenderQuality;
+        previewSettings.ShowAmigaScroller = config.Settings.ShowAmigaScroller;
         previewSettings.ScrollerText = config.Settings.ScrollerText;
         previewSettings.ScrollerSpeed = config.Settings.ScrollerSpeed;
         previewSettings.ScrollerWave = config.Settings.ScrollerWave;

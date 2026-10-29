@@ -1,5 +1,9 @@
 # Gruetze RetroSaver development
 
+- Add a separately scrolling transparent woodland layer for stronger parallax depth.
+- Add a saved Show scrolling text option for Amiga demos with instant preview;
+  hidden text retains its content and settings.
+
 - Rework jump-and-run art with project-owned generated pixel assets: layered
   woodland panorama, shaded mossy rock platforms, six running/two jumping poses
   and faceted collectible crystals. Textures are prepared once at game resolution.

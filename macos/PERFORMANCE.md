@@ -100,3 +100,11 @@ Per-frame work is a few cached image draws plus the existing fixed-step physics.
 Local measured source rendering is about 0.40 ms/frame with 104 managed bytes
 per frame, excluding CRT effects. The three-minute autoplay/30-vs-60-Hz tests
 continue to pass. These are local measurements, not a Neo performance claim.
+
+## Second parallax layer and text visibility
+
+A second transparent 768×256 woodland texture is cached once. Far scenery moves
+at 0.18 of camera speed, middle woodland at 0.46, and terrain at full speed.
+Both backgrounds use mirrored joins. Local source rendering with both layers
+and scrolling text measured about 0.51 ms/frame, excluding CRT.
+Disabling the scroller skips its draw calls entirely; text and speed are preserved.

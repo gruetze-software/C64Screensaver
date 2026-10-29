@@ -23,7 +23,7 @@ public sealed class AmigaRunner
     public int Crystals { get; private set; }
     public int Respawns { get; private set; }
 
-    public AmigaRunner() { _ = RunnerArtwork.Sprites.Value; _ = RunnerArtwork.Panorama.Value; _ = Terrain.Value; _ = RunnerArtwork.Crystals.Value; }
+    public AmigaRunner() { _ = RunnerArtwork.Sprites.Value; _ = RunnerArtwork.Panorama.Value; _ = RunnerArtwork.Midground.Value; _ = Terrain.Value; _ = RunnerArtwork.Crystals.Value; }
     public static double? GroundAt(double x)
     {
         double local = (x % Period + Period) % Period;
@@ -89,17 +89,10 @@ public sealed class AmigaRunner
         AdvanceTo(time);
         double camera = WorldX - 96;
         paint.Color = SKColors.White;
-        double backgroundScroll = camera * .18;
-        int firstBackground = (int)Math.Floor(backgroundScroll / 768);
-        for (int i = firstBackground; i <= firstBackground + 1; i++)
-        {
-            int saved = canvas.Save();
-            canvas.Translate((float)(i * 768 - backgroundScroll), 0);
-            // Mirrored joins keep the panorama continuous without a hard seam.
-            if ((i & 1) != 0) { canvas.Translate(768, 0); canvas.Scale(-1, 1); }
-            canvas.DrawImage(RunnerArtwork.Panorama.Value, new SKRect(0, 0, 768, 288), Nearest, paint);
-            canvas.RestoreToCount(saved);
-        }
+        DrawLayer(canvas, RunnerArtwork.Panorama.Value, camera * .18, paint);
+        paint.Color = SKColors.White.WithAlpha(220);
+        DrawLayer(canvas, RunnerArtwork.Midground.Value, camera * .46, paint);
+        paint.Color = SKColors.White;
         int firstCycle = (int)Math.Floor(camera / Period);
         for (int cycle = firstCycle; cycle <= firstCycle + 1; cycle++)
         for (int index = 0; index < Platforms.Length; index++)
@@ -126,6 +119,18 @@ public sealed class AmigaRunner
         paint.Color = SKColors.White;
         int frame = Grounded ? (int)(time * 12) % 6 : velocity < 0 ? 6 : 7;
         canvas.DrawImage(RunnerArtwork.Sprites.Value[frame], new SKRect(76, (float)FootY - 44, 116, (float)FootY), Nearest, paint);
+    }
+    private static void DrawLayer(SKCanvas canvas, SKImage image, double scroll, SKPaint paint)
+    {
+        int first = (int)Math.Floor(scroll / 768);
+        for (int i = first; i <= first + 1; i++)
+        {
+            int saved = canvas.Save();
+            canvas.Translate((float)(i * 768 - scroll), 0);
+            if ((i & 1) != 0) { canvas.Translate(768, 0); canvas.Scale(-1, 1); }
+            canvas.DrawImage(image, new SKRect(0, 0, 768, 288), Nearest, paint);
+            canvas.RestoreToCount(saved);
+        }
     }
     private static SKImage[] CreateTerrain()
     {

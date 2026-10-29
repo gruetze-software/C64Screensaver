@@ -141,3 +141,30 @@ for (int frame = 0; frame <= 360; frame++) thirtyHz.AdvanceTo(frame / 30.0);
 Check(Math.Abs(direct.FootY - thirtyHz.FootY) < .0001 && direct.Crystals == thirtyHz.Crystals,
     "Jump physics is independent of presentation rate");
 Console.WriteLine("PASS: jump-and-run autoplayer, platform collisions, pickups, frame-rate independence and replay.");
+
+var textToggle = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None,
+    AmigaAnimation = AmigaDemo.Runner, PowerTransition = false };
+using (var toggled = new AmigaFrameBuffer())
+using (var visibleText = toggled.CaptureFrame(textToggle, 3))
+{
+    textToggle.ShowAmigaScroller = false;
+    using var hiddenText = toggled.CaptureFrame(textToggle, 3);
+    Check(Difference(visibleText, hiddenText) > 100, "Scrolling text can be hidden");
+    using var a = SKBitmap.FromImage(visibleText);
+    using var b = SKBitmap.FromImage(hiddenText);
+    for (int y = 0; y < 200; y++)
+    for (int x = 0; x < 384; x++)
+        Check(a.GetPixel(x, y) == b.GetPixel(x, y), "Text toggle preserves the game and background");
+    Save(hiddenText, "demo-Runner-no-text");
+}
+Console.WriteLine("PASS: scrolling-text visibility and unchanged game state.");
+
+using (var layerStream = typeof(SaverSettings).Assembly.GetManifestResourceStream(
+    "GruetzeRetroSaver.Runner.forest-midground-v1.png") ?? throw new Exception("Missing second background"))
+using (var layer = SKBitmap.Decode(layerStream))
+{
+    var pixels = layer.Pixels;
+    Check(pixels.Count(p => p.Alpha < 16) > pixels.Length / 3, "Middle background leaves transparent views of distant scenery");
+    Check(pixels.Count(p => p.Alpha > 180) > pixels.Length / 20, "Middle background contains visible artwork");
+}
+Console.WriteLine("PASS: separately embedded transparent parallax artwork.");

@@ -23,10 +23,11 @@ public sealed class CompanionWindow : Window
         Classes.Add("dialog");
         using (var iconStream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://C64Screensaver/Assets/app-icon.ico")))
             Icon = new WindowIcon(iconStream);
-        Width = 1160; Height = 820; MinWidth = 880; MinHeight = 620;
+        Width = 1160; Height = 860; MinWidth = 880; MinHeight = 620;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var system = new ComboBox { ItemsSource = new[] { "Commodore 64", "Amiga" }, SelectedIndex = config.Settings.AmigaMode ? 1 : 0 };
         var text = new TextBox { Text = config.Settings.ScrollerText, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 4096, MinHeight = 60 };
+        var showScroller = new CheckBox { Name = "ShowScroller", Content = "Show scrolling text", IsChecked = config.Settings.ShowAmigaScroller, FontSize = 13 };
         var speed = new Slider { Height = 32, Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
         var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
         var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1" }, SelectedIndex = (int)config.Settings.AmigaBoot };
@@ -76,6 +77,7 @@ public sealed class CompanionWindow : Window
         Field("Amiga animation", demo);
         Field("Demo runtime · seconds", duration);
         Field("Software rendering quality", quality);
+        editor.Children.Add(showScroller);
         Field("Amiga scrolling text", text);
         Field("Scrolling speed", speed);
         Field("Sine wave height", wave);
@@ -97,7 +99,8 @@ public sealed class CompanionWindow : Window
         Content = body;
         void UpdateAvailability()
         {
-            text.IsEnabled = speed.IsEnabled = wave.IsEnabled = boot.IsEnabled = demo.IsEnabled = duration.IsEnabled = activity.IsEnabled = config.Settings.AmigaMode;
+            showScroller.IsEnabled = boot.IsEnabled = demo.IsEnabled = duration.IsEnabled = activity.IsEnabled = config.Settings.AmigaMode;
+            text.IsEnabled = speed.IsEnabled = wave.IsEnabled = config.Settings.AmigaMode && showScroller.IsChecked == true;
             activity.IsEnabled = config.Settings.AmigaMode && config.Settings.AmigaBoot != AmigaBootStyle.None;
         }
         void Restart()
@@ -112,6 +115,7 @@ public sealed class CompanionWindow : Window
         demo.SelectionChanged += (_, _) => { config.Settings.AmigaAnimation = (AmigaDemo)Math.Max(0, demo.SelectedIndex); Restart(); };
         quality.SelectionChanged += (_, _) => { config.Settings.NativeRenderQuality = Math.Max(0, quality.SelectedIndex); scene.InvalidateVisual(); };
         duration.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(NumericUpDown.Value)) { config.Settings.AmigaDurationSeconds = (int)(duration.Value ?? 45); Restart(); } };
+        showScroller.IsCheckedChanged += (_, _) => { config.Settings.ShowAmigaScroller = showScroller.IsChecked == true; UpdateAvailability(); scene.InvalidateVisual(); };
         text.TextChanged += (_, _) => { config.Settings.ScrollerText = text.Text ?? ""; config.Settings.Validate(); scene.InvalidateVisual(); };
         speed.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.ScrollerSpeed = speed.Value; };
         wave.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.ScrollerWave = wave.Value; };
@@ -123,6 +127,7 @@ public sealed class CompanionWindow : Window
             config.Settings.AmigaAnimation = (AmigaDemo)Math.Max(0, demo.SelectedIndex);
             config.Settings.AmigaDurationSeconds = (int)(duration.Value ?? 45);
             config.Settings.NativeRenderQuality = Math.Max(0, quality.SelectedIndex);
+            config.Settings.ShowAmigaScroller = showScroller.IsChecked == true;
             config.Settings.ScrollerText = text.Text ?? "";
             config.Settings.ScrollerSpeed = speed.Value;
             config.Settings.ScrollerWave = wave.Value;

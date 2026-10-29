@@ -7,6 +7,7 @@ internal static class RunnerArtwork
 {
     private static readonly SKSamplingOptions Nearest = new(SKFilterMode.Nearest);
     internal static readonly Lazy<SKImage> Panorama = new(() => Resize("forest-v2", 768, 256));
+    internal static readonly Lazy<SKImage> Midground = new(() => Resize("forest-midground-v1", 768, 256));
     internal static readonly Lazy<SKImage[]> Sprites = new(CreateSprites);
     private static readonly Lazy<SKImage[]> Tiles = new(CreateTiles);
     internal static readonly Lazy<SKImage[]> Crystals = new(CreateCrystals);

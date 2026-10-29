@@ -15,6 +15,7 @@ public class SaverSettings
     public int AmigaDurationSeconds { get; set; } = 45;
     public int NativeRenderQuality { get; set; }
     public bool AmigaMode { get; set; }
+    public bool ShowAmigaScroller { get; set; } = true;
     public string ScrollerText { get; set; } = "GRUETZE RETROSAVER - WELCOME TO THE AMIGA!   WWW.GRUETZE-SOFTWARE.DE";
     public double ScrollerSpeed { get; set; } = 48;
     public double ScrollerWave { get; set; } = 20;
