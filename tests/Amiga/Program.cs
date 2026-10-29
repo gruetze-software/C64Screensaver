@@ -24,9 +24,12 @@ foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, 
     settings.AmigaBoot = boot;
     using var first = renderer.CaptureFrame(settings, 1);
     using var loading = renderer.CaptureFrame(settings, 4.6);
-    Check(Difference(first, loading) > 500, "Startup disk moves and loads: " + boot);
+    Check(boot == AmigaBootStyle.Classic13 ? Difference(first, loading) == 0 : Difference(first, loading) > 500, "Original static/animated startup: " + boot);
+    using (var sameFrame = renderer.CaptureFrame(settings, 1))
+        Check(!ReferenceEquals(first, sameFrame), "Overlapping render operations own independent image wrappers");
+    Check(first.Width == 640, "Disposing one boot frame leaves another alive");
     Save(first, "boot-" + boot);
-    using var demo = renderer.CaptureFrame(settings, 6);
+    using var demo = renderer.CaptureFrame(settings, AmigaFrameBuffer.BootDuration(settings) + 1);
     Check(Difference(first, demo) > 10000, "Startup proceeds to demo: " + boot);
 }
 settings.AmigaBoot = AmigaBootStyle.None;
@@ -66,6 +69,7 @@ settings.AmigaDurationSeconds = 0; settings.NativeRenderQuality = 99;
 settings.Validate();
 Check(settings.AmigaAnimation == AmigaDemo.Cycle && settings.AmigaBoot == AmigaBootStyle.Classic13 &&
     settings.AmigaDurationSeconds == 15 && settings.NativeRenderQuality == 2, "Validate persisted Amiga options");
+settings.AmigaBoot = AmigaBootStyle.None;
 using (var first = renderer.CaptureFrame(settings, 1))
 using (var original = SKBitmap.FromImage(first))
 {

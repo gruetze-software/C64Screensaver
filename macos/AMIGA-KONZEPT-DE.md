@@ -98,3 +98,14 @@ CRT-Abschalt-/Einschalteffekte mit dem nächsten Startbild an.
 Gemeinsamer Renderer für Avalonia und native Mac-Bibliothek; ein separates
 Amiga.saver-Modul und der Einstellungs-Austausch mit der Mac-Begleit-App sind
 weiterhin offen. Performance-Messungen und Qualitätsstufen siehe PERFORMANCE.md.
+
+
+## Korrektur der Startsequenz vom 29. Oktober
+
+Die freien Nachzeichnungen sind ersetzt: 1.3 verwendet den statischen
+Original-Bildschirm mit kopfüber beschrifteter Workbench-Diskette. 2.0 und 3.1
+verwenden die historischen GIF-Animationen mit großem Regenbogen-Häkchen,
+Laufwerk, Versions- und Copyright-Texten. Keine RETRO-Etiketten, zusätzlichen
+STYLE-Titel oder erfundenen Fortschrittsbalken. 1.3 bleibt fünf Sekunden stehen;
+2.0/3.1 spielen einen vollständigen Animationszyklus vor dem Demo-Start.
+Quellen und Zuordnung: C64Screensaver/Assets/Kickstart/CREDITS.md.

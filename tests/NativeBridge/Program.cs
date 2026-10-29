@@ -68,3 +68,29 @@ unsafe
     destroyAmiga(id);
     Console.WriteLine("Native Amiga: animated frames through the shared ABI passed.");
 }
+
+unsafe
+{
+    delegate* unmanaged[Cdecl]<byte*, int, int, ulong> create = &Exports.Create;
+    delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> render = &Exports.Render;
+    delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
+    foreach (int boot in new[] { 1, 2, 3 })
+    {
+        byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { AmigaMode = true, AmigaBoot = boot, CrtEnabled = false, PowerTransition = false });
+        ulong id;
+        fixed (byte* p = json) id = create(p, json.Length, 42);
+        if (id == 0) throw new Exception("Original Kickstart native session failed");
+        byte[] before = new byte[384 * 288 * 4], after = new byte[before.Length];
+        fixed (byte* a = before)
+        fixed (byte* b = after)
+        {
+            if (render(id, a, before.Length, 384, 288, 384 * 4, 0) != 1) throw new Exception("Original Kickstart resource missing");
+            for (int i = 0; i < 16; i++)
+                if (render(id, b, after.Length, 384, 288, 384 * 4, .25) != 1) throw new Exception("Original Kickstart frame failed");
+        }
+        bool equal = System.Linq.Enumerable.SequenceEqual(before, after);
+        if ((boot == 1) != equal) throw new Exception("Original static/animated native playback mismatch");
+        destroy(id);
+    }
+    Console.WriteLine("Native Kickstart: all three embedded captures and original static/animated playback passed.");
+}

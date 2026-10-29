@@ -6,10 +6,11 @@ namespace C64Screensaver;
 public enum AmigaBootStyle { None, Classic13, Purple20, Purple31 }
 public enum AmigaDemo { Cycle, Copper, Boing, Starflight, Plasma }
 
-// Original procedural artwork, not a ROM dump or an extracted demo asset.
+// Procedural demos with historical Kickstart screen captures; no ROM is loaded.
 public sealed class AmigaFrameBuffer : IDisposable
 {
     private readonly SKSurface surface = SKSurface.Create(new SKImageInfo(384, 288));
+    private SKSurface? bootSurface;
     private readonly SKBitmap plasma = new(96, 72);
     private readonly int[] plasmaPixels = new int[96 * 72];
     private readonly SKPaint paint = new() { IsAntialias = false };
@@ -32,7 +33,7 @@ public sealed class AmigaFrameBuffer : IDisposable
         using var renderer = new AmigaFrameBuffer();
         return renderer.CaptureFrame(settings, time);
     }
-    public static double BootDuration(SaverSettings settings) => settings.AmigaBoot == AmigaBootStyle.None ? 0 : 5;
+    public static double BootDuration(SaverSettings settings) => settings.AmigaBoot == AmigaBootStyle.None ? 0 : settings.AmigaBoot == AmigaBootStyle.Classic13 ? 5 : KickstartFrames.PlaybackSeconds(settings.AmigaBoot);
     public static double? PowerTime(SaverSettings settings, double time)
     {
         if (!settings.PowerTransition) return null;
@@ -56,7 +57,16 @@ public sealed class AmigaFrameBuffer : IDisposable
         double phase = time % length;
         bool revealNext = settings.PowerTransition && phase >= boot + settings.AmigaDurationSeconds + 1.02;
         double contentPhase = revealNext ? 0 : phase;
-        if (contentPhase < boot) DrawBoot(canvas, settings.AmigaBoot, contentPhase);
+        if (contentPhase < boot)
+        {
+            bootSurface ??= SKSurface.Create(new SKImageInfo(640, 400));
+            var original = KickstartFrames.At(settings.AmigaBoot, contentPhase);
+            // Mark the surface dirty for a distinct snapshot: Avalonia can retain
+            // multiple frame operations, each with independent image ownership.
+            bootSurface.Canvas.Clear(SKColors.Black);
+            bootSurface.Canvas.DrawImage(original, 0, 0);
+            return bootSurface.Snapshot();
+        }
         else
         {
             double demoTime = Math.Min(contentPhase - boot, settings.AmigaDurationSeconds);
@@ -168,82 +178,6 @@ public sealed class AmigaFrameBuffer : IDisposable
         paint.Color = SKColors.White;
         canvas.DrawBitmap(plasma, new SKRect(0, 0, 384, 288), paint);
     }
-    private void DrawBoot(SKCanvas canvas, AmigaBootStyle style, double time)
-    {
-        bool classic = style == AmigaBootStyle.Classic13;
-        canvas.Clear(classic ? new SKColor(220, 220, 220) : new SKColor(73, 27, 111));
-        // Independently drawn hand/disk and drive motifs, deliberately not pixel-identical ROM artwork.
-        float diskY = 78 - (time > 3.6 ? (float)Math.Min(36, (time - 3.6) * 36) : 0);
-        if (classic)
-        {
-            using var hand = new SKPath();
-            hand.MoveTo(98, 220); hand.LineTo(116, 174); hand.LineTo(127, 161);
-            hand.LineTo(132, 137); hand.CubicTo(134, 125, 143, 126, 144, 135);
-            hand.LineTo(142, 153); hand.LineTo(149, 153); hand.LineTo(154, 138);
-            hand.CubicTo(158, 129, 166, 133, 163, 143); hand.LineTo(160, 155);
-            hand.LineTo(176, 155); hand.CubicTo(184, 148, 191, 149, 190, 157);
-            hand.LineTo(191, 164); hand.LineTo(209, 164);
-            hand.CubicTo(226, 164, 228, 177, 216, 184);
-            hand.LineTo(200, 202); hand.LineTo(173, 206); hand.LineTo(158, 220); hand.Close();
-            paint.Color = SKColors.White;
-            canvas.DrawPath(hand, paint);
-            paint.Color = new SKColor(30, 30, 50);
-            paint.Style = SKPaintStyle.Stroke; paint.StrokeWidth = 2;
-            canvas.DrawPath(hand, paint);
-            canvas.DrawLine(132, 161, 149, 168, paint);
-            canvas.DrawLine(149, 174, 184, 177, paint);
-            canvas.DrawLine(161, 191, 190, 188, paint);
-            paint.Style = SKPaintStyle.Fill; paint.StrokeWidth = 1;
-        }
-        else
-        {
-            paint.Color = new SKColor(180, 180, 195);
-            canvas.DrawRoundRect(106, 164, 172, 30, 3, 3, paint);
-            paint.Color = new SKColor(25, 18, 38);
-            canvas.DrawRect(120, 174, 128, 5, paint);
-            paint.Color = time > 3.6 ? SKColors.LimeGreen : SKColors.DarkGreen;
-            canvas.DrawRect(258, 177, 8, 4, paint);
-        }
-        paint.Color = classic ? new SKColor(38, 61, 166) : new SKColor(220, 215, 232);
-        canvas.DrawRect(154, diskY, 76, 76, paint);
-        paint.Color = new SKColor(50, 50, 70);
-        canvas.DrawRect(165, diskY, 48, 25, paint);
-        paint.Color = new SKColor(185, 188, 200);
-        canvas.DrawRect(173, diskY + 3, 14, 19, paint);
-        paint.Color = SKColors.White;
-        canvas.DrawRect(161, diskY + 43, 62, 28, paint);
-        DrawText(canvas, "RETRO", 172, diskY + 52, 1, new SKColor(30, 30, 50));
-        string label = classic ? "KICKSTART 1.3 STYLE" : style == AmigaBootStyle.Purple20 ? "KICKSTART 2.0 STYLE" : "KICKSTART 3.1 STYLE";
-        DrawText(canvas, label, 192 - label.Length * 4, 223, 1, classic ? SKColors.Black : SKColors.White);
-        if (time < 3.6) DrawText(canvas, "INSERT DISK", 148, 245, 1, classic ? SKColors.Black : SKColors.White);
-        else
-        {
-            paint.Color = classic ? new SKColor(38, 61, 166) : SKColors.White;
-            canvas.DrawRect(128, 247, (float)Math.Clamp((time - 3.6) / 1.4, 0, 1) * 128, 3, paint);
-        }
-        if (style == AmigaBootStyle.Purple31)
-        {
-            SKColor[] colors = [SKColors.Red, SKColors.Orange, SKColors.Yellow, SKColors.LimeGreen, SKColors.Cyan, SKColors.Blue];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                paint.Color = colors[i];
-                canvas.DrawRect(145 + i * 15, 42 - i * 3, 13, 6, paint);
-            }
-        }
-    }
-    private void DrawText(SKCanvas canvas, string text, float x, float y, int scale, SKColor color)
-    {
-        paint.Color = color;
-        foreach (char ch in text)
-        {
-            var rows = PixelCharacters.Rows((byte)ch);
-            if (rows != null)
-                for (int row = 0; row < 8; row++)
-                for (int col = 0; col < 8; col++)
-                    if ((rows[row] & (128 >> col)) != 0) canvas.DrawRect(x + col * scale, y + row * scale, scale, scale, paint);
-            x += 8 * scale;
-        }
-    }
     private static SKImage CreateGlyphAtlas()
     {
         using var target = SKSurface.Create(new SKImageInfo(95 * 18, 27));
@@ -313,6 +247,6 @@ public sealed class AmigaFrameBuffer : IDisposable
     {
         if (disposed) return;
         disposed = true;
-        surface.Dispose(); plasma.Dispose(); paint.Dispose();
+        surface.Dispose(); bootSurface?.Dispose(); plasma.Dispose(); paint.Dispose();
     }
 }

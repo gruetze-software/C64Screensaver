@@ -3,10 +3,10 @@
 Development branch: the new .NET 10 / Avalonia 12 companion opens on normal launch
 (or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe and plasma scenes,
 a live preview and editable scrolling text,
-speed and wave height. Choose a hand/disk or purple-drive startup motif inspired
-by Kickstart 1.3, 2.0 or 3.1, or skip startup. Cycle all demos or repeat one with
-configurable runtime and CRT power transitions. The artwork is independently drawn;
-no Kickstart ROM or original scene-demo assets are bundled. --fullscreen and Windows /s still launch the screensaver
+speed and wave height. Choose the historical Kickstart 1.3, 2.0 or 3.1 startup screen, or skip startup. Cycle all demos or repeat one with
+configurable runtime and CRT power transitions. The demos are procedurally drawn; the startup screens use historical captures
+with their original artwork and animation. No Kickstart ROM is loaded.
+See [screen artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md). --fullscreen and Windows /s still launch the screensaver
 directly. Existing settings stay in their original location.
 
 Windows and Linux public release packages remain free. New public release

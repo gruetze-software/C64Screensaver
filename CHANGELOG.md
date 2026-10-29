@@ -1,5 +1,8 @@
 # Gruetze RetroSaver development
 
+- Replace the freehand Kickstart approximations with historical static/animated
+  screen captures, preserving original layout, text, palette and frame timing.
+
 - Amiga: three independently drawn Kickstart-style startup motifs, four demos,
   configurable playlist/runtime and continuous scrolling text across demo changes.
 - Persistent Amiga drawing buffers and sprite atlases; bounded software CRT

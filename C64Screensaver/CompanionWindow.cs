@@ -70,7 +70,7 @@ public sealed class CompanionWindow : Window
             editor.Children.Add(control);
         }
         Field("System", system);
-        Field("Kickstart-style startup", boot);
+        Field("Kickstart startup", boot);
         Field("Amiga animation", demo);
         Field("Demo runtime · seconds", duration);
         Field("Software rendering quality", quality);
