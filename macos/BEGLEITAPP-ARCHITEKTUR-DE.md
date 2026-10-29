@@ -127,7 +127,7 @@ Editor. C64-Einstellungen und Speicherort bleiben erhalten.
 Copper-Balken und Sinus-Lauftext werden selbst gezeichnet. Derselbe Renderer
 ist in die native Mac-Bibliothek eingebunden und über deren JSON-Einstellungen
 mit AmigaMode aktivierbar. Es gibt noch kein separates Amiga.saver-Bundle,
-keine Kickstart-Auswahl, keinen gemeinsamen autorisierten Konfigurationsordner
+keinen gemeinsamen autorisierten Konfigurationsordner
 und noch keinen Aufruf der Begleit-App aus dem nativen Optionsdialog.
 Die Mac-Sandbox-Integration ist damit ausdrücklich noch nicht bestätigt.
 
@@ -135,3 +135,8 @@ Die öffentliche Release-Vorbereitung erzeugt künftig nur Windows-/Linux-Pakete
 Lokale Mac-Publishes und native CI-Testartefakte bleiben möglich. Bestehende
 GitHub-Releases wurden nicht gelöscht; ein Store-Link wird erst nach Vorliegen
 einer tatsächlichen Produktseite eingetragen.
+
+
+Amiga-Ausbau vom 29. Oktober: Startmotiv, vier Animationen, Laufzeit und
+Software-Qualitätsstufe sind jetzt in der Begleit-App einstellbar. Die
+Einstellungsübertragung und das separate native Amiga-Modul bleiben offen.

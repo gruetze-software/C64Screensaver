@@ -9,6 +9,10 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
+    public AmigaBootStyle AmigaBoot { get; set; } = AmigaBootStyle.Classic13;
+    public AmigaDemo AmigaAnimation { get; set; } = AmigaDemo.Cycle;
+    public int AmigaDurationSeconds { get; set; } = 45;
+    public int NativeRenderQuality { get; set; }
     public bool AmigaMode { get; set; }
     public string ScrollerText { get; set; } = "GRUETZE RETROSAVER - WELCOME TO THE AMIGA!   WWW.GRUETZE-SOFTWARE.DE";
     public double ScrollerSpeed { get; set; } = 48;
@@ -40,6 +44,10 @@ public class SaverSettings
 
     public void Validate()
     {
+        if (!Enum.IsDefined(AmigaBoot)) AmigaBoot = AmigaBootStyle.Classic13;
+        if (!Enum.IsDefined(AmigaAnimation)) AmigaAnimation = AmigaDemo.Cycle;
+        AmigaDurationSeconds = Math.Clamp(AmigaDurationSeconds, 15, 1800);
+        NativeRenderQuality = Math.Clamp(NativeRenderQuality, 0, 2);
         ScrollerText = (ScrollerText ?? "").Replace("ä", "AE").Replace("ö", "OE").Replace("ü", "UE").Replace("ß", "SS").ToUpperInvariant();
         ScrollerText = new string(System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(ScrollerText, c => c >= ' ' && c <= '~' ? c : ' ')));
         if (ScrollerText.Length > 4096) ScrollerText = ScrollerText[..4096];

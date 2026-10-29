@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test Amiga startup and animations
+        run: dotnet run --project tests/Amiga -c Release
       - name: Test managed C ABI
         run: dotnet run --project tests/NativeBridge -c Release
       - name: Measure CPU render budgets
@@ -40,3 +42,4 @@ jobs:
           path: |
             artifacts/macos-native/**/*.zip
             artifacts/macos-native/**/screenshots/*.png
+            artifacts/amiga-review/*.png

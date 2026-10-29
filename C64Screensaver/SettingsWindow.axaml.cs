@@ -21,6 +21,10 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         config = configManager;
         previewSettings.AmigaMode = config.Settings.AmigaMode;
+        previewSettings.AmigaBoot = config.Settings.AmigaBoot;
+        previewSettings.AmigaAnimation = config.Settings.AmigaAnimation;
+        previewSettings.AmigaDurationSeconds = config.Settings.AmigaDurationSeconds;
+        previewSettings.NativeRenderQuality = config.Settings.NativeRenderQuality;
         previewSettings.ScrollerText = config.Settings.ScrollerText;
         previewSettings.ScrollerSpeed = config.Settings.ScrollerSpeed;
         previewSettings.ScrollerWave = config.Settings.ScrollerWave;

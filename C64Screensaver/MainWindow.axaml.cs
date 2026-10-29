@@ -102,6 +102,11 @@ public partial class MainWindow : Window
             return;
         }
         double elapsed = _lastFrame.HasValue ? Math.Max((time - _lastFrame.Value).TotalSeconds, 0) : 0;
+        if (_lastFrame.HasValue && elapsed < 1.0 / 60 - .001)
+        {
+            RequestAnimationFrame(_frameCallback);
+            return;
+        }
         double delta = Math.Min(elapsed, 0.1);
         _lastFrame = time;
         AdvanceScene(delta);

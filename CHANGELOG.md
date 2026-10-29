@@ -1,5 +1,12 @@
 # Gruetze RetroSaver development
 
+- Amiga: three independently drawn Kickstart-style startup motifs, four demos,
+  configurable playlist/runtime and continuous scrolling text across demo changes.
+- Persistent Amiga drawing buffers and sprite atlases; bounded software CRT
+  resolution with Efficient/Balanced/Detailed quality, retaining full GPU detail.
+- Display-synchronized companion preview, paused while dialogs/fullscreen previews
+  are active; larger preview with a separate scrolling editor panel.
+
 - Shared .NET 10 / Avalonia 12 companion with C64/Amiga selection, live preview,
   app/company logos and access to existing monitor settings.
 - Original Amiga Copper bars and editable sine scroller; text up to 4096

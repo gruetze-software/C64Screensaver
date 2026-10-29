@@ -45,3 +45,39 @@ Activity Monitor using Efficient versus Detailed. Check smoothness, CPU,
 memory after several cycles and energy usage. A remaining architectural
 improvement is rendering directly to a Metal/GPU surface; that requires a
 different native presentation/Skia backend and is not implemented here.
+
+
+## Amiga-Ausbau und begrenztes Software-Rendering (29. Oktober 2026)
+
+Die Software-CRT-Pipeline rechnet jetzt unabhängig von der Monitorgröße in einem
+begrenzten Zwischenbild und skaliert das fertige Ergebnis. Die Qualitätsstufen
+verwenden maximal 640×360 (Efficient), 960×540 (Balanced) bzw. 1280×720 (Detailed).
+Das tatsächliche Seitenverhältnis bleibt erhalten. Native Host-Ausgabepuffer und
+Monitordarstellung behalten ihre bisherige Größe. GPU-Rendering in Avalonia
+bleibt in voller Auflösung. Feine Masken und Scanlines werden bei niedrigeren
+Software-Stufen sichtbar weicher; höhere Qualität braucht mehr Rechenzeit.
+
+Lokale Windows-CPU-Rastermessung mit tests/NativePerformance, gleiche
+CRT-Voreinstellungen, drei Aufwärmbilder und zwölf Messbilder:
+
+| Ausgabe | Vorher ms/Bild | Jetzt, Efficient ms/Bild |
+| --- | ---: | ---: |
+| 960×540 | 39,17 | 21,66 |
+| 1280×720 | 60,88 | 21,54 |
+| 1920×1080 | 512,68 | 24,91 |
+
+Diese Stichprobe enthält die Shaderarbeit und CPU-Ausgabe, aber weder AppKit-
+Präsentation noch eine Messung auf dem Neo. Sie garantiert keine bestimmte
+Bildrate. Laufende Vorschaufenster beeinflussen die lokale Rechnerlast.
+
+Die Amiga-Quellbilder verwenden eine wiederverwendete Fläche, vorbereitete
+Schriftspalten und vorberechnete Kugelbilder. Gemessene reine Szenen-Zeiten
+liegen lokal bei ungefähr 0,35–0,48 ms/Bild; die verwalteten Allokationen sinken
+von rund 2074 Byte/Bild beim alten Copper-Prototyp auf ca. 104–208 Byte/Bild.
+Das ist wesentlich weniger als der Aufwand des Software-CRT-Effekts.
+
+Die Begleit-App verwendet den Darstellungstakt statt eines unabhängigen
+30-Hz-Timers, begrenzt auf maximal 60 Aktualisierungen pro Sekunde. Während
+eigener Vollbildvorschauen und modaler Dialoge pausiert ihre Hintergrundvorschau.
+Die Vollbildanzeige vermeidet ebenfalls unnötige Aktualisierungen oberhalb 60 Hz.
+Animationen verwenden weiterhin die verstrichene Zeit statt fester Schrittweiten.

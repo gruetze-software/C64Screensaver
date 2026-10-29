@@ -52,7 +52,7 @@ unsafe
     delegate* unmanaged[Cdecl]<byte*, int, int, ulong> createAmiga = &Exports.Create;
     delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> renderAmiga = &Exports.Render;
     delegate* unmanaged[Cdecl]<ulong, void> destroyAmiga = &Exports.Destroy;
-    byte[] json = System.Text.Encoding.UTF8.GetBytes("""{"AmigaMode":true,"ScrollerText":"GRUETZE RETROSAVER","CrtEnabled":false}""");
+    byte[] json = System.Text.Encoding.UTF8.GetBytes("""{"AmigaMode":true,"AmigaBoot":0,"ScrollerText":"GRUETZE RETROSAVER","CrtEnabled":false}""");
     ulong id;
     fixed (byte* p = json) id = createAmiga(p, json.Length, 42);
     if (id == 0) throw new Exception("Native Amiga session failed");

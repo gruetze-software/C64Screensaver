@@ -13,14 +13,17 @@ public sealed class C64Scene : Control
     private SaverSettings settings = new();
     private bool disposed;
     private double amigaTime;
+    private AmigaFrameBuffer? amiga;
     private double? effectTime;
-    public bool IsPowerTransitionActive => session.TransitionTime.HasValue;
+    public bool IsPowerTransitionActive => session.TransitionTime.HasValue || (settings.AmigaMode && AmigaFrameBuffer.PowerTime(settings, amigaTime).HasValue);
     public bool PreviewDetails { get; set; }
     public void Initialize(SaverSettings configuration, bool preview, double width, double height, Random random)
     {
         effectTime = null;
         amigaTime = 0;
         settings = configuration;
+        amiga?.Dispose();
+        amiga = settings.AmigaMode ? new AmigaFrameBuffer() : null;
         session = new ScreenSession(random, settings.Programs, settings);
     }
     public void ShowProgramPreview() { session.StartPreview(); InvalidateVisual(); }
@@ -38,15 +41,15 @@ public sealed class C64Scene : Control
         if ((!settings.AmigaMode && runProgram) || session.TransitionTime.HasValue) session.Advance(seconds, settings.SpeedMultiplier);
         InvalidateVisual();
     }
-    public void Clear() => disposed = true;
+    public void Clear() { disposed = true; amiga?.Dispose(); amiga = null; }
     public override void Render(DrawingContext context)
     {
         base.Render(context);
         if (disposed || Bounds.Width <= 0 || Bounds.Height <= 0) return;
         double time = settings.AmigaMode ? amigaTime : effectTime ?? session.Elapsed;
-        var image = settings.AmigaMode ? AmigaFrameBuffer.Capture(settings, time) : frameBuffer.Capture(session, settings, time);
+        var image = settings.AmigaMode ? amiga!.CaptureFrame(settings, time) : frameBuffer.Capture(session, settings, time);
         context.DrawRectangle(Brushes.Black, null, new Rect(Bounds.Size));
-        context.Custom(new CrtDrawOperation(new Rect(Bounds.Size), image, CrtParameters.From(settings), time, PreviewDetails));
-        if (session.TransitionTime is { } transition) CrtPowerEffect.Draw(context, new Rect(Bounds.Size), transition);
+        context.Custom(new CrtDrawOperation(new Rect(Bounds.Size), image, CrtParameters.From(settings), time, PreviewDetails, settings.NativeRenderQuality));
+        if ((session.TransitionTime ?? (settings.AmigaMode ? AmigaFrameBuffer.PowerTime(settings, time) : null)) is { } transition) CrtPowerEffect.Draw(context, new Rect(Bounds.Size), transition);
     }
 }

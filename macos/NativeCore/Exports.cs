@@ -22,6 +22,8 @@ public static unsafe class Exports
         internal readonly C64FrameBuffer Frame = new();
         internal bool Closed;
         internal double Elapsed;
+        internal readonly AmigaFrameBuffer? Amiga = settings.AmigaMode ? new AmigaFrameBuffer() : null;
+        internal readonly CpuCrtRenderer Crt = new();
     }
 
     private static readonly ConcurrentDictionary<ulong, Session> Sessions = new();
@@ -89,12 +91,12 @@ public static unsafe class Exports
                 session.Elapsed += Math.Min(seconds, .25);
                 if (!session.Settings.AmigaMode || session.Screen.TransitionTime.HasValue) session.Screen.Advance(Math.Min(seconds, .25), session.Settings.SpeedMultiplier);
                 using var image = session.Settings.AmigaMode
-                    ? AmigaFrameBuffer.Capture(session.Settings, session.Elapsed)
+                    ? session.Amiga!.CaptureFrame(session.Settings, session.Elapsed)
                     : session.Frame.Capture(session.Screen, session.Settings, session.Screen.Elapsed);
                 surface.Canvas.Clear(SKColors.Black);
-                CrtRenderer.Draw(surface.Canvas, new SKRect(0, 0, width, height), image,
-                    CrtParameters.From(session.Settings), session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed);
-                if (session.Screen.TransitionTime is double transition)
+                session.Crt.Draw(surface.Canvas, new SKRect(0, 0, width, height), image,
+                    CrtParameters.From(session.Settings), session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed, session.Settings.NativeRenderQuality);
+                if ((session.Screen.TransitionTime ?? (session.Settings.AmigaMode ? AmigaFrameBuffer.PowerTime(session.Settings, session.Elapsed) : null)) is double transition)
                     CrtPowerRenderer.Draw(surface.Canvas, width, height, transition);
                 surface.Canvas.Flush();
                 return 1;
@@ -124,7 +126,12 @@ public static unsafe class Exports
         try
         {
             if (Sessions.TryRemove(id, out var session))
-                lock (session.Gate) session.Closed = true;
+                lock (session.Gate)
+                {
+                    session.Closed = true;
+                    session.Amiga?.Dispose();
+                    session.Crt.Dispose();
+                }
         }
         catch { }
     }

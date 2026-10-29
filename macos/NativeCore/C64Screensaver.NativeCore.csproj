@@ -15,6 +15,7 @@
     <Compile Include="../../C64Screensaver/AmigaFrameBuffer.cs" Link="Shared/AmigaFrameBuffer.cs" />
     <Compile Include="../../C64Screensaver/SaverSettings.cs" Link="Shared/SaverSettings.cs" />
     <Compile Include="../../C64Screensaver/C64FrameBuffer.cs" Link="Shared/C64FrameBuffer.cs" />
+    <Compile Include="../../C64Screensaver/CpuCrtRenderer.cs" Link="Shared/CpuCrtRenderer.cs" />
     <Compile Include="../../C64Screensaver/CrtRenderer.cs" Link="Shared/CrtRenderer.cs" />
     <Compile Include="../../C64Screensaver/CrtPowerRenderer.cs" Link="Shared/CrtPowerRenderer.cs" />
   </ItemGroup>

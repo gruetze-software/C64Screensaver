@@ -79,3 +79,22 @@ bewerten. Keine neue permanente Hintergrundüberwachung einbauen.
 Noch offen: exakte Bootmotive/Versionen und deren Grafikrechte, endgültiger
 Produktname, endgültiger Umfang der ersten Verkaufsversion und Store-Freigabe.
 Der bisher gewünschte Preis 1,99 USD wird durch dieses Konzept nicht geändert.
+
+
+## Implementiert am 29. Oktober 2026
+
+In der Begleit-App auswählbar: Start überspringen, nachgezeichnete
+Disketten-Hand (1.3-Stil), violettes Laufwerk (2.0-Stil) und Regenbogen/Laufwerk
+(3.1-Stil). Es handelt sich um eigene Motive, keine ROM-genauen Abbilder.
+Ein fünfsekündiger Start mit Ladebewegung geht in die Demo über.
+
+Copper/Sinus-Lauftext, rotierender Boing-Ball mit Schatten und Gitter,
+Sternenflug mit Drahtwürfel und Plasma sind implementiert. Alle unterstützen
+denselben editierbaren Lauftext. Dieser läuft über Demo-Wechsel hinweg weiter.
+Einzelprogramme wiederholen sich; die Gesamtauswahl wechselt durch alle vier.
+Laufzeit und Startmotiv sind einstellbar. Optional schließen sich die
+CRT-Abschalt-/Einschalteffekte mit dem nächsten Startbild an.
+
+Gemeinsamer Renderer für Avalonia und native Mac-Bibliothek; ein separates
+Amiga.saver-Modul und der Einstellungs-Austausch mit der Mac-Begleit-App sind
+weiterhin offen. Performance-Messungen und Qualitätsstufen siehe PERFORMANCE.md.
