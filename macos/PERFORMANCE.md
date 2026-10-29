@@ -87,3 +87,16 @@ Die optionale Laufwerksreflexion liegt nach dem CRT-Pass auf dem Glas. Sie verwe
 eine einmal vorberechnete 96×48-Grafik und nur einen kleinen Bildaufruf pro aktivem
 Bild. Ruhige Phasen überspringen das Zeichnen vollständig; kein zusätzlicher
 Vollbild-Shader oder Blur-Pass ist nötig. Sie ist nur im Kickstart-Start aktiv.
+
+## Jump-and-run artwork revision 2
+
+The new panorama, terrain atlas and character sheet are embedded resources.
+The renderer prepares a 768×256 panorama, small platform surfaces and eight
+40×44 character frames once, before the demo starts. Sprite bounds use one
+bulk pixel read instead of millions of individual native pixel calls.
+Other Amiga demos do not load the runner artwork until it is selected.
+
+Per-frame work is a few cached image draws plus the existing fixed-step physics.
+Local measured source rendering is about 0.40 ms/frame with 104 managed bytes
+per frame, excluding CRT effects. The three-minute autoplay/30-vs-60-Hz tests
+continue to pass. These are local measurements, not a Neo performance claim.

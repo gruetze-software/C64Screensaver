@@ -23,7 +23,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**;Assets\Runner\**" />
+    <EmbeddedResource Include="Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
   </ItemGroup>
 

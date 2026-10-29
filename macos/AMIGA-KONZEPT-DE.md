@@ -120,3 +120,11 @@ unabhängig von der Darstellung. Der Lauftext bleibt sichtbar.
 Die Demo ist einzeln wählbar und Teil der Gesamtabfolge. Figuren und Hintergrund
 sind vorberechnet; keine externen Spielgrafiken oder Game-Engine erforderlich.
 Lokale reine Szenenmessung ca. 0,46 ms/Bild (ohne CRT-Pass).
+
+## Grafiküberarbeitung des Jump-and-Run
+
+Die einfachen geometrischen Platzhalter wurden durch eigens erzeugte
+Pixelgrafik-Assets ersetzt: Waldpanorama mit Tiefe, schattierte Fels-/Moosflächen,
+eine größere Figur mit sechs Lauf- und zwei Sprungposen sowie facettierte Kristalle.
+Grafiken und vollständige Imagegen-Prompts liegen unter
+C64Screensaver/Assets/Runner/. Die Spielphysik bleibt unverändert.

@@ -1,5 +1,9 @@
 # Gruetze RetroSaver development
 
+- Rework jump-and-run art with project-owned generated pixel assets: layered
+  woodland panorama, shaded mossy rock platforms, six running/two jumping poses
+  and faceted collectible crystals. Textures are prepared once at game resolution.
+
 - Add an autoplay pixel jump-and-run to the Amiga demos and playlist, with
   fixed-step jump physics, platform collisions, crystal pickups and parallax hills.
 

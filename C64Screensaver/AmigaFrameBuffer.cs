@@ -14,7 +14,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     private readonly SKBitmap plasma = new(96, 72);
     private readonly int[] plasmaPixels = new int[96 * 72];
     private readonly SKPaint paint = new() { IsAntialias = false };
-    private readonly AmigaRunner runner = new();
+    private AmigaRunner? runner;
     private readonly SKPoint3[] stars = CreateStars();
     private static readonly Lazy<SKImage> GlyphAtlas = new(CreateGlyphAtlas);
     private static readonly Lazy<SKImage[]> Balls = new(CreateBalls);
@@ -69,6 +69,8 @@ public sealed class AmigaFrameBuffer : IDisposable
         double phase = time % length;
         bool revealNext = settings.PowerTransition && phase >= boot + settings.AmigaDurationSeconds + 1.02;
         double contentPhase = revealNext ? 0 : phase;
+        var demo = CurrentDemo(settings, time + (revealNext ? .4 : 0));
+        if (demo == AmigaDemo.Runner) runner ??= new AmigaRunner();
         if (contentPhase < boot)
         {
             bootSurface ??= SKSurface.Create(new SKImageInfo(640, 400));
@@ -83,12 +85,11 @@ public sealed class AmigaFrameBuffer : IDisposable
         {
             double demoTime = Math.Min(contentPhase - boot, settings.AmigaDurationSeconds);
             canvas.Clear(new SKColor(5, 7, 24));
-            var demo = CurrentDemo(settings, time + (revealNext ? .4 : 0));
             switch (demo)
             {
                 case AmigaDemo.Boing: DrawBoing(canvas, demoTime); break;
                 case AmigaDemo.Starflight: DrawStars(canvas, demoTime); break;
-                case AmigaDemo.Runner: runner.Draw(canvas, demoTime, paint); break;
+                case AmigaDemo.Runner: runner!.Draw(canvas, demoTime, paint); break;
                 case AmigaDemo.Plasma: DrawPlasma(canvas, demoTime); break;
                 default: DrawCopper(canvas, demoTime); break;
             }

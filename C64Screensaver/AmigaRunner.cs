@@ -12,9 +12,7 @@ public sealed class AmigaRunner
         new(0,160,198), new(192,288,178), new(320,416,198),
         new(448,560,178), new(592,704,198), new(736,848,174), new(880,1024,198)
     ];
-    private static readonly Lazy<SKImage[]> Sprites = new(CreateSprites);
-    private static readonly Lazy<SKImage> Sky = new(CreateSky);
-    private static readonly Lazy<SKImage> Hills = new(CreateHills);
+    private static readonly Lazy<SKImage[]> Terrain = new(CreateTerrain);
     private static readonly SKSamplingOptions Nearest = new(SKFilterMode.Nearest);
     private long ticks;
     private double velocity;
@@ -25,7 +23,7 @@ public sealed class AmigaRunner
     public int Crystals { get; private set; }
     public int Respawns { get; private set; }
 
-    public AmigaRunner() { _ = Sprites.Value; _ = Sky.Value; _ = Hills.Value; }
+    public AmigaRunner() { _ = RunnerArtwork.Sprites.Value; _ = RunnerArtwork.Panorama.Value; _ = Terrain.Value; _ = RunnerArtwork.Crystals.Value; }
     public static double? GroundAt(double x)
     {
         double local = (x % Period + Period) % Period;
@@ -91,34 +89,34 @@ public sealed class AmigaRunner
         AdvanceTo(time);
         double camera = WorldX - 96;
         paint.Color = SKColors.White;
-        canvas.DrawImage(Sky.Value, 0, 0, paint);
-        float parallax = (float)((camera * .22 % 256 + 256) % 256);
-        for (int i = -1; i < 3; i++) canvas.DrawImage(Hills.Value, i * 256 - parallax, 66, paint);
+        double backgroundScroll = camera * .18;
+        int firstBackground = (int)Math.Floor(backgroundScroll / 768);
+        for (int i = firstBackground; i <= firstBackground + 1; i++)
+        {
+            int saved = canvas.Save();
+            canvas.Translate((float)(i * 768 - backgroundScroll), 0);
+            // Mirrored joins keep the panorama continuous without a hard seam.
+            if ((i & 1) != 0) { canvas.Translate(768, 0); canvas.Scale(-1, 1); }
+            canvas.DrawImage(RunnerArtwork.Panorama.Value, new SKRect(0, 0, 768, 288), Nearest, paint);
+            canvas.RestoreToCount(saved);
+        }
         int firstCycle = (int)Math.Floor(camera / Period);
         for (int cycle = firstCycle; cycle <= firstCycle + 1; cycle++)
-        foreach (var platform in Platforms)
+        for (int index = 0; index < Platforms.Length; index++)
         {
+            var platform = Platforms[index];
             float left = (float)(cycle * Period + platform.Start - camera);
             float right = (float)(cycle * Period + platform.End - camera);
             float top = (float)platform.Top;
             if (right < 0 || left > 384) continue;
-            paint.Color = new SKColor(40, 34, 70);
-            canvas.DrawRect(left, top, right - left, 288 - top, paint);
-            paint.Color = new SKColor(64, 48, 91);
-            for (float y = top + 16; y < 288; y += 16) canvas.DrawLine(left, y, right, y, paint);
-            for (float x = left; x < right; x += 16) canvas.DrawLine(x, top, x, 288, paint);
-            paint.Color = new SKColor(29, 115, 107);
-            canvas.DrawRect(left, top, right - left, 7, paint);
-            paint.Color = new SKColor(93, 223, 171);
-            canvas.DrawRect(left, top, right - left, 3, paint);
+            paint.Color = SKColors.White;
+            canvas.DrawImage(Terrain.Value[index], left, top, paint);
             double crystalWorld = cycle * Period + (platform.Start + platform.End) / 2;
             if (crystalWorld < WorldX - 10) continue;
             float cx = (float)(crystalWorld - camera), cy = top - 24 + (float)Math.Sin(time * 4 + crystalWorld) * 2;
-            paint.Color = new SKColor(94, 230, 255);
-            canvas.DrawRect(cx - 2, cy - 4, 4, 8, paint);
-            canvas.DrawRect(cx - 4, cy - 2, 8, 4, paint);
             paint.Color = SKColors.White;
-            canvas.DrawRect(cx - 1, cy - 2, 2, 2, paint);
+            var crystal = RunnerArtwork.Crystals.Value[(int)(time * 7 + cycle + index) & 3];
+            canvas.DrawImage(crystal, cx - 7, cy - 8, paint);
         }
         if (GroundAt(WorldX) is double shadowY)
         {
@@ -126,67 +124,15 @@ public sealed class AmigaRunner
             canvas.DrawOval(96, (float)shadowY + 2, 12, 2, paint);
         }
         paint.Color = SKColors.White;
-        int frame = Grounded ? (int)(time * 9) % 2 : 2;
-        canvas.DrawImage(Sprites.Value[frame], new SKRect(84, (float)FootY - 32, 108, (float)FootY), Nearest, paint);
+        int frame = Grounded ? (int)(time * 12) % 6 : velocity < 0 ? 6 : 7;
+        canvas.DrawImage(RunnerArtwork.Sprites.Value[frame], new SKRect(76, (float)FootY - 44, 116, (float)FootY), Nearest, paint);
     }
-    private static SKImage CreateSky()
+    private static SKImage[] CreateTerrain()
     {
-        using var surface = SKSurface.Create(new SKImageInfo(384, 288));
-        using var gradient = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(0, 225),
-            new[] { new SKColor(12, 20, 53), new SKColor(76, 43, 99) }, SKShaderTileMode.Clamp);
-        using var paint = new SKPaint { Shader = gradient };
-        surface.Canvas.DrawRect(0, 0, 384, 288, paint);
-        paint.Shader = null; paint.Color = new SKColor(242, 186, 130);
-        surface.Canvas.DrawCircle(310, 39, 17, paint);
-        paint.Color = new SKColor(242, 186, 130, 65);
-        surface.Canvas.DrawRect(288, 53, 44, 2, paint);
-        return surface.Snapshot();
-    }
-    private static SKImage CreateHills()
-    {
-        using var surface = SKSurface.Create(new SKImageInfo(256, 128));
-        surface.Canvas.Clear(SKColors.Transparent);
-        using var paint = new SKPaint { Color = new SKColor(43, 34, 76) };
-        using var mountain = new SKPath();
-        mountain.MoveTo(0, 100); mountain.LineTo(32, 80); mountain.LineTo(64, 40);
-        mountain.LineTo(88, 65); mountain.LineTo(112, 52); mountain.LineTo(160, 120);
-        mountain.LineTo(200, 70); mountain.LineTo(256, 100);
-        mountain.LineTo(256, 128); mountain.LineTo(0, 128); mountain.Close();
-        surface.Canvas.DrawPath(mountain, paint);
-        return surface.Snapshot();
-    }
-    private static SKImage[] CreateSprites()
-    {
-        string[] body =
-        [
-            "....RRRR....", "...RRRRRR...", "..RRRRRRRR..", "...SSKSS....",
-            "...SSSSS....", "...SSSS.....", "....YY......", "..YYYYYY....",
-            ".SYYYYYYS...", ".S.YYYY.S...", "...BBBBB....", "...BBBBB....",
-            "...BB.BB....", "...BB.BB....", "..KK..KK....", ".KKK..KKK..."
-        ];
-        var result = new SKImage[3];
-        using var paint = new SKPaint();
-        for (int frame = 0; frame < result.Length; frame++)
-        {
-            using var surface = SKSurface.Create(new SKImageInfo(12, 16));
-            surface.Canvas.Clear(SKColors.Transparent);
-            for (int y = 0; y < 16; y++)
-            for (int x = 0; x < 12; x++)
-            {
-                int sourceX = x;
-                if (y >= 12 && frame == 1) sourceX = x + (y % 2 == 0 ? 1 : -1);
-                if (y >= 13 && frame == 2) sourceX = x + (x < 6 ? -1 : 1);
-                char pixel = sourceX is >= 0 and < 12 ? body[y][sourceX] : '.';
-                paint.Color = pixel switch
-                {
-                    'R' => new SKColor(53, 194, 175), 'S' => new SKColor(246, 210, 164),
-                    'Y' => new SKColor(255, 179, 79), 'B' => new SKColor(91, 120, 184),
-                    'K' => new SKColor(16, 22, 40), _ => SKColors.Transparent
-                };
-                if (pixel != '.') surface.Canvas.DrawRect(x, y, 1, 1, paint);
-            }
-            result[frame] = surface.Snapshot();
-        }
+        var result = new SKImage[Platforms.Length];
+        for (int i = 0; i < result.Length; i++)
+            result[i] = RunnerArtwork.Platform((int)(Platforms[i].End - Platforms[i].Start),
+                288 - (int)Platforms[i].Top, i);
         return result;
     }
 }
