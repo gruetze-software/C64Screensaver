@@ -40,6 +40,6 @@ jobs:
         with:
           name: Gruetze-RetroSaver-macOS-${{ matrix.arch }}
           path: |
-            artifacts/macos-companion/**/*.dmg
+            artifacts/macos-companion/osx-*/Gruetze-RetroSaver-*.dmg
             artifacts/macos-native/**/screenshots/*.png
             artifacts/amiga-review/*.png
