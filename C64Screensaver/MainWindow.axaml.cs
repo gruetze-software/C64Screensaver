@@ -19,6 +19,7 @@ public partial class MainWindow : Window
     private readonly Action<TimeSpan> _frameCallback;
     private readonly FrameStatistics _frameTimes = new();
     private TimeSpan? _lastFrame;
+    private double _nextFrame;
     private double _fpsElapsed;
     private int _frameCount;
     private Point? _initialMouse;
@@ -102,11 +103,12 @@ public partial class MainWindow : Window
             return;
         }
         double elapsed = _lastFrame.HasValue ? Math.Max((time - _lastFrame.Value).TotalSeconds, 0) : 0;
-        if (_lastFrame.HasValue && elapsed < 1.0 / 60 - .001)
+        if (_lastFrame.HasValue && time.TotalSeconds + .000001 < _nextFrame)
         {
             RequestAnimationFrame(_frameCallback);
             return;
         }
+        _nextFrame = time.TotalSeconds - _nextFrame > 1.0 / 60 ? time.TotalSeconds + 1.0 / 60 : _nextFrame + 1.0 / 60;
         double delta = Math.Min(elapsed, 0.1);
         _lastFrame = time;
         AdvanceScene(delta);

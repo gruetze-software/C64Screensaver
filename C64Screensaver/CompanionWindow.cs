@@ -13,6 +13,7 @@ public sealed class CompanionWindow : Window
     private bool running;
     private readonly Stopwatch clock = new();
     private double previous;
+    private double nextFrame;
     private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap };
     public CompanionWindow() : this(new ConfigManager()) { }
     public CompanionWindow(ConfigManager configuration)
@@ -26,8 +27,8 @@ public sealed class CompanionWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var system = new ComboBox { ItemsSource = new[] { "Commodore 64", "Amiga" }, SelectedIndex = config.Settings.AmigaMode ? 1 : 0 };
         var text = new TextBox { Text = config.Settings.ScrollerText, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 4096, MinHeight = 65 };
-        var speed = new Slider { Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
-        var wave = new Slider { Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
+        var speed = new Slider { Height = 32, Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
+        var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
         var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "1.3 · hand & disk", "2.0 · purple drive", "3.1 · rainbow & drive" }, SelectedIndex = (int)config.Settings.AmigaBoot };
         var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Cycle all demos", "Copper & sine scroller", "Boing ball", "Starflight & wireframe", "Plasma" }, SelectedIndex = (int)config.Settings.AmigaAnimation };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
@@ -61,7 +62,7 @@ public sealed class CompanionWindow : Window
         header.Children.Add(heading);
         header.Children.Add(new TextBlock { Text = "Your C64. Your Amiga. Your monitor." });
         body.Children.Add(header);
-        var editor = new StackPanel { Spacing = 10 };
+        var editor = new StackPanel { Spacing = 6 };
         void Field(string label, Control control)
         {
             editor.Children.Add(new TextBlock { Text = label, FontSize = 13 });
@@ -137,8 +138,9 @@ public sealed class CompanionWindow : Window
         {
             if (!running) return;
             double now = clock.Elapsed.TotalSeconds;
-            if (now - previous >= 1.0 / 60 - .001)
+            if (now + .000001 >= nextFrame)
             {
+                nextFrame = now - nextFrame > 1.0 / 60 ? now + 1.0 / 60 : nextFrame + 1.0 / 60;
                 double elapsed = Math.Clamp(now - previous, 0, .1);
                 previous = now;
                 // Modal editors and fullscreen previews get the rendering budget.

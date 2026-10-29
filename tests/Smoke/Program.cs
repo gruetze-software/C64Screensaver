@@ -202,6 +202,7 @@ AppBuilder.Configure<App>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOp
 Check(CrtDrawOperation.ShaderAvailable, "CRT shader compiles: " + CrtDrawOperation.ShaderError);
 string output = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../docs/images"));
 Directory.CreateDirectory(output);
+if (args.Contains("--companion-only")) { CompanionUi(); return; }
 void Capture(Window window, string name)
 {
     window.Show();
@@ -499,6 +500,10 @@ glowDialog.Height = 1000;
 Capture(glowDialog, "glowing-settings");
 Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");
 
+CompanionUi();
+
+void CompanionUi()
+{
 var companionConfig = new ConfigManager(Path.Combine(Path.GetTempPath(), "retrosaver-test-" + Guid.NewGuid() + ".json"));
 var companion = new CompanionWindow(companionConfig);
 companion.Show();
@@ -521,3 +526,4 @@ Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Sett
 CaptureScene("amiga-copper-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None });
 File.Delete(companionConfig.ConfigPath);
 Console.WriteLine("PASS: companion startup, direct system launch, Amiga animation and editable scrolling text persistence.");
+}
