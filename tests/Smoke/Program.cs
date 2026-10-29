@@ -113,6 +113,15 @@ var savedConfig = new ConfigManager(configPath) { Settings = new SaverSettings {
     Glow = 29, Vignette = 33, Flicker = 0, CrtEnabled = false, Programs = ProgramSelection.Company } };
 Check(savedConfig.SaveSettings(), "Save effect settings");
 var restored = new ConfigManager(configPath).Settings;
+var reloadProbe = new ConfigManager(configPath);
+string validSettings = File.ReadAllText(configPath);
+File.WriteAllText(configPath, "{broken");
+reloadProbe.LoadSettings();
+Check(reloadProbe.LastError != null && reloadProbe.Settings.Glow == savedConfig.Settings.Glow,
+    "Corrupt external save retains the last valid settings");
+File.WriteAllText(configPath, validSettings);
+reloadProbe.LoadSettings();
+Check(reloadProbe.LastError == null, "Reload recovers after an atomic replacement");
 Check(restored.Curvature == 48 && restored.MaskStrength == 27 && restored.Softness == 41 &&
     restored.Glow == 29 && restored.Vignette == 33 && restored.Flicker == 0 &&
     !restored.CrtEnabled && restored.Programs == ProgramSelection.Company, "Restore effects and program selection");

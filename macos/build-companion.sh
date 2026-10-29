@@ -19,11 +19,29 @@ cp "$root/macos/Companion-Info.plist" "$app/Contents/Info.plist"
 plutil -replace CFBundleShortVersionString -string "$version" "$app/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$version" "$app/Contents/Info.plist"
 cp "$root/C64Screensaver/Assets/app-icon.icns" "$app/Contents/Resources/"
+saver="$root/artifacts/macos-native/$rid/C64Screensaver.saver"
+[[ -d "$saver" ]] || { echo "Build the native screensaver first." >&2; exit 1; }
+ditto "$saver" "$app/Contents/Resources/C64Screensaver.saver"
 while IFS= read -r -d '' native_file; do
   if file "$native_file" | grep -q 'Mach-O'; then codesign --force --sign - "$native_file"; fi
 done < <(find "$app/Contents/MacOS" -type f -print0)
 codesign --force --sign - "$app"
 codesign --verify --deep --strict "$app"
 "$app/Contents/MacOS/c64screensaver" --help
-(cd "$out" && ditto -c -k --keepParent "Gruetze RetroSaver.app" "Gruetze-RetroSaver-$version-macos-$arch-test.zip")
+payload="$(mktemp -d "$out/dmg-payload.XXXXXX")"
+ditto "$app" "$payload/Gruetze RetroSaver.app"
+ln -s /Applications "$payload/Applications"
+cp "$root/macos/INSTALL-DE.txt" "$payload/Lies mich.txt"
+dmg="$out/Gruetze-RetroSaver-$version-macos-$arch.dmg"
+hdiutil create -volname "Gruetze RetroSaver" -srcfolder "$payload" -format UDZO -ov "$dmg"
+hdiutil verify "$dmg"
+# Inspect the actual image, not just the source staging folder.
+mount="$(mktemp -d "$out/mount.XXXXXX")"
+hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount"
+trap 'hdiutil detach "$mount" >/dev/null || true' EXIT
+codesign --verify --deep --strict "$mount/Gruetze RetroSaver.app"
+test -f "$mount/Gruetze RetroSaver.app/Contents/Resources/C64Screensaver.saver/Contents/Info.plist"
+"$mount/Gruetze RetroSaver.app/Contents/MacOS/c64screensaver" --help
+hdiutil detach "$mount"
+trap - EXIT
 echo "Developer test app (ad-hoc signed, not notarized): $app"

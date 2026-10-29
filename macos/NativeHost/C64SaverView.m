@@ -2,6 +2,8 @@
 #import <QuartzCore/QuartzCore.h>
 #import <dlfcn.h>
 #import <stdint.h>
+#import <unistd.h>
+#import <sys/stat.h>
 
 typedef int (*VersionFn)(void);
 typedef int (*LoadFn)(const uint8_t *, int);
@@ -58,6 +60,8 @@ static BOOL loadCore(NSBundle *bundle) {
     NSInteger _renderQuality;
     NSImage *_image;
     BOOL _failed, _stopped;
+    NSDictionary *_lastSettings, *_sessionSettings;
+    CFTimeInterval _settingsChecked;
     NSWindow *_options;
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
@@ -85,22 +89,75 @@ static BOOL loadCore(NSBundle *bundle) {
 - (BOOL)isOpaque { return YES; }
 - (BOOL)isFlipped { return YES; }
 - (NSUserDefaults *)preferences {
-    return [[NSUserDefaults alloc] initWithSuiteName:@"de.gruetze-software.C64Screensaver.Native"];
+    NSString *fixture = NSProcessInfo.processInfo.environment[@"GRUETZE_RETROSAVER_SETTINGS_PATH"];
+    NSString *suite = fixture ? [NSString stringWithFormat:@"de.gruetze-software.RetroSaver.Tests.%lu", (unsigned long)fixture.hash]
+        : @"de.gruetze-software.C64Screensaver.Native";
+    return [[NSUserDefaults alloc] initWithSuiteName:suite];
+}
+- (NSString *)sharedSettingsPath {
+    NSString *override = NSProcessInfo.processInfo.environment[@"GRUETZE_RETROSAVER_SETTINGS_PATH"];
+    return override ?: [NSString stringWithFormat:@"/Users/Shared/GruetzeRetroSaver-%u/settings.json", getuid()];
+}
+- (NSDictionary *)normalizedSettings:(id)value {
+    if (![value isKindOfClass:NSDictionary.class]) return nil;
+    NSMutableDictionary *settings = [value mutableCopy];
+    if (settings[@"KeepAspectRatio"] == NSNull.null) [settings removeObjectForKey:@"KeepAspectRatio"];
+    for (NSString *key in @[@"KeepAspectRatio", @"FillScreen", @"CrtEnabled", @"Scanlines", @"CycleColors",
+            @"PowerTransition", @"AmigaMode", @"ShowAmigaScroller", @"AmigaDiskActivity", @"ShowFps"])
+        if (settings[key]) {
+            if (![settings[key] isKindOfClass:NSNumber.class]) return nil;
+            settings[key] = [settings[key] boolValue] ? @YES : @NO;
+        }
+    for (NSString *key in @[@"CompanyName", @"CompanyWebsite", @"CompanyTagline", @"ScrollerText"])
+        if (settings[key] && ![settings[key] isKindOfClass:NSString.class]) return nil;
+    for (NSString *key in @[@"Programs", @"ProgramDurationSeconds", @"NativeRenderQuality", @"AmigaBoot",
+            @"AmigaAnimation", @"AmigaDurationSeconds", @"ScrollerSpeed", @"ScrollerWave", @"CrtStrength",
+            @"Curvature", @"ScanlineStrength", @"MaskStrength", @"Softness", @"Glow", @"GlowSpread",
+            @"Vignette", @"Flicker", @"SpeedMultiplier"])
+        if (settings[key] && (![settings[key] isKindOfClass:NSNumber.class]
+            || CFGetTypeID((__bridge CFTypeRef)settings[key]) == CFBooleanGetTypeID())) return nil;
+    for (NSString *key in @[@"Programs", @"ProgramDurationSeconds", @"NativeRenderQuality", @"AmigaBoot",
+            @"AmigaAnimation", @"AmigaDurationSeconds", @"CrtStrength"])
+        if (settings[key] && ([settings[key] doubleValue] != [settings[key] intValue])) return nil;
+    return settings;
+}
+- (BOOL)saveSharedSettings:(NSDictionary *)settings error:(NSError **)error {
+    NSString *path = [self sharedSettingsPath];
+    NSString *folder = path.stringByDeletingLastPathComponent;
+    if (![NSFileManager.defaultManager createDirectoryAtPath:folder withIntermediateDirectories:YES
+            attributes:@{NSFilePosixPermissions:@0700} error:error]) return NO;
+    struct stat info;
+    if (lstat(folder.fileSystemRepresentation, &info) || !S_ISDIR(info.st_mode) || info.st_uid != getuid()) {
+        if (error) *error = [NSError errorWithDomain:@"GruetzeRetroSaver" code:1
+            userInfo:@{NSLocalizedDescriptionKey:@"The settings folder is not owned by this user."}];
+        return NO;
+    }
+    NSData *json = [NSJSONSerialization dataWithJSONObject:settings options:NSJSONWritingPrettyPrinted error:error];
+    if (!json || ![json writeToFile:path options:NSDataWritingAtomic error:error]) return NO;
+    _lastSettings = [settings copy];
+    [[self preferences] setObject:settings forKey:@"Settings"];
+    return YES;
 }
 - (NSDictionary *)settings {
-    NSDictionary *saved = [[self preferences] dictionaryForKey:@"Settings"];
-    if (saved) {
-        // Earlier builds boxed C comparisons as NSNumber(int), producing JSON
-        // 0/1 instead of booleans. Repair them before crossing the typed C ABI.
-        NSMutableDictionary *normalized = [saved mutableCopy];
-        for (NSString *key in @[@"KeepAspectRatio", @"FillScreen", @"CrtEnabled",
-                @"Scanlines", @"CycleColors", @"PowerTransition", @"AmigaMode", @"ShowAmigaScroller", @"AmigaDiskActivity"])
-            if (normalized[key]) normalized[key] = [normalized[key] boolValue] ? @YES : @NO;
-        return normalized;
+    NSString *path = [self sharedSettingsPath];
+    struct stat info;
+    BOOL safeFolder = !lstat(path.stringByDeletingLastPathComponent.fileSystemRepresentation, &info)
+        && S_ISDIR(info.st_mode) && info.st_uid == getuid();
+    NSData *data = safeFolder ? [NSData dataWithContentsOfFile:path] : nil;
+    NSDictionary *shared = data.length <= 1024*1024 && data.length
+        ? [self normalizedSettings:[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]] : nil;
+    if (shared) {
+        _lastSettings = shared;
+        return shared;
     }
-    return @{@"Programs": @0, @"ProgramDurationSeconds": @100, @"KeepAspectRatio": @YES,
+    if (_lastSettings) return _lastSettings;
+    NSDictionary *legacy = [self normalizedSettings:[[self preferences] dictionaryForKey:@"Settings"]];
+    _lastSettings = legacy ?: @{@"Programs": @0, @"ProgramDurationSeconds": @100, @"KeepAspectRatio": @YES,
         @"CompanyName": @"GRUETZE-SOFTWARE", @"CompanyWebsite": @"WWW.GRUETZE-SOFTWARE.DE",
         @"CompanyTagline": @"SOFTWARE MIT CHARAKTER"};
+    // Existing native preferences seed the common file only if none exists.
+    if (!data && legacy) [self saveSharedSettings:legacy error:nil];
+    return _lastSettings;
 }
 - (void)releaseSession {
     // Queued results from an earlier start/stop cycle must never replace a new frame.
@@ -117,6 +174,7 @@ static BOOL loadCore(NSBundle *bundle) {
     _failed = !loadCore([NSBundle bundleForClass:self.class]);
     if (!_failed) {
         NSDictionary *settings = [self settings];
+        _sessionSettings = settings;
         _renderQuality = MAX(0, MIN(2, [settings[@"NativeRenderQuality"] integerValue]));
         NSData *json = [NSJSONSerialization dataWithJSONObject:settings options:0 error:nil];
         _session = createSession(json.bytes, (int)json.length, (int)arc4random());
@@ -178,8 +236,16 @@ static BOOL loadCore(NSBundle *bundle) {
 }
 - (void)dealloc { [self stopPreviewTimer]; [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
 - (void)animateOneFrame {
-    if (_renderInFlight || _stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0 || ![self ensureSession]) return;
+    if (_renderInFlight || _stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0) return;
     CFTimeInterval now = CACurrentMediaTime();
+    if (now - _settingsChecked >= 1) {
+        _settingsChecked = now;
+        if (_session && ![[self settings] isEqualToDictionary:_sessionSettings]) {
+            [self releaseSession];
+            _failed = NO;
+        }
+    }
+    if (![self ensureSession]) return;
     // AppKit may request multiple draws/start callbacks within one timer tick.
     // Retain the last immutable frame rather than recomputing identical images.
     if (_image && _previous && now - _previous < self.animationTimeInterval * .95) return;
@@ -400,7 +466,7 @@ static BOOL loadCore(NSBundle *bundle) {
     playbackHint.textColor = NSColor.secondaryLabelColor;
 
     _optionsBody = [self page:@"Monitor effects" tabs:tabs];
-    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : YES;
+    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : ![s[@"FillScreen"] boolValue];
     BOOL border = [s[@"FillScreen"] boolValue];
     _fullScreen = [self check:@"Fill entire screen — no black bars or C64 border" value:!aspect && border y:335];
     _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
@@ -481,7 +547,6 @@ static BOOL loadCore(NSBundle *bundle) {
         @"FillScreen": full || _border.state == NSControlStateValueOn ? @YES : @NO,
         @"MaskStrength": @(_phosphor.doubleValue), @"Glow": @(_glow.doubleValue),
         @"GlowSpread": @(_spread.doubleValue), @"ScanlineStrength": @(_scanlines.doubleValue),
-        @"Scanlines": @YES, @"CrtEnabled": @YES,
         @"NativeRenderQuality": @(_quality.indexOfSelectedItem),
         @"CycleColors": _borderColors.indexOfSelectedItem == 1 ? @YES : @NO,
         @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
@@ -497,7 +562,14 @@ static BOOL loadCore(NSBundle *bundle) {
         @"ScrollerText": [_amigaText.stringValue substringToIndex:MIN(4096,_amigaText.stringValue.length)],
         @"ScrollerSpeed": @(MAX(8,MIN(160,_amigaSpeed.doubleValue))),
         @"ScrollerWave": @(MAX(0,MIN(48,_amigaWave.doubleValue)))}];
-    [[self preferences] setObject:settings forKey:@"Settings"];
+    NSError *saveError = nil;
+    if (![self saveSharedSettings:settings error:&saveError]) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = @"Settings could not be saved";
+        alert.informativeText = saveError.localizedDescription ?: @"Open the companion app and save your settings there.";
+        [alert beginSheetModalForWindow:_options completionHandler:nil];
+        return;
+    }
     [self finishOptions:NSModalResponseOK];
     // Apply settings even if the host has not started its animation timer yet.
     [self releaseSession];

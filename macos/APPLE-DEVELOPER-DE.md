@@ -1,3 +1,26 @@
+# Integrierte Mac-Distribution ab 1.2.1
+
+Einmal auf dem Mac den aktuellen Stand holen und beide Bestandteile bauen:
+
+    git pull
+    bash macos/build-native.sh arm64
+    bash macos/build-companion.sh arm64
+    bash macos/test-shared-settings.sh
+
+Danach die gesamte App samt eingebettetem Bildschirmschoner signieren und die
+kombinierte DMG notarisierten lassen (Befehl in einer Zeile):
+
+    bash macos/sign-notarize.sh "$PWD/artifacts/macos-companion/osx-arm64/Gruetze RetroSaver.app" "Developer ID Application: Christoph Schaefer (8GZ7AD23D7)" C64Screensaver-notary
+
+Das vorhandene Schlüsselbundprofil wird weiterverwendet; kein Passwort in Skripte schreiben.
+Das Ergebnis liegt in artifacts/macos-signed/distribution.*/Gruetze-RetroSaver.dmg.
+Nur diese vollständige DMG weitergeben. Die Begleitapp enthält den Installationsknopf
+für den echten System-Bildschirmschoner und beide verwenden dieselben Einstellungen.
+Der Ablauf darunter beschreibt noch den bisherigen Einzel-.saver-Weg; dieser bleibt
+für Entwickler unterstützt, ist aber nicht mehr die normale Distribution.
+
+.NET-10-JIT-Berechtigung: https://learn.microsoft.com/en-us/dotnet/core/deploying/macos
+
 > Stand 1.2.0: Der gemeinsame native Bildschirmschoner bietet jetzt C64 und Amiga
 > im Optionsdialog an. Amiga enthält ausschließlich Jump & run und Plasma.
 > Die Begleit-App wird mit macos/build-companion.sh zusätzlich als .app gebaut.
