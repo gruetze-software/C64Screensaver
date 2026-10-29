@@ -1,5 +1,8 @@
 # Gruetze RetroSaver development
 
+- Optional red disk-activity reflection on the CRT glass during Kickstart startup,
+  with short irregular seek bursts and quiet pauses.
+
 - Replace the freehand Kickstart approximations with historical static/animated
   screen captures, preserving original layout, text, palette and frame timing.
 

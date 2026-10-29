@@ -81,3 +81,9 @@ Die Begleit-App verwendet den Darstellungstakt statt eines unabhängigen
 eigener Vollbildvorschauen und modaler Dialoge pausiert ihre Hintergrundvorschau.
 Die Vollbildanzeige vermeidet ebenfalls unnötige Aktualisierungen oberhalb 60 Hz.
 Animationen verwenden weiterhin die verstrichene Zeit statt fester Schrittweiten.
+
+
+Die optionale Laufwerksreflexion liegt nach dem CRT-Pass auf dem Glas. Sie verwendet
+eine einmal vorberechnete 96×48-Grafik und nur einen kleinen Bildaufruf pro aktivem
+Bild. Ruhige Phasen überspringen das Zeichnen vollständig; kein zusätzlicher
+Vollbild-Shader oder Blur-Pass ist nötig. Sie ist nur im Kickstart-Start aktiv.

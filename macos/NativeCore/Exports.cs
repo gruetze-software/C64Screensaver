@@ -96,6 +96,9 @@ public static unsafe class Exports
                 surface.Canvas.Clear(SKColors.Black);
                 session.Crt.Draw(surface.Canvas, new SKRect(0, 0, width, height), image,
                     CrtParameters.From(session.Settings), session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed, session.Settings.NativeRenderQuality);
+                if (session.Settings.AmigaMode && session.Settings.AmigaDiskActivity
+                    && AmigaFrameBuffer.StartupTime(session.Settings, session.Elapsed) is double activity)
+                    DiskActivityReflection.Draw(surface.Canvas, new SKRect(0, 0, width, height), CrtParameters.From(session.Settings), activity);
                 if ((session.Screen.TransitionTime ?? (session.Settings.AmigaMode ? AmigaFrameBuffer.PowerTime(session.Settings, session.Elapsed) : null)) is double transition)
                     CrtPowerRenderer.Draw(surface.Canvas, width, height, transition);
                 surface.Canvas.Flush();

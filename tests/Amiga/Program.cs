@@ -82,3 +82,29 @@ bool rejected = false;
 try { using var invalid = renderer.CaptureFrame(settings, 0); } catch (ObjectDisposedException) { rejected = true; }
 Check(rejected, "Disposed renderer cannot draw");
 Console.WriteLine("PASS: three startup motifs, four animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
+
+var reflectedSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.Classic13, CrtEnabled = false };
+using (var originalBoot = AmigaFrameBuffer.Capture(reflectedSettings, .46))
+using (var target = SKSurface.Create(new SKImageInfo(640, 480)))
+{
+    var parameters = CrtParameters.From(reflectedSettings);
+    target.Canvas.Clear(SKColors.Black);
+    CrtRenderer.Draw(target.Canvas, new SKRect(0, 0, 640, 480), originalBoot, parameters, .46);
+    using var off = target.Snapshot();
+    DiskActivityReflection.Draw(target.Canvas, new SKRect(0, 0, 640, 480), parameters, .46);
+    using var on = target.Snapshot();
+    Check(Difference(off, on) is > 20 and < 2000, "Disk reflection stays small and visible");
+    using var a = SKBitmap.FromImage(off);
+    using var b = SKBitmap.FromImage(on);
+    for (int y = 0; y < 480; y++)
+    for (int x = 0; x < 640; x++)
+        if (x < 510 || y < 380) Check(a.GetPixel(x, y) == b.GetPixel(x, y), "Original screen remains unchanged outside lower-right reflection");
+    Save(on, "disk-reflection-on");
+    target.Canvas.Clear(SKColors.Black);
+    CrtRenderer.Draw(target.Canvas, new SKRect(0, 0, 640, 480), originalBoot, parameters, .46);
+    DiskActivityReflection.Draw(target.Canvas, new SKRect(0, 0, 640, 480), parameters, 1.5);
+    using var quiet = target.Snapshot();
+    Check(Difference(off, quiet) == 0, "Drive reflection has quiet intervals");
+}
+Check(AmigaFrameBuffer.StartupTime(reflectedSettings, 6) == null, "No disk activity during demos");
+Console.WriteLine("PASS: localized disk reflection, original-screen preservation, quiet intervals and startup-only timing.");

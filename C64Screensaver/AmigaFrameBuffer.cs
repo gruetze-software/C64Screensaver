@@ -34,6 +34,15 @@ public sealed class AmigaFrameBuffer : IDisposable
         return renderer.CaptureFrame(settings, time);
     }
     public static double BootDuration(SaverSettings settings) => settings.AmigaBoot == AmigaBootStyle.None ? 0 : settings.AmigaBoot == AmigaBootStyle.Classic13 ? 5 : KickstartFrames.PlaybackSeconds(settings.AmigaBoot);
+    public static double? StartupTime(SaverSettings settings, double time)
+    {
+        double boot = BootDuration(settings);
+        if (boot == 0) return null;
+        double end = boot + settings.AmigaDurationSeconds;
+        double phase = time % (end + (settings.PowerTransition ? 1.42 : 0));
+        if (phase < boot) return phase;
+        return settings.PowerTransition && phase >= end + 1.02 ? 0 : null;
+    }
     public static double? PowerTime(SaverSettings settings, double time)
     {
         if (!settings.PowerTransition) return null;

@@ -17,9 +17,10 @@ public sealed class CrtDrawOperation : ICustomDrawOperation
     private readonly double time;
     private readonly bool previewDetails;
     private readonly int quality;
+    private readonly double? diskActivityTime;
     public Rect Bounds { get; }
-    public CrtDrawOperation(Rect bounds, SKImage image, CrtParameters parameters, double time, bool previewDetails = false, int quality = 0)
-    { Bounds = bounds; this.image = image; this.parameters = parameters; this.time = time; this.previewDetails = previewDetails; this.quality = quality; }
+    public CrtDrawOperation(Rect bounds, SKImage image, CrtParameters parameters, double time, bool previewDetails = false, int quality = 0, double? diskActivityTime = null)
+    { Bounds = bounds; this.image = image; this.parameters = parameters; this.time = time; this.previewDetails = previewDetails; this.quality = quality; this.diskActivityTime = diskActivityTime; }
     public bool HitTest(Point p) => false;
     public bool Equals(ICustomDrawOperation? other) => false;
     public void Dispose() => image.Dispose();
@@ -35,5 +36,6 @@ public sealed class CrtDrawOperation : ICustomDrawOperation
             cpu.Draw(lease.SkCanvas, target, image, parameters, time, quality, previewDetails);
         }
         else CrtRenderer.Draw(lease.SkCanvas, target, image, parameters, time, previewDetails);
+        if (diskActivityTime is double activity) DiskActivityReflection.Draw(lease.SkCanvas, target, parameters, activity);
     }
 }

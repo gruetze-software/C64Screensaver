@@ -76,7 +76,7 @@ unsafe
     delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
     foreach (int boot in new[] { 1, 2, 3 })
     {
-        byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { AmigaMode = true, AmigaBoot = boot, CrtEnabled = false, PowerTransition = false });
+        byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { AmigaMode = true, AmigaBoot = boot, AmigaDiskActivity = false, CrtEnabled = false, PowerTransition = false });
         ulong id;
         fixed (byte* p = json) id = create(p, json.Length, 42);
         if (id == 0) throw new Exception("Original Kickstart native session failed");

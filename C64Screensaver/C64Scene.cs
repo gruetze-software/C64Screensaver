@@ -49,7 +49,8 @@ public sealed class C64Scene : Control
         double time = settings.AmigaMode ? amigaTime : effectTime ?? session.Elapsed;
         var image = settings.AmigaMode ? amiga!.CaptureFrame(settings, time) : frameBuffer.Capture(session, settings, time);
         context.DrawRectangle(Brushes.Black, null, new Rect(Bounds.Size));
-        context.Custom(new CrtDrawOperation(new Rect(Bounds.Size), image, CrtParameters.From(settings), time, PreviewDetails, settings.NativeRenderQuality));
+        context.Custom(new CrtDrawOperation(new Rect(Bounds.Size), image, CrtParameters.From(settings), time, PreviewDetails, settings.NativeRenderQuality,
+            settings.AmigaMode && settings.AmigaDiskActivity ? AmigaFrameBuffer.StartupTime(settings, time) : null));
         if ((session.TransitionTime ?? (settings.AmigaMode ? AmigaFrameBuffer.PowerTime(settings, time) : null)) is { } transition) CrtPowerEffect.Draw(context, new Rect(Bounds.Size), transition);
     }
 }

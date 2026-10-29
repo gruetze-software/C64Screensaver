@@ -9,6 +9,7 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
+    public bool AmigaDiskActivity { get; set; } = true;
     public AmigaBootStyle AmigaBoot { get; set; } = AmigaBootStyle.Classic13;
     public AmigaDemo AmigaAnimation { get; set; } = AmigaDemo.Cycle;
     public int AmigaDurationSeconds { get; set; } = 45;

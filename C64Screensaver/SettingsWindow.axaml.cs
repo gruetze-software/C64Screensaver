@@ -21,6 +21,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         config = configManager;
         previewSettings.AmigaMode = config.Settings.AmigaMode;
+        previewSettings.AmigaDiskActivity = config.Settings.AmigaDiskActivity;
         previewSettings.AmigaBoot = config.Settings.AmigaBoot;
         previewSettings.AmigaAnimation = config.Settings.AmigaAnimation;
         previewSettings.AmigaDurationSeconds = config.Settings.AmigaDurationSeconds;
