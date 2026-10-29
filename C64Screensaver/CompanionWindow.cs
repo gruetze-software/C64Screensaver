@@ -29,7 +29,7 @@ public sealed class CompanionWindow : Window
         var text = new TextBox { Text = config.Settings.ScrollerText, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 4096, MinHeight = 65 };
         var speed = new Slider { Height = 32, Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
         var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
-        var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "1.3 · hand & disk", "2.0 · purple drive", "3.1 · rainbow & drive" }, SelectedIndex = (int)config.Settings.AmigaBoot };
+        var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1" }, SelectedIndex = (int)config.Settings.AmigaBoot };
         var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Cycle all demos", "Copper & sine scroller", "Boing ball", "Starflight & wireframe", "Plasma" }, SelectedIndex = (int)config.Settings.AmigaAnimation };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
         var quality = new ComboBox { Name = "RenderQuality", ItemsSource = new[] { "Efficient", "Balanced", "Detailed" }, SelectedIndex = config.Settings.NativeRenderQuality };
