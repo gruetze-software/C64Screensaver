@@ -516,7 +516,7 @@ controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.Purple31;
 controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
 controls.OfType<CheckBox>().Single(c => c.Name == "ShowScroller").IsChecked = false;
-controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = (int)AmigaDemo.Runner;
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 1;
 controls.OfType<ComboBox>().Single(c => c.Name == "RenderQuality").SelectedIndex = 1;
 controls.OfType<NumericUpDown>().Single(c => c.Name == "AmigaDuration").Value = 20;
 Dispatcher.UIThread.RunJobs();
@@ -526,7 +526,7 @@ var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
 Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
 companion.Close();
 Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings { AmigaMode = true } }), "retrosaver-companion");
-CaptureScene("amiga-copper-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None });
+CaptureScene("amiga-plasma-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None, AmigaAnimation = AmigaDemo.Plasma });
 File.Delete(companionConfig.ConfigPath);
 Console.WriteLine("PASS: companion startup, direct system launch, Amiga animation and editable scrolling text persistence.");
 }

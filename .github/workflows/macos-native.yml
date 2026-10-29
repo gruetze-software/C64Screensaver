@@ -1,10 +1,10 @@
-name: Experimental macOS screensaver
+name: macOS builds
 on:
   push:
-    branches: [codex/macos-native-screensaver]
+    branches: [main, codex/macos-native-screensaver]
   workflow_dispatch:
 concurrency:
-  group: macos-native-prototype
+  group: macos-build-${{ github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -32,14 +32,17 @@ jobs:
         run: dotnet run --project tests/NativePerformance -c Release
       - name: Build native screensaver
         run: bash macos/build-native.sh ${{ matrix.arch }}
+      - name: Build companion application
+        run: bash macos/build-companion.sh ${{ matrix.arch }}
       - name: Preserve bundle permissions and signatures
         run: |
           cd artifacts/macos-native/osx-*/
           ditto -c -k --keepParent C64Screensaver.saver C64Screensaver-experimental-${{ matrix.arch }}.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: C64Screensaver-native-${{ matrix.arch }}
+          name: Gruetze-RetroSaver-macOS-${{ matrix.arch }}
           path: |
             artifacts/macos-native/**/*.zip
+            artifacts/macos-companion/**/*.zip
             artifacts/macos-native/**/screenshots/*.png
             artifacts/amiga-review/*.png

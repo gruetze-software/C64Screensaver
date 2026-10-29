@@ -1,3 +1,19 @@
+# Changelog
+
+## 1.2.0 — 2026-10-29
+
+- Introduce the Gruetze RetroSaver companion for C64 and Amiga.
+- Keep only Jump & run and Plasma in the Amiga selection; alternate both or repeat one.
+  Retired saved demo selections fall back to alternating. C64 BASIC programs are unchanged.
+- Add layered woodland parallax, animated explorer, platform physics and crystals.
+- Add optional editable scrolling text, historical Kickstart captures and disk reflection.
+- Improve preview pacing, cache drawing resources and bound CPU CRT rendering costs.
+- Add native macOS C64/Amiga selection and Amiga startup, demo and scroller options.
+- Build native screensaver and companion test bundles for Apple Silicon and Intel.
+  Preferences remain separate; Developer ID distribution and Store submission are separate steps.
+
+## Development history before 1.2.0
+
 # Gruetze RetroSaver development
 
 - Add a separately scrolling transparent woodland layer for stronger parallax depth.

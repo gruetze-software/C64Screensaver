@@ -8,6 +8,7 @@ using System.Linq;
 namespace C64Screensaver;
 public sealed class CompanionWindow : Window
 {
+    private static readonly AmigaDemo[] DemoChoices = [AmigaDemo.Cycle, AmigaDemo.Runner, AmigaDemo.Plasma];
     private readonly ConfigManager config;
     private readonly C64Scene scene = new() { MinHeight = 280 };
     private bool running;
@@ -32,7 +33,7 @@ public sealed class CompanionWindow : Window
         var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
         var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1" }, SelectedIndex = (int)config.Settings.AmigaBoot };
         var activity = new CheckBox { Name = "DiskActivity", Content = "Disk activity reflection", IsChecked = config.Settings.AmigaDiskActivity, FontSize = 13 };
-        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Cycle all demos", "Copper & sine scroller", "Boing ball", "Starflight & wireframe", "Plasma", "Jump & run" }, SelectedIndex = (int)config.Settings.AmigaAnimation };
+        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Alternate Jump & run / Plasma", "Jump & run", "Plasma" }, SelectedIndex = Math.Max(0, Array.IndexOf(DemoChoices, config.Settings.AmigaAnimation)) };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
         var quality = new ComboBox { Name = "RenderQuality", ItemsSource = new[] { "Efficient", "Balanced", "Detailed" }, SelectedIndex = config.Settings.NativeRenderQuality };
         var save = new Button { Content = "Save settings" };
@@ -112,7 +113,7 @@ public sealed class CompanionWindow : Window
         system.SelectionChanged += (_, _) => { config.Settings.AmigaMode = system.SelectedIndex == 1; Restart(); };
         boot.SelectionChanged += (_, _) => { config.Settings.AmigaBoot = (AmigaBootStyle)Math.Max(0, boot.SelectedIndex); Restart(); };
         activity.IsCheckedChanged += (_, _) => { config.Settings.AmigaDiskActivity = activity.IsChecked == true; scene.InvalidateVisual(); };
-        demo.SelectionChanged += (_, _) => { config.Settings.AmigaAnimation = (AmigaDemo)Math.Max(0, demo.SelectedIndex); Restart(); };
+        demo.SelectionChanged += (_, _) => { config.Settings.AmigaAnimation = DemoChoices[Math.Clamp(demo.SelectedIndex, 0, DemoChoices.Length - 1)]; Restart(); };
         quality.SelectionChanged += (_, _) => { config.Settings.NativeRenderQuality = Math.Max(0, quality.SelectedIndex); scene.InvalidateVisual(); };
         duration.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(NumericUpDown.Value)) { config.Settings.AmigaDurationSeconds = (int)(duration.Value ?? 45); Restart(); } };
         showScroller.IsCheckedChanged += (_, _) => { config.Settings.ShowAmigaScroller = showScroller.IsChecked == true; UpdateAvailability(); scene.InvalidateVisual(); };
@@ -124,7 +125,7 @@ public sealed class CompanionWindow : Window
             config.Settings.AmigaMode = system.SelectedIndex == 1;
             config.Settings.AmigaDiskActivity = activity.IsChecked == true;
             config.Settings.AmigaBoot = (AmigaBootStyle)Math.Max(0, boot.SelectedIndex);
-            config.Settings.AmigaAnimation = (AmigaDemo)Math.Max(0, demo.SelectedIndex);
+            config.Settings.AmigaAnimation = DemoChoices[Math.Clamp(demo.SelectedIndex, 0, DemoChoices.Length - 1)];
             config.Settings.AmigaDurationSeconds = (int)(duration.Value ?? 45);
             config.Settings.NativeRenderQuality = Math.Max(0, quality.SelectedIndex);
             config.Settings.ShowAmigaScroller = showScroller.IsChecked == true;

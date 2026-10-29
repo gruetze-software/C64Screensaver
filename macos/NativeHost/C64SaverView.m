@@ -62,7 +62,9 @@ static BOOL loadCore(NSBundle *bundle) {
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
     NSArray<NSButton *> *_settingsTabButtons;
-    NSPopUpButton *_program, *_quality, *_borderColors;
+    NSPopUpButton *_program, *_quality, *_borderColors, *_system, *_amigaBoot, *_amigaDemo;
+    NSButton *_amigaScroller, *_amigaActivity;
+    NSTextField *_amigaText, *_amigaDuration, *_amigaSpeed, *_amigaWave;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
     NSTextField *_company, *_website, *_tagline, *_duration;
@@ -92,7 +94,7 @@ static BOOL loadCore(NSBundle *bundle) {
         // 0/1 instead of booleans. Repair them before crossing the typed C ABI.
         NSMutableDictionary *normalized = [saved mutableCopy];
         for (NSString *key in @[@"KeepAspectRatio", @"FillScreen", @"CrtEnabled",
-                @"Scanlines", @"CycleColors", @"PowerTransition"])
+                @"Scanlines", @"CycleColors", @"PowerTransition", @"AmigaMode", @"ShowAmigaScroller", @"AmigaDiskActivity"])
             if (normalized[key]) normalized[key] = [normalized[key] boolValue] ? @YES : @NO;
         return normalized;
     }
@@ -342,15 +344,15 @@ static BOOL loadCore(NSBundle *bundle) {
         styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
     _options.releasedWhenClosed = NO;
     _options.contentView = [[C64SettingsBackground alloc] initWithFrame:NSMakeRect(0,0,620,620)];
-    _options.title = @"C64Screensaver · Settings";
+    _options.title = @"Gruetze RetroSaver · Settings";
     NSBundle *bundle = [NSBundle bundleForClass:self.class];
     NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"?";
     NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"] ?: @"?";
     _optionsBody = _options.contentView;
     [self brandImage:@"app-icon.icns" frame:NSMakeRect(22,532,70,70) tag:201];
     [self brandImage:@"logogs.png" frame:NSMakeRect(520,524,76,80) tag:202];
-    [self label:@"C64Screensaver" frame:NSMakeRect(110,565,390,30) font:[NSFont boldSystemFontOfSize:24]];
-    NSTextField *subtitle = [self label:@"Your C64. Your monitor." frame:NSMakeRect(110,542,390,22) font:[NSFont systemFontOfSize:13]];
+    [self label:@"Gruetze RetroSaver" frame:NSMakeRect(110,565,390,30) font:[NSFont boldSystemFontOfSize:24]];
+    NSTextField *subtitle = [self label:@"Your C64. Your Amiga. Your monitor." frame:NSMakeRect(110,542,390,22) font:[NSFont systemFontOfSize:13]];
     subtitle.textColor = NSColor.secondaryLabelColor;
     NSTextField *versionLabel = [self label:[NSString stringWithFormat:@"Version %@ · Mac preview build %@",version,build]
         frame:NSMakeRect(110,521,390,20) font:[NSFont systemFontOfSize:11]];
@@ -360,10 +362,10 @@ static BOOL loadCore(NSBundle *bundle) {
     tabs.tabViewType = NSNoTabsNoBorder;
     _settingsTabs = tabs;
     NSMutableArray<NSButton *> *navigation = [NSMutableArray array];
-    NSArray<NSString *> *titles = @[@"Playback",@"Monitor effects",@"Company card"];
-    for (NSInteger index = 0; index < 3; index++) {
+    NSArray<NSString *> *titles = @[@"Playback",@"Monitor effects",@"Company card",@"Amiga"];
+    for (NSInteger index = 0; index < 4; index++) {
         NSButton *button = [NSButton buttonWithTitle:titles[index] target:self action:@selector(selectSettingsTab:)];
-        button.frame = NSMakeRect(105 + index*140,477,130,30);
+        button.frame = NSMakeRect(20 + index*145,477,140,30);
         button.bezelStyle = NSBezelStyleRounded;
         [button setButtonType:NSButtonTypePushOnPushOff];
         button.state = index == 0 ? NSControlStateValueOn : NSControlStateValueOff;
@@ -375,21 +377,26 @@ static BOOL loadCore(NSBundle *bundle) {
     tabs.identifier = @"C64SettingsTabs";
     [_options.contentView addSubview:tabs];
     _optionsBody = [self page:@"Playback" tabs:tabs];
-    [self label:@"BASIC programs" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
-    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,300,510,30) pullsDown:NO];
+    [self label:@"C64 BASIC programs" frame:NSMakeRect(20,294,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _system = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,337,510,30) pullsDown:NO];
+    _system.tag = 301;
+    [_system addItemsWithTitles:@[@"System: Commodore 64", @"System: Amiga"]];
+    [_system selectItemAtIndex:[s[@"AmigaMode"] boolValue] ? 1 : 0];
+    [_optionsBody addSubview:_system];
+    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,260,510,30) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
     [_program selectItemAtIndex:MAX(0, MIN(3, [s[@"Programs"] integerValue]))];
     [_optionsBody addSubview:_program];
-    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:250];
+    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:210];
     _power = [self check:@"CRT power-off / dot / power-on between programs"
-        value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:205];
-    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,145,510,30) pullsDown:NO];
+        value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:165];
+    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,115,510,30) pullsDown:NO];
     [_quality addItemsWithTitles:@[@"Rendering: Efficient — up to 540p (recommended)",
         @"Rendering: Balanced — up to 720p", @"Rendering: Detailed — up to 1080p, higher CPU use"]];
     [_quality selectItemAtIndex:MAX(0,MIN(2,[s[@"NativeRenderQuality"] integerValue]))];
     [_optionsBody addSubview:_quality];
     NSTextField *playbackHint = [self label:@"The C64 types each listing, corrects its mistakes and enters RUN. The program timer begins after RUN. Efficient rendering uses less CPU."
-        frame:NSMakeRect(20,55,510,65) font:[NSFont systemFontOfSize:12]];
+        frame:NSMakeRect(20,20,510,70) font:[NSFont systemFontOfSize:12]];
     playbackHint.textColor = NSColor.secondaryLabelColor;
 
     _optionsBody = [self page:@"Monitor effects" tabs:tabs];
@@ -423,6 +430,28 @@ static BOOL loadCore(NSBundle *bundle) {
     NSTextField *companyHint = [self label:@"Up to 28 characters per line. Text appears in uppercase; umlauts become AE, OE and UE. Choose Company card or All programs on the Playback tab."
         frame:NSMakeRect(20,70,510,75) font:[NSFont systemFontOfSize:12]];
     companyHint.textColor = NSColor.secondaryLabelColor;
+
+    _optionsBody = [self page:@"Amiga" tabs:tabs];
+    _amigaBoot = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,335,510,30) pullsDown:NO];
+    _amigaBoot.tag = 302;
+    [_amigaBoot addItemsWithTitles:@[@"Skip Kickstart", @"Kickstart 1.3", @"Kickstart 2.0", @"Kickstart 3.1"]];
+    [_amigaBoot selectItemAtIndex:MAX(0,MIN(3,s[@"AmigaBoot"] ? [s[@"AmigaBoot"] integerValue] : 1))];
+    [_optionsBody addSubview:_amigaBoot];
+    _amigaDemo = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,290,510,30) pullsDown:NO];
+    _amigaDemo.tag = 303;
+    [_amigaDemo addItemsWithTitles:@[@"Alternate Jump & run / Plasma", @"Jump & run", @"Plasma"]];
+    NSInteger selectedDemo = [s[@"AmigaAnimation"] integerValue];
+    [_amigaDemo selectItemAtIndex:selectedDemo == 5 ? 1 : selectedDemo == 4 ? 2 : 0];
+    [_optionsBody addSubview:_amigaDemo];
+    _amigaDuration = [self field:[(s[@"AmigaDurationSeconds"] ?: @45) stringValue] label:@"Seconds / demo" y:245];
+    _amigaScroller = [self check:@"Show scrolling text" value:s[@"ShowAmigaScroller"] ? [s[@"ShowAmigaScroller"] boolValue] : YES y:205];
+    _amigaScroller.tag = 304;
+    _amigaActivity = [self check:@"Disk activity reflection" value:s[@"AmigaDiskActivity"] ? [s[@"AmigaDiskActivity"] boolValue] : YES y:172];
+    _amigaActivity.tag = 305;
+    _amigaText = [self field:s[@"ScrollerText"] ?: @"GRUETZE RETROSAVER - WWW.GRUETZE-SOFTWARE.DE" label:@"Scrolling text" y:122];
+    _amigaText.tag = 306;
+    _amigaSpeed = [self field:[(s[@"ScrollerSpeed"] ?: @48) stringValue] label:@"Scroll speed" y:72];
+    _amigaWave = [self field:[(s[@"ScrollerWave"] ?: @20) stringValue] label:@"Wave height" y:22];
 
     C64HomepageButton *homepage = [[C64HomepageButton alloc] initWithFrame:NSMakeRect(20,20,235,30)];
     homepage.title = @"www.gruetze-software.de";
@@ -458,6 +487,16 @@ static BOOL loadCore(NSBundle *bundle) {
         @"PowerTransition": _power.state == NSControlStateValueOn ? @YES : @NO,
         @"CompanyName": _company.stringValue, @"CompanyWebsite": _website.stringValue,
         @"CompanyTagline": _tagline.stringValue}];
+    [settings addEntriesFromDictionary:@{
+        @"AmigaMode": _system.indexOfSelectedItem == 1 ? @YES : @NO,
+        @"AmigaBoot": @(_amigaBoot.indexOfSelectedItem),
+        @"AmigaAnimation": @(_amigaDemo.indexOfSelectedItem == 1 ? 5 : _amigaDemo.indexOfSelectedItem == 2 ? 4 : 0),
+        @"AmigaDurationSeconds": @(MAX(15,MIN(1800,_amigaDuration.integerValue))),
+        @"ShowAmigaScroller": _amigaScroller.state == NSControlStateValueOn ? @YES : @NO,
+        @"AmigaDiskActivity": _amigaActivity.state == NSControlStateValueOn ? @YES : @NO,
+        @"ScrollerText": [_amigaText.stringValue substringToIndex:MIN(4096,_amigaText.stringValue.length)],
+        @"ScrollerSpeed": @(MAX(8,MIN(160,_amigaSpeed.doubleValue))),
+        @"ScrollerWave": @(MAX(0,MIN(48,_amigaWave.doubleValue)))}];
     [[self preferences] setObject:settings forKey:@"Settings"];
     [self finishOptions:NSModalResponseOK];
     // Apply settings even if the host has not started its animation timer yet.

@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
             if (![brand isKindOfClass:NSImageView.class] || !brand.image.isValid) return 30;
         }
         NSTabView *tabs = (NSTabView *)findTag(sheet.contentView,203);
-        if (![tabs isKindOfClass:NSTabView.class] || tabs.numberOfTabViewItems != 3) return 31;
+        if (![tabs isKindOfClass:NSTabView.class] || tabs.numberOfTabViewItems != 4) return 31;
         for (NSTabViewItem *item in tabs.tabViewItems) {
             [tabs selectTabViewItem:item];
             for (NSView *control in item.view.subviews)
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
         if (argc == 3) {
             NSString *directory = [NSString stringWithUTF8String:argv[2]];
             [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
-            for (NSInteger index = 0; index < 3; index++) {
+            for (NSInteger index = 0; index < 4; index++) {
                 [(NSButton *)findTag(sheet.contentView,501+index) performClick:nil];
                 [sheet displayIfNeeded];
                 [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.05]];
@@ -252,8 +252,24 @@ int main(int argc, char **argv) {
         for (NSView *control in allControls(afterStop.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Cancel"])
                 [(NSButton *)control performClick:nil];
+        NSWindow *amigaSheet = view.configureSheet;
+        NSPopUpButton *system = (NSPopUpButton *)findTag(amigaSheet.contentView,301);
+        NSPopUpButton *boot = (NSPopUpButton *)findTag(amigaSheet.contentView,302);
+        NSPopUpButton *demo = (NSPopUpButton *)findTag(amigaSheet.contentView,303);
+        if (system.numberOfItems != 2 || demo.numberOfItems != 3) return 37;
+        [system selectItemAtIndex:1]; [boot selectItemAtIndex:0]; [demo selectItemAtIndex:1];
+        ((NSButton *)findTag(amigaSheet.contentView,304)).state = NSControlStateValueOff;
+        ((NSTextField *)findTag(amigaSheet.contentView,306)).stringValue = @"NEO AMIGA TEST";
+        for (NSView *control in allControls(amigaSheet.contentView))
+            if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Save"])
+                [(NSButton *)control performClick:nil];
+        NSDictionary *amigaSaved = [defaults dictionaryForKey:@"Settings"];
+        passed = passed && [amigaSaved[@"AmigaMode"] boolValue] && [amigaSaved[@"AmigaAnimation"] integerValue] == 5
+            && ![amigaSaved[@"ShowAmigaScroller"] boolValue] && [amigaSaved[@"ScrollerText"] isEqualToString:@"NEO AMIGA TEST"];
+        passed = passed && hasPicture(view);
         [view stopAnimation];
         [view removeFromSuperview];
+        if (original) [defaults setObject:original forKey:@"Settings"]; else [defaults removeObjectForKey:@"Settings"];
         if (!passed) return 12;
         NSLog(@"Options smoke: nonblack frames, detach/reattach, stop/start, sheet, CRT sliders, saved values and borderless full-screen passed.");
     }

@@ -4,7 +4,7 @@ using SkiaSharp;
 namespace C64Screensaver;
 
 public enum AmigaBootStyle { None, Classic13, Purple20, Purple31 }
-public enum AmigaDemo { Cycle, Copper, Boing, Starflight, Plasma, Runner }
+public enum AmigaDemo { Cycle = 0, Runner = 5, Plasma = 4 }
 
 // Procedural demos with historical Kickstart screen captures; no ROM is loaded.
 public sealed class AmigaFrameBuffer : IDisposable
@@ -15,10 +15,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     private readonly int[] plasmaPixels = new int[96 * 72];
     private readonly SKPaint paint = new() { IsAntialias = false };
     private AmigaRunner? runner;
-    private readonly SKPoint3[] stars = CreateStars();
     private static readonly Lazy<SKImage> GlyphAtlas = new(CreateGlyphAtlas);
-    private static readonly Lazy<SKImage[]> Balls = new(CreateBalls);
-    private static readonly Lazy<SKImage> BoingFloor = new(CreateBoingFloor);
     private static readonly float[] Sines = CreateSines();
     private static readonly SKColor[] PlasmaColors = CreatePalette();
     private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear);
@@ -28,8 +25,6 @@ public sealed class AmigaFrameBuffer : IDisposable
     {
         // Prepare sprites during startup, before a demo needs them for its first frame.
         _ = GlyphAtlas.Value;
-        _ = Balls.Value;
-        _ = BoingFloor.Value;
     }
     public static SKImage Capture(SaverSettings settings, double time)
     {
@@ -57,7 +52,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     {
         double length = BootDuration(settings) + settings.AmigaDurationSeconds + (settings.PowerTransition ? 1.42 : 0);
         return settings.AmigaAnimation == AmigaDemo.Cycle
-            ? (AmigaDemo)(1 + (int)(time / length % 5)) : settings.AmigaAnimation;
+            ? ((long)(time / length) % 2 == 0 ? AmigaDemo.Runner : AmigaDemo.Plasma) : settings.AmigaAnimation;
     }
     public SKImage CaptureFrame(SaverSettings settings, double time)
     {
@@ -87,29 +82,14 @@ public sealed class AmigaFrameBuffer : IDisposable
             canvas.Clear(new SKColor(5, 7, 24));
             switch (demo)
             {
-                case AmigaDemo.Boing: DrawBoing(canvas, demoTime); break;
-                case AmigaDemo.Starflight: DrawStars(canvas, demoTime); break;
                 case AmigaDemo.Runner: runner!.Draw(canvas, demoTime, paint); break;
-                case AmigaDemo.Plasma: DrawPlasma(canvas, demoTime); break;
-                default: DrawCopper(canvas, demoTime); break;
+                default: DrawPlasma(canvas, demoTime); break;
             }
             double scrollTime = Math.Floor(time / length) * settings.AmigaDurationSeconds
                 + (revealNext ? settings.AmigaDurationSeconds : Math.Clamp(phase - boot, 0, settings.AmigaDurationSeconds));
-            if (settings.ShowAmigaScroller) DrawScroller(canvas, settings, scrollTime, demo == AmigaDemo.Copper ? 135 : Math.Min(226, 261 - (float)settings.ScrollerWave));
+            if (settings.ShowAmigaScroller) DrawScroller(canvas, settings, scrollTime, Math.Min(226, 261 - (float)settings.ScrollerWave));
         }
         return surface.Snapshot();
-    }
-    private void DrawCopper(SKCanvas canvas, double time)
-    {
-        for (int bar = 0; bar < 5; bar++)
-        {
-            float center = 144 + (float)Math.Sin(time * .7 + bar * .9) * 100;
-            for (int row = -12; row <= 12; row++)
-            {
-                paint.Color = SKColor.FromHsv((float)((bar * 65 + time * 10) % 360), 85, (1 - Math.Abs(row) / 13f) * 80);
-                canvas.DrawRect(0, center + row, 384, 1, paint);
-            }
-        }
     }
     private void DrawScroller(SKCanvas canvas, SaverSettings settings, double time, float baseline)
     {
@@ -133,74 +113,6 @@ public sealed class AmigaFrameBuffer : IDisposable
                     new SKRect(x, y, x + 2, y + 27), Sampling, paint);
             }
         }
-    }
-    private static SKImage CreateBoingFloor()
-    {
-        const float horizon = 170, bottom = 288;
-        using var floor = SKSurface.Create(new SKImageInfo(384, 288));
-        var canvas = floor.Canvas;
-        canvas.Clear(SKColors.Transparent);
-        canvas.ClipRect(new SKRect(0, horizon, 384, bottom));
-        using var grid = new SKPaint { Color = new SKColor(8, 9, 27) };
-        canvas.DrawRect(0, horizon, 384, bottom - horizon, grid);
-        var color = new SKColor(55, 38, 88);
-        // Fade distant grid lines so they do not form a dense triangular ridge.
-        using var fade = SKShader.CreateLinearGradient(new SKPoint(0, horizon),
-            new SKPoint(0, horizon + 34), new[] { color.WithAlpha(0), color }, SKShaderTileMode.Clamp);
-        grid.Shader = fade;
-        // Project a level ground plane: equal world-depth steps become 1/z rows.
-        for (int depth = 1; depth <= 48; depth++)
-        {
-            float y = horizon + (bottom - horizon) / depth;
-            canvas.DrawLine(0, y, 384, y, grid);
-        }
-        // A wide fan covers the whole ground, not only a narrow center triangle.
-        for (int x = -3840; x <= 4224; x += 48)
-            canvas.DrawLine(192, horizon, x, bottom, grid);
-        grid.Shader = null;
-        grid.Color = new SKColor(30, 25, 46);
-        canvas.DrawLine(0, horizon, 384, horizon, grid);
-        return floor.Snapshot();
-    }
-    private void DrawBoing(SKCanvas canvas, double time)
-    {
-        paint.Color = SKColors.White;
-        canvas.DrawImage(BoingFloor.Value, 0, 0, paint);
-        float bx = 192 + (float)Math.Sin(time * .8) * 110;
-        float bounce = (float)Math.Abs(Math.Sin(time * 1.6));
-        paint.Color = new SKColor(0, 0, 0, (byte)(100 - bounce * 60));
-        canvas.DrawOval(bx, 201, 40 - bounce * 18, 7 - bounce * 3, paint);
-        paint.Color = SKColors.White;
-        var ball = Balls.Value[(int)(time * 18) % Balls.Value.Length];
-        canvas.DrawImage(ball, new SKRect(bx - 48, 105 - bounce * 95, bx + 48, 201 - bounce * 95), Sampling, paint);
-    }
-    private void DrawStars(SKCanvas canvas, double time)
-    {
-        foreach (var star in stars)
-        {
-            float z = (float)((star.Z - time * .24) % 1);
-            if (z <= 0) z += 1;
-            float x = 192 + star.X / z, y = 130 + star.Y / z;
-            if (x < 0 || x > 384 || y < 0 || y > 288) continue;
-            byte light = (byte)(60 + (1 - z) * 195);
-            paint.Color = new SKColor(light, light, 255);
-            canvas.DrawRect(x, y, z < .3 ? 2 : 1, z < .3 ? 2 : 1, paint);
-        }
-        Span<SKPoint> points = stackalloc SKPoint[8];
-        double a = time * .6, b = time * .35;
-        for (int i = 0; i < 8; i++)
-        {
-            double x = (i & 1) == 0 ? -1 : 1, y = (i & 2) == 0 ? -1 : 1, z = (i & 4) == 0 ? -1 : 1;
-            double rx = x * Math.Cos(a) - z * Math.Sin(a), rz = x * Math.Sin(a) + z * Math.Cos(a);
-            double ry = y * Math.Cos(b) - rz * Math.Sin(b), depth = 4 + y * Math.Sin(b) + rz * Math.Cos(b);
-            points[i] = new SKPoint(192 + (float)(rx * 130 / depth), 120 + (float)(ry * 130 / depth));
-        }
-        paint.Color = new SKColor(80, 235, 255);
-        paint.StrokeWidth = 1.2f;
-        for (int i = 0; i < 8; i++)
-            for (int bit = 1; bit <= 4; bit *= 2)
-                if ((i & bit) == 0) canvas.DrawLine(points[i], points[i | bit], paint);
-        paint.StrokeWidth = 1;
     }
     private void DrawPlasma(SKCanvas canvas, double time)
     {
@@ -238,39 +150,6 @@ public sealed class AmigaFrameBuffer : IDisposable
             }
         }
         return target.Snapshot();
-    }
-    private static SKImage[] CreateBalls()
-    {
-        var result = new SKImage[12];
-        using var bitmap = new SKBitmap(96, 96);
-        var pixels = new int[96 * 96];
-        for (int frame = 0; frame < result.Length; frame++)
-        {
-            Array.Clear(pixels);
-            for (int y = 0; y < 96; y++)
-            for (int x = 0; x < 96; x++)
-            {
-                double nx = (x - 47.5) / 47, ny = (y - 47.5) / 47, radius = nx * nx + ny * ny;
-                if (radius > 1) continue;
-                double nz = Math.Sqrt(1 - radius);
-                int u = (int)Math.Floor((Math.Atan2(nx, nz) / Math.PI + 1 + frame / 48.0) * 8);
-                int v = (int)Math.Floor((Math.Asin(ny) / Math.PI + .5) * 8);
-                double light = .35 + .65 * Math.Max(0, -.25 * nx - .35 * ny + .8 * nz);
-                bool red = ((u + v) & 1) == 0;
-                pixels[y * 96 + x] = unchecked((int)(uint)new SKColor((byte)(240 * light), (byte)((red ? 35 : 240) * light), (byte)((red ? 45 : 240) * light)));
-            }
-            Marshal.Copy(pixels, 0, bitmap.GetPixels(), pixels.Length);
-            // A copy keeps each atlas frame independent of the reused bitmap.
-            result[frame] = SKImage.FromPixelCopy(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
-        }
-        return result;
-    }
-    private static SKPoint3[] CreateStars()
-    {
-        var random = new Random(64);
-        var result = new SKPoint3[150];
-        for (int i = 0; i < result.Length; i++) result[i] = new SKPoint3((float)(random.NextDouble() - .5) * 180, (float)(random.NextDouble() - .5) * 130, (float)random.NextDouble());
-        return result;
     }
     private static float[] CreateSines()
     {

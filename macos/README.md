@@ -1,7 +1,22 @@
-# Native macOS screensaver — experimental
+# Gruetze RetroSaver 1.2.0 on macOS
 
-This branch prototypes an installable ScreenSaverView bundle. It is separate from the
-released Avalonia application and is not part of release 1.1.
+Build both the real system screensaver and the companion on a Mac:
+
+    bash macos/build-native.sh arm64
+    bash macos/build-companion.sh arm64
+
+Use x86_64 for Intel. Output folders are artifacts/macos-native/osx-* and
+artifacts/macos-companion/osx-*. The companion ZIP contains Gruetze RetroSaver.app;
+the native ZIP contains C64Screensaver.saver, retaining its upgrade-compatible identity.
+Double-click the .saver to install, then select it in System Settings → Screen Saver.
+Options has Playback, Monitor effects, Company card and Amiga tabs. Select the system
+under Playback; configure Kickstart, Jump & run/Plasma, duration and scrolling text under Amiga.
+
+Companion and native settings are currently separate. These are ad-hoc signed developer
+test builds, not notarized Store packages. For public native distribution follow
+[the Developer ID guide](APPLE-DEVELOPER-DE.md) using a certificate on your own Mac.
+GitHub Actions builds and tests both architectures; successful automated tests do not
+replace checking installation, animation and energy use on a physical Mac.
 
 ## Architecture
 
@@ -14,7 +29,7 @@ to caller-owned memory. Frames passed to AppKit are copied so their lifetime is 
 of the next render. NativeAOT/Skia modules remain loaded for the lifetime of the process:
 NativeAOT library unloading is unsupported.
 
-The prototype rasterizes at up to 1920×1080 and requests 30 fps. This is a performance cap,
+The native host requests 30 fps fullscreen and 20 fps in the small preview. This is a performance cap,
 not a guarantee; CPU usage, Retina scaling and energy use need real Mac measurements.
 Its options include program selection, duration after RUN, 4:3/stretch, border visibility,
 phosphor mask, glow, glow spread, scanline strength and the three company texts. An explicit fill-entire-screen option removes both letterboxing and the C64 border. Preferences use a separate NSUserDefaults suite;

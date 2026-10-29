@@ -1,3 +1,10 @@
+> Stand 1.2.0: Der gemeinsame native Bildschirmschoner bietet jetzt C64 und Amiga
+> im Optionsdialog an. Amiga enthält ausschließlich Jump & run und Plasma.
+> Die Begleit-App wird mit macos/build-companion.sh zusätzlich als .app gebaut.
+> Beide verwenden derzeit getrennte Einstellungen; Store-Einreichung und die
+> gemeinsame Einstellungsablage sind noch offen. Frühere Entwurfsabschnitte unten
+> beschreiben teilweise noch den Stand vor dieser Umsetzung.
+
 # Apple-Developer-Weg für C64Screensaver
 
 Ziel: Den nativen Mac-Bildschirmschoner als signierten und von Apple notarisierten

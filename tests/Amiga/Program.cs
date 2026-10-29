@@ -33,7 +33,7 @@ foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, 
     Check(Difference(first, demo) > 10000, "Startup proceeds to demo: " + boot);
 }
 settings.AmigaBoot = AmigaBootStyle.None;
-foreach (var effect in new[] { AmigaDemo.Copper, AmigaDemo.Boing, AmigaDemo.Starflight, AmigaDemo.Plasma, AmigaDemo.Runner })
+foreach (var effect in new[] { AmigaDemo.Runner, AmigaDemo.Plasma })
 {
     settings.AmigaAnimation = effect;
     using var before = renderer.CaptureFrame(settings, 2);
@@ -59,7 +59,7 @@ settings.AmigaBoot = AmigaBootStyle.Classic13;
 settings.PowerTransition = true;
 settings.AmigaDurationSeconds = 15;
 for (int i = 0; i < 10; i++)
-    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (AmigaDemo)(1 + i % 5), "Playlist cycles all effects");
+    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (i % 2 == 0 ? AmigaDemo.Runner : AmigaDemo.Plasma), "Playlist cycles all effects");
 Check(AmigaFrameBuffer.PowerTime(settings, 20.5) is > .49 and < .51, "CRT transition occurs after runtime");
 Check(AmigaFrameBuffer.PowerTime(settings, 21.43) == null, "CRT transition finishes on next boot");
 settings.AmigaAnimation = AmigaDemo.Plasma;
@@ -81,7 +81,7 @@ renderer.Dispose();
 bool rejected = false;
 try { using var invalid = renderer.CaptureFrame(settings, 0); } catch (ObjectDisposedException) { rejected = true; }
 Check(rejected, "Disposed renderer cannot draw");
-Console.WriteLine("PASS: three startup motifs, five animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
+Console.WriteLine("PASS: three startup motifs, two animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
 
 var reflectedSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.Classic13, CrtEnabled = false };
 using (var originalBoot = AmigaFrameBuffer.Capture(reflectedSettings, .46))
@@ -108,20 +108,6 @@ using (var target = SKSurface.Create(new SKImageInfo(640, 480)))
 }
 Check(AmigaFrameBuffer.StartupTime(reflectedSettings, 6) == null, "No disk activity during demos");
 Console.WriteLine("PASS: localized disk reflection, original-screen preservation, quiet intervals and startup-only timing.");
-
-using (var floorRenderer = new AmigaFrameBuffer())
-using (var image = floorRenderer.CaptureFrame(new SaverSettings {
-    AmigaMode = true, AmigaBoot = AmigaBootStyle.None,
-    AmigaAnimation = AmigaDemo.Boing, ScrollerText = "", PowerTransition = false }, 3))
-using (var pixels = SKBitmap.FromImage(image))
-{
-    for (int x = 0; x < 384; x++)
-    {
-        Check(pixels.GetPixel(x, 165) == new SKColor(5, 7, 24), "No grid protrudes above the common horizon");
-        Check(pixels.GetPixel(x, 175) != new SKColor(5, 7, 24), "Ground extends across the entire screen below the horizon");
-    }
-}
-Console.WriteLine("PASS: flat full-width Boing horizon with no triangular ridge.");
 
 var autoplay = new AmigaRunner();
 for (int frame = 0; frame <= 60 * 180; frame++)
@@ -168,3 +154,11 @@ using (var layer = SKBitmap.Decode(layerStream))
     Check(pixels.Count(p => p.Alpha > 180) > pixels.Length / 20, "Middle background contains visible artwork");
 }
 Console.WriteLine("PASS: separately embedded transparent parallax artwork.");
+
+foreach (int removed in new[] {1,2,3})
+{
+    var legacyDemo = new SaverSettings { AmigaAnimation = (AmigaDemo)removed };
+    legacyDemo.Validate();
+    Check(legacyDemo.AmigaAnimation == AmigaDemo.Cycle, "Removed selections migrate to the supported playlist");
+}
+Check((int)AmigaDemo.Runner == 5 && (int)AmigaDemo.Plasma == 4, "Existing supported settings keep their numeric identity");

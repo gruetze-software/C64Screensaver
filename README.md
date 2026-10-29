@@ -1,20 +1,26 @@
 # Gruetze RetroSaver
 
-Development branch: the new .NET 10 / Avalonia 12 companion opens on normal launch
-(or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe, plasma and an autoplay jump-and-run scene with shaded rock tiles, two independently scrolling woodland layers and an eight-pose character,
-a live preview and editable scrolling text,
-speed and wave height. The Amiga scrolling text can be switched on or off. Choose the historical Kickstart 1.3, 2.0 or 3.1 startup screen, or skip startup. Cycle all demos or repeat one with
-configurable runtime and CRT power transitions. An optional soft red disk-activity
-reflection pulses on the glass during Kickstart startup. The demos are procedurally drawn; the startup screens use historical captures
-with their original artwork and animation. No Kickstart ROM is loaded.
-See [screen artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md). --fullscreen and Windows /s still launch the screensaver
-directly. Existing settings stay in their original location.
+Version **1.2.0** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
+Normal launch opens the companion; --fullscreen starts the selected animation.
 
-Windows and Linux public release packages remain free. New public release
-packaging excludes macOS; local Mac builds remain available for development.
-The intended Mac distribution is the App Store. Store submission, the native
-screensaver/companion settings bridge and separate Amiga module are still pending.
-The historical downloads described below are version 1.1.0 of C64Screensaver.
+The Amiga selection contains **Jump & run** and **Plasma**. Alternate both or repeat
+one with a configurable duration and CRT power transitions. Jump & run includes
+an automatically jumping explorer, crystals and two independently scrolling woodland
+layers. Scrolling text can be edited, adjusted or hidden. Choose the historical
+Kickstart 1.3, 2.0 or 3.1 startup, or skip startup; an optional red disk-activity
+reflection accompanies loading. No Kickstart ROM is loaded.
+See [screen artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
+
+The C64 retains all three BASIC programs, ghost typing, corrections and RUN.
+Windows and Linux packages remain free. macOS development builds include the
+companion app and a real native system screensaver, built for Apple Silicon and Intel.
+The native Options dialog now selects C64 or Amiga and configures both remaining demos.
+**Native screensaver and companion preferences are currently separate.** App Store
+submission and a shared settings bridge are pending. Mac test packages are ad-hoc
+signed, not notarized, and are kept as build artifacts rather than public release assets.
+See [Mac build instructions](macos/README.md) and the
+[Developer ID guide](macos/APPLE-DEVELOPER-DE.md).
+The downloads below describe the historical C64Screensaver 1.1.0 release.
 
 ![Gruetze RetroSaver companion with editable Amiga scroller](docs/images/retrosaver-companion.png)
 
@@ -154,8 +160,8 @@ Ordinary tests do not reset the user's settings.
 
     pwsh scripts/release.ps1
 
-Builds and tests Release, then creates self-contained ZIP files for six platforms
-and a SHA-256 checksum list in artifacts/release/1.1.0.
+Builds and tests Release, then creates free Windows/Linux self-contained ZIP files
+and a SHA-256 checksum list in artifacts/release/1.2.0.
 To publish one platform:
 
     pwsh scripts/publish.ps1 -Runtime win-x64
