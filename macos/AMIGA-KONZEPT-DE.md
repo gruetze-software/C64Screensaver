@@ -1,3 +1,10 @@
+> Update 1.2.1: App und .saver werden gemeinsam als DMG gebaut. Die App enthält
+> das .saver-Bundle, bietet dessen Installation an und verwendet dieselbe per-user
+> JSON-Datei in /Users/Shared/GruetzeRetroSaver-<uid>. Native Wiedergabe lädt nach;
+> die Begleitapp aktualisiert sich beim Zurückwechseln. Frühere Entwurfsnotizen zu
+> getrennter Ablage/noch fehlender Brücke unten sind damit überholt. Store-Freigabe
+> und eine gegebenenfalls andere Store-Sandbox bleiben separat zu prüfen.
+
 > Stand 1.2.0: Der gemeinsame native Bildschirmschoner bietet jetzt C64 und Amiga
 > im Optionsdialog an. Amiga enthält ausschließlich Jump & run und Plasma.
 > Die Begleit-App wird mit macos/build-companion.sh zusätzlich als .app gebaut.

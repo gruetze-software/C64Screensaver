@@ -40,6 +40,9 @@ static BOOL hasPicture(ScreenSaverView *view) {
 int main(int argc, char **argv) {
     @autoreleasepool {
         if (argc < 2 || argc > 3) return 2;
+        NSString *sharedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"retrosaver-options-%@/settings.json", NSUUID.UUID.UUIDString]];
+        setenv("GRUETZE_RETROSAVER_SETTINGS_PATH", sharedPath.fileSystemRepresentation, 1);
         [NSApplication sharedApplication];
         NSBundle *bundle = [NSBundle bundleWithPath:[NSString stringWithUTF8String:argv[1]]];
         NSError *error = nil;
@@ -194,6 +197,8 @@ int main(int argc, char **argv) {
         NSMutableDictionary *legacy = [saved mutableCopy];
         legacy[@"KeepAspectRatio"] = @0; legacy[@"FillScreen"] = @1;
         [defaults setObject:legacy forKey:@"Settings"];
+        [[NSJSONSerialization dataWithJSONObject:legacy options:0 error:nil]
+            writeToFile:sharedPath options:NSDataWritingAtomic error:nil];
         NSLog(@"Options validation before async rendering: %d", passed);
         NSWindow *reopened = view.configureSheet;
         passed = passed && [((NSSlider *)findTag(reopened.contentView,2)) doubleValue] == 20;
@@ -270,6 +275,7 @@ int main(int argc, char **argv) {
         [view stopAnimation];
         [view removeFromSuperview];
         if (original) [defaults setObject:original forKey:@"Settings"]; else [defaults removeObjectForKey:@"Settings"];
+        [NSFileManager.defaultManager removeItemAtPath:sharedPath.stringByDeletingLastPathComponent error:nil];
         if (!passed) return 12;
         NSLog(@"Options smoke: nonblack frames, detach/reattach, stop/start, sheet, CRT sliders, saved values and borderless full-screen passed.");
     }

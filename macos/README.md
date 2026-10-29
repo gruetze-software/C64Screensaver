@@ -1,22 +1,31 @@
-# Gruetze RetroSaver 1.2.0 on macOS
+# Gruetze RetroSaver 1.2.1 on macOS
 
-Build both the real system screensaver and the companion on a Mac:
+Build one integrated distribution on a Mac:
 
     bash macos/build-native.sh arm64
     bash macos/build-companion.sh arm64
+    bash macos/test-shared-settings.sh
 
-Use x86_64 for Intel. Output folders are artifacts/macos-native/osx-* and
-artifacts/macos-companion/osx-*. The companion ZIP contains Gruetze RetroSaver.app;
-the native ZIP contains C64Screensaver.saver, retaining its upgrade-compatible identity.
-Double-click the .saver to install, then select it in System Settings → Screen Saver.
-Options has Playback, Monitor effects, Company card and Amiga tabs. Select the system
-under Playback; configure Kickstart, Jump & run/Plasma, duration and scrolling text under Amiga.
+Use x86_64 for Intel. The single DMG is under artifacts/macos-companion/osx-*.
+Its app contains C64Screensaver.saver. Drag the app into Applications, open it and
+click Install / update system screensaver; macOS handles the installation confirmation.
+Select Gruetze RetroSaver (older installations may show C64Screensaver) in Screen Saver settings.
 
-Companion and native settings are currently separate. These are ad-hoc signed developer
-test builds, not notarized Store packages. For public native distribution follow
-[the Developer ID guide](APPLE-DEVELOPER-DE.md) using a certificate on your own Mac.
-GitHub Actions builds and tests both architectures; successful automated tests do not
-replace checking installation, animation and energy use on a physical Mac.
+Both interfaces use /Users/Shared/GruetzeRetroSaver-<uid>/settings.json, where uid
+is the login user's numeric UID. The directory is restricted to its owner; the name
+is independent of the screensaver host's remapped home directory. Writes replace the
+file atomically. Native playback checks once per second and retains its last good
+settings on corrupt input; the companion reloads external saves on activation.
+The first valid legacy source migrates only if the shared file is absent. The old
+native suite remains a fallback cache; Windows/Linux keep their existing JSON path.
+There is no daemon or idle monitor. App Store sandbox/review is still a separate task.
+
+Developer DMGs are ad-hoc signed and not notarized. To sign/notarize the complete app,
+use sign-notarize.sh with Gruetze RetroSaver.app, not just the embedded .saver.
+See [the Developer ID guide](APPLE-DEVELOPER-DE.md).
+CI checks cross-process settings exchange, live reload, corrupt-file fallback,
+mounted-DMG content and signatures on Apple Silicon and Intel. It does not replace
+checking Apple's actual screensaver host and Gatekeeper on each macOS release.
 
 ## Architecture
 
@@ -32,8 +41,7 @@ NativeAOT library unloading is unsupported.
 The native host requests 30 fps fullscreen and 20 fps in the small preview. This is a performance cap,
 not a guarantee; CPU usage, Retina scaling and energy use need real Mac measurements.
 Its options include program selection, duration after RUN, 4:3/stretch, border visibility,
-phosphor mask, glow, glow spread, scanline strength and the three company texts. An explicit fill-entire-screen option removes both letterboxing and the C64 border. Preferences use a separate NSUserDefaults suite;
-the desktop application's JSON settings are not imported. The native power transition
+phosphor mask, glow, glow spread, scanline strength and the three company texts. An explicit fill-entire-screen option removes both letterboxing and the C64 border. Preferences use the common per-user JSON file; a local suite caches native fallback values. The native power transition
 currently uses a Skia counterpart of the desktop effect.
 
 ## Build on a Mac

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 — 2026-10-29
+
+- Distribute one Mac DMG with the native screensaver embedded inside the companion.
+- Install or update the system screensaver using a button in the companion.
+- Use a shared per-user settings file with atomic writes; migrate existing desktop/native
+  preferences when no shared file exists. Retain the last good settings on malformed saves.
+- Automatically reload native playback after external saves and refresh the companion
+  when returning from native options. Preserve settings not exposed by the native dialog.
+- Add cross-process Mac integration tests and mounted-DMG signature/content checks.
+- Extend Developer ID signing/notarization to the complete app and embedded screensaver.
+
 ## 1.2.0 — 2026-10-29
 
 - Introduce the Gruetze RetroSaver companion for C64 and Amiga.

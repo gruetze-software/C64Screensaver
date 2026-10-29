@@ -44,6 +44,27 @@ public sealed class CompanionWindow : Window
         var run = new Button { Content = "Start fullscreen preview" };
         var actions = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var button in new[] { settings, run, save, about }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
+        if (OperatingSystem.IsMacOS())
+        {
+            var install = new Button { Name = "InstallMacScreensaver", Content = "Install / update system screensaver" };
+            install.Margin = new Thickness(0, 0, 12, 8);
+            install.Click += (_, _) =>
+            {
+                ReadEditor();
+                if (!config.SaveSettings()) { status.Text = "Could not save: " + config.LastError; return; }
+                // The system installer handles installation and update confirmation.
+                string saver = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory,
+                    "..", "Resources", "C64Screensaver.saver"));
+                if (!System.IO.Directory.Exists(saver)) { status.Text = "Use the complete Mac app from the DMG to install the screensaver."; return; }
+                try
+                {
+                    Process.Start(new ProcessStartInfo("/usr/bin/open") { ArgumentList = { saver }, UseShellExecute = false });
+                    status.Text = "Finish installation, then choose Gruetze RetroSaver in System Settings → Screen Saver.";
+                }
+                catch (Exception ex) { status.Text = "Could not open the system installer: " + ex.Message; }
+            };
+            actions.Children.Insert(0, install);
+        }
         var body = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(28) };
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("70,*,70") };
         var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 60, Height = 60 };
@@ -160,8 +181,34 @@ public sealed class CompanionWindow : Window
             }
             RequestAnimationFrame(Animate);
         }
+        // Reload another process's saves when returning to the companion. Clone first,
+        // because setting controls fires handlers that update the live settings object.
+        DateTime savedStamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
+        Activated += (_, _) =>
+        {
+            if (!OperatingSystem.IsMacOS() || OwnedWindows.Any(w => w.IsVisible)) return;
+            DateTime stamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
+            if (stamp == savedStamp || !System.IO.File.Exists(config.ConfigPath)) return;
+            savedStamp = stamp;
+            config.LoadSettings();
+            if (config.LastError != null) { status.Text = "Could not reload: " + config.LastError; return; }
+            var loaded = System.Text.Json.JsonSerializer.Deserialize<SaverSettings>(System.Text.Json.JsonSerializer.Serialize(config.Settings))!;
+            system.SelectedIndex = loaded.AmigaMode ? 1 : 0;
+            boot.SelectedIndex = (int)loaded.AmigaBoot;
+            activity.IsChecked = loaded.AmigaDiskActivity;
+            demo.SelectedIndex = Math.Max(0, Array.IndexOf(DemoChoices, loaded.AmigaAnimation));
+            duration.Value = loaded.AmigaDurationSeconds;
+            quality.SelectedIndex = loaded.NativeRenderQuality;
+            showScroller.IsChecked = loaded.ShowAmigaScroller;
+            text.Text = loaded.ScrollerText; speed.Value = loaded.ScrollerSpeed; wave.Value = loaded.ScrollerWave;
+            config.Settings = loaded;
+            Restart();
+        };
         Restart();
-        Opened += (_, _) => { running = true; clock.Start(); RequestAnimationFrame(Animate); };
+        Opened += (_, _) => {
+            if (OperatingSystem.IsMacOS() && !System.IO.File.Exists(config.ConfigPath))
+                status.Text = config.SaveSettings() ? "Shared screensaver settings are ready." : "Could not prepare shared settings: " + config.LastError;
+            running = true; clock.Start(); RequestAnimationFrame(Animate); };
         Closed += (_, _) => { running = false; clock.Stop(); scene.Clear(); foreach (var preview in previews.ToArray()) preview.Close(); };
     }
 }
