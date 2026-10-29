@@ -108,3 +108,17 @@ using (var target = SKSurface.Create(new SKImageInfo(640, 480)))
 }
 Check(AmigaFrameBuffer.StartupTime(reflectedSettings, 6) == null, "No disk activity during demos");
 Console.WriteLine("PASS: localized disk reflection, original-screen preservation, quiet intervals and startup-only timing.");
+
+using (var floorRenderer = new AmigaFrameBuffer())
+using (var image = floorRenderer.CaptureFrame(new SaverSettings {
+    AmigaMode = true, AmigaBoot = AmigaBootStyle.None,
+    AmigaAnimation = AmigaDemo.Boing, ScrollerText = "", PowerTransition = false }, 3))
+using (var pixels = SKBitmap.FromImage(image))
+{
+    for (int x = 0; x < 384; x++)
+    {
+        Check(pixels.GetPixel(x, 165) == new SKColor(5, 7, 24), "No grid protrudes above the common horizon");
+        Check(pixels.GetPixel(x, 175) != new SKColor(5, 7, 24), "Ground extends across the entire screen below the horizon");
+    }
+}
+Console.WriteLine("PASS: flat full-width Boing horizon with no triangular ridge.");

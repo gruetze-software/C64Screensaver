@@ -17,6 +17,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     private readonly SKPoint3[] stars = CreateStars();
     private static readonly Lazy<SKImage> GlyphAtlas = new(CreateGlyphAtlas);
     private static readonly Lazy<SKImage[]> Balls = new(CreateBalls);
+    private static readonly Lazy<SKImage> BoingFloor = new(CreateBoingFloor);
     private static readonly float[] Sines = CreateSines();
     private static readonly SKColor[] PlasmaColors = CreatePalette();
     private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear);
@@ -27,6 +28,7 @@ public sealed class AmigaFrameBuffer : IDisposable
         // Prepare sprites during startup, before a demo needs them for its first frame.
         _ = GlyphAtlas.Value;
         _ = Balls.Value;
+        _ = BoingFloor.Value;
     }
     public static SKImage Capture(SaverSettings settings, double time)
     {
@@ -129,11 +131,38 @@ public sealed class AmigaFrameBuffer : IDisposable
             }
         }
     }
+    private static SKImage CreateBoingFloor()
+    {
+        const float horizon = 170, bottom = 288;
+        using var floor = SKSurface.Create(new SKImageInfo(384, 288));
+        var canvas = floor.Canvas;
+        canvas.Clear(SKColors.Transparent);
+        canvas.ClipRect(new SKRect(0, horizon, 384, bottom));
+        using var grid = new SKPaint { Color = new SKColor(8, 9, 27) };
+        canvas.DrawRect(0, horizon, 384, bottom - horizon, grid);
+        var color = new SKColor(55, 38, 88);
+        // Fade distant grid lines so they do not form a dense triangular ridge.
+        using var fade = SKShader.CreateLinearGradient(new SKPoint(0, horizon),
+            new SKPoint(0, horizon + 34), new[] { color.WithAlpha(0), color }, SKShaderTileMode.Clamp);
+        grid.Shader = fade;
+        // Project a level ground plane: equal world-depth steps become 1/z rows.
+        for (int depth = 1; depth <= 48; depth++)
+        {
+            float y = horizon + (bottom - horizon) / depth;
+            canvas.DrawLine(0, y, 384, y, grid);
+        }
+        // A wide fan covers the whole ground, not only a narrow center triangle.
+        for (int x = -3840; x <= 4224; x += 48)
+            canvas.DrawLine(192, horizon, x, bottom, grid);
+        grid.Shader = null;
+        grid.Color = new SKColor(30, 25, 46);
+        canvas.DrawLine(0, horizon, 384, horizon, grid);
+        return floor.Snapshot();
+    }
     private void DrawBoing(SKCanvas canvas, double time)
     {
-        paint.Color = new SKColor(55, 38, 88);
-        for (int y = 195; y < 288; y += 12) canvas.DrawLine(0, y, 384, y, paint);
-        for (int x = -180; x < 600; x += 40) canvas.DrawLine(192, 170, x, 288, paint);
+        paint.Color = SKColors.White;
+        canvas.DrawImage(BoingFloor.Value, 0, 0, paint);
         float bx = 192 + (float)Math.Sin(time * .8) * 110;
         float bounce = (float)Math.Abs(Math.Sin(time * 1.6));
         paint.Color = new SKColor(0, 0, 0, (byte)(100 - bounce * 60));
