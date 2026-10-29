@@ -515,13 +515,13 @@ controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").Text = "LONG SC
 controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.Purple31;
 controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
-controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = (int)AmigaDemo.Boing;
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = (int)AmigaDemo.Runner;
 controls.OfType<ComboBox>().Single(c => c.Name == "RenderQuality").SelectedIndex = 1;
 controls.OfType<NumericUpDown>().Single(c => c.Name == "AmigaDuration").Value = 20;
 Dispatcher.UIThread.RunJobs();
 controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
-Check(reloadedCompanion.AmigaMode && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Boing && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
+Check(reloadedCompanion.AmigaMode && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
 companion.Close();
 Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings { AmigaMode = true } }), "retrosaver-companion");
 CaptureScene("amiga-copper-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None });

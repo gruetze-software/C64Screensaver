@@ -31,7 +31,7 @@ public sealed class CompanionWindow : Window
         var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
         var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1" }, SelectedIndex = (int)config.Settings.AmigaBoot };
         var activity = new CheckBox { Name = "DiskActivity", Content = "Disk activity reflection", IsChecked = config.Settings.AmigaDiskActivity, FontSize = 13 };
-        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Cycle all demos", "Copper & sine scroller", "Boing ball", "Starflight & wireframe", "Plasma" }, SelectedIndex = (int)config.Settings.AmigaAnimation };
+        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Cycle all demos", "Copper & sine scroller", "Boing ball", "Starflight & wireframe", "Plasma", "Jump & run" }, SelectedIndex = (int)config.Settings.AmigaAnimation };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
         var quality = new ComboBox { Name = "RenderQuality", ItemsSource = new[] { "Efficient", "Balanced", "Detailed" }, SelectedIndex = config.Settings.NativeRenderQuality };
         var save = new Button { Content = "Save settings" };

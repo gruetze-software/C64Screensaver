@@ -1,5 +1,8 @@
 # Gruetze RetroSaver development
 
+- Add an autoplay pixel jump-and-run to the Amiga demos and playlist, with
+  fixed-step jump physics, platform collisions, crystal pickups and parallax hills.
+
 - Optional red disk-activity reflection on the CRT glass during Kickstart startup,
   with short irregular seek bursts and quiet pauses.
 

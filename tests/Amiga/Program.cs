@@ -33,7 +33,7 @@ foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, 
     Check(Difference(first, demo) > 10000, "Startup proceeds to demo: " + boot);
 }
 settings.AmigaBoot = AmigaBootStyle.None;
-foreach (var effect in new[] { AmigaDemo.Copper, AmigaDemo.Boing, AmigaDemo.Starflight, AmigaDemo.Plasma })
+foreach (var effect in new[] { AmigaDemo.Copper, AmigaDemo.Boing, AmigaDemo.Starflight, AmigaDemo.Plasma, AmigaDemo.Runner })
 {
     settings.AmigaAnimation = effect;
     using var before = renderer.CaptureFrame(settings, 2);
@@ -58,8 +58,8 @@ settings.AmigaAnimation = AmigaDemo.Cycle;
 settings.AmigaBoot = AmigaBootStyle.Classic13;
 settings.PowerTransition = true;
 settings.AmigaDurationSeconds = 15;
-for (int i = 0; i < 8; i++)
-    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (AmigaDemo)(1 + i % 4), "Playlist cycles all effects");
+for (int i = 0; i < 10; i++)
+    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (AmigaDemo)(1 + i % 5), "Playlist cycles all effects");
 Check(AmigaFrameBuffer.PowerTime(settings, 20.5) is > .49 and < .51, "CRT transition occurs after runtime");
 Check(AmigaFrameBuffer.PowerTime(settings, 21.43) == null, "CRT transition finishes on next boot");
 settings.AmigaAnimation = AmigaDemo.Plasma;
@@ -81,7 +81,7 @@ renderer.Dispose();
 bool rejected = false;
 try { using var invalid = renderer.CaptureFrame(settings, 0); } catch (ObjectDisposedException) { rejected = true; }
 Check(rejected, "Disposed renderer cannot draw");
-Console.WriteLine("PASS: three startup motifs, four animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
+Console.WriteLine("PASS: three startup motifs, five animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
 
 var reflectedSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.Classic13, CrtEnabled = false };
 using (var originalBoot = AmigaFrameBuffer.Capture(reflectedSettings, .46))
@@ -122,3 +122,22 @@ using (var pixels = SKBitmap.FromImage(image))
     }
 }
 Console.WriteLine("PASS: flat full-width Boing horizon with no triangular ridge.");
+
+var autoplay = new AmigaRunner();
+for (int frame = 0; frame <= 60 * 180; frame++)
+{
+    autoplay.AdvanceTo(frame / 60.0);
+    Check(autoplay.FootY < 288, "Autoplayer stays inside the game");
+}
+Check(autoplay.Jumps > 50 && autoplay.Crystals > 20 && autoplay.Respawns == 0,
+    $"Autoplayer crosses platforms safely: jumps={autoplay.Jumps}, crystals={autoplay.Crystals}, respawns={autoplay.Respawns}");
+var direct = new AmigaRunner();
+direct.AdvanceTo(12);
+autoplay.AdvanceTo(12);
+Check(Math.Abs(direct.WorldX - autoplay.WorldX) < .0001 && Math.Abs(direct.FootY - autoplay.FootY) < .0001,
+    "Rewinding a demo resets deterministic game state");
+var thirtyHz = new AmigaRunner();
+for (int frame = 0; frame <= 360; frame++) thirtyHz.AdvanceTo(frame / 30.0);
+Check(Math.Abs(direct.FootY - thirtyHz.FootY) < .0001 && direct.Crystals == thirtyHz.Crystals,
+    "Jump physics is independent of presentation rate");
+Console.WriteLine("PASS: jump-and-run autoplayer, platform collisions, pickups, frame-rate independence and replay.");

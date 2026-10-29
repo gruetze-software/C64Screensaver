@@ -1,7 +1,7 @@
 # Gruetze RetroSaver
 
 Development branch: the new .NET 10 / Avalonia 12 companion opens on normal launch
-(or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe and plasma scenes,
+(or with --companion / --settings). It offers C64 BASIC, Amiga Copper bars, Boing ball, starflight/wireframe, plasma and an autoplay jump-and-run scene,
 a live preview and editable scrolling text,
 speed and wave height. Choose the historical Kickstart 1.3, 2.0 or 3.1 startup screen, or skip startup. Cycle all demos or repeat one with
 configurable runtime and CRT power transitions. An optional soft red disk-activity
@@ -17,6 +17,8 @@ screensaver/companion settings bridge and separate Amiga module are still pendin
 The historical downloads described below are version 1.1.0 of C64Screensaver.
 
 ![Gruetze RetroSaver companion with editable Amiga scroller](docs/images/retrosaver-companion.png)
+
+![Autoplay Amiga jump-and-run with scrolling text](docs/images/amiga-jump-and-run.png)
 
 ## Existing C64 release 1.1
 

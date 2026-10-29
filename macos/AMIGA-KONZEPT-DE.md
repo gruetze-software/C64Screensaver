@@ -109,3 +109,14 @@ Laufwerk, Versions- und Copyright-Texten. Keine RETRO-Etiketten, zusätzlichen
 STYLE-Titel oder erfundenen Fortschrittsbalken. 1.3 bleibt fünf Sekunden stehen;
 2.0/3.1 spielen einen vollständigen Animationszyklus vor dem Demo-Start.
 Quellen und Zuordnung: C64Screensaver/Assets/Kickstart/CREDITS.md.
+
+## Selbstspielendes Jump-and-Run
+
+Fünfte Demo: eigene Pixelfigur, scrollende Plattformen mit Lücken und
+unterschiedlichen Höhen, Kristalle und Parallax-Berge. Die Figur steuert sich
+selbst; Sprünge und Kollisionen laufen mit einem festen 60-Hz-Zeitschritt,
+unabhängig von der Darstellung. Der Lauftext bleibt sichtbar.
+
+Die Demo ist einzeln wählbar und Teil der Gesamtabfolge. Figuren und Hintergrund
+sind vorberechnet; keine externen Spielgrafiken oder Game-Engine erforderlich.
+Lokale reine Szenenmessung ca. 0,46 ms/Bild (ohne CRT-Pass).

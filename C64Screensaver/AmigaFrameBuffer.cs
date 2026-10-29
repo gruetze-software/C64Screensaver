@@ -4,7 +4,7 @@ using SkiaSharp;
 namespace C64Screensaver;
 
 public enum AmigaBootStyle { None, Classic13, Purple20, Purple31 }
-public enum AmigaDemo { Cycle, Copper, Boing, Starflight, Plasma }
+public enum AmigaDemo { Cycle, Copper, Boing, Starflight, Plasma, Runner }
 
 // Procedural demos with historical Kickstart screen captures; no ROM is loaded.
 public sealed class AmigaFrameBuffer : IDisposable
@@ -14,6 +14,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     private readonly SKBitmap plasma = new(96, 72);
     private readonly int[] plasmaPixels = new int[96 * 72];
     private readonly SKPaint paint = new() { IsAntialias = false };
+    private readonly AmigaRunner runner = new();
     private readonly SKPoint3[] stars = CreateStars();
     private static readonly Lazy<SKImage> GlyphAtlas = new(CreateGlyphAtlas);
     private static readonly Lazy<SKImage[]> Balls = new(CreateBalls);
@@ -56,7 +57,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     {
         double length = BootDuration(settings) + settings.AmigaDurationSeconds + (settings.PowerTransition ? 1.42 : 0);
         return settings.AmigaAnimation == AmigaDemo.Cycle
-            ? (AmigaDemo)(1 + (int)(time / length % 4)) : settings.AmigaAnimation;
+            ? (AmigaDemo)(1 + (int)(time / length % 5)) : settings.AmigaAnimation;
     }
     public SKImage CaptureFrame(SaverSettings settings, double time)
     {
@@ -87,6 +88,7 @@ public sealed class AmigaFrameBuffer : IDisposable
             {
                 case AmigaDemo.Boing: DrawBoing(canvas, demoTime); break;
                 case AmigaDemo.Starflight: DrawStars(canvas, demoTime); break;
+                case AmigaDemo.Runner: runner.Draw(canvas, demoTime, paint); break;
                 case AmigaDemo.Plasma: DrawPlasma(canvas, demoTime); break;
                 default: DrawCopper(canvas, demoTime); break;
             }

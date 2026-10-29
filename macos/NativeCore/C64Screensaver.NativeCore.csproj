@@ -14,6 +14,7 @@
     <Compile Include="../../C64Screensaver/PixelCharacters.cs" Link="Shared/PixelCharacters.cs" />
     <EmbeddedResource Include="../../C64Screensaver/Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
     <Compile Include="../../C64Screensaver/KickstartFrames.cs" Link="Shared/KickstartFrames.cs" />
+    <Compile Include="../../C64Screensaver/AmigaRunner.cs" Link="Shared/AmigaRunner.cs" />
     <Compile Include="../../C64Screensaver/AmigaFrameBuffer.cs" Link="Shared/AmigaFrameBuffer.cs" />
     <Compile Include="../../C64Screensaver/SaverSettings.cs" Link="Shared/SaverSettings.cs" />
     <Compile Include="../../C64Screensaver/C64FrameBuffer.cs" Link="Shared/C64FrameBuffer.cs" />
