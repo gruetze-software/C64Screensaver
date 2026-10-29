@@ -68,6 +68,10 @@ int main(int argc, char **argv) {
         if (![[view valueForKey:@"settings"][@"AmigaMode"] boolValue] || ![view valueForKey:@"image"]) return 11;
         [@"{\"Glow\":\"invalid\"}" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
         if ([[view valueForKey:@"settings"][@"Glow"] doubleValue] != 37) return 12;
+        for (NSString *invalid in @[@"{\"Glow\":true}", @"{\"AmigaMode\":null}", @"{\"Programs\":1.5}"]) {
+            [invalid writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+            if ([[view valueForKey:@"settings"][@"Glow"] doubleValue] != 37) return 13;
+        }
         [view stopAnimation]; [view removeFromSuperview];
         [NSFileManager.defaultManager removeItemAtPath:folder error:nil];
         NSLog(@"PASS: cross-process companion/native settings, native save, nullable aspect, live reload and corrupt-file fallback.");

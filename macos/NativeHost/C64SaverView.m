@@ -89,7 +89,10 @@ static BOOL loadCore(NSBundle *bundle) {
 - (BOOL)isOpaque { return YES; }
 - (BOOL)isFlipped { return YES; }
 - (NSUserDefaults *)preferences {
-    return [[NSUserDefaults alloc] initWithSuiteName:@"de.gruetze-software.C64Screensaver.Native"];
+    NSString *fixture = NSProcessInfo.processInfo.environment[@"GRUETZE_RETROSAVER_SETTINGS_PATH"];
+    NSString *suite = fixture ? [NSString stringWithFormat:@"de.gruetze-software.RetroSaver.Tests.%lu", (unsigned long)fixture.hash]
+        : @"de.gruetze-software.C64Screensaver.Native";
+    return [[NSUserDefaults alloc] initWithSuiteName:suite];
 }
 - (NSString *)sharedSettingsPath {
     NSString *override = NSProcessInfo.processInfo.environment[@"GRUETZE_RETROSAVER_SETTINGS_PATH"];
@@ -101,7 +104,7 @@ static BOOL loadCore(NSBundle *bundle) {
     if (settings[@"KeepAspectRatio"] == NSNull.null) [settings removeObjectForKey:@"KeepAspectRatio"];
     for (NSString *key in @[@"KeepAspectRatio", @"FillScreen", @"CrtEnabled", @"Scanlines", @"CycleColors",
             @"PowerTransition", @"AmigaMode", @"ShowAmigaScroller", @"AmigaDiskActivity", @"ShowFps"])
-        if (settings[key] && settings[key] != NSNull.null) {
+        if (settings[key]) {
             if (![settings[key] isKindOfClass:NSNumber.class]) return nil;
             settings[key] = [settings[key] boolValue] ? @YES : @NO;
         }
@@ -111,7 +114,11 @@ static BOOL loadCore(NSBundle *bundle) {
             @"AmigaAnimation", @"AmigaDurationSeconds", @"ScrollerSpeed", @"ScrollerWave", @"CrtStrength",
             @"Curvature", @"ScanlineStrength", @"MaskStrength", @"Softness", @"Glow", @"GlowSpread",
             @"Vignette", @"Flicker", @"SpeedMultiplier"])
-        if (settings[key] && ![settings[key] isKindOfClass:NSNumber.class]) return nil;
+        if (settings[key] && (![settings[key] isKindOfClass:NSNumber.class]
+            || CFGetTypeID((__bridge CFTypeRef)settings[key]) == CFBooleanGetTypeID())) return nil;
+    for (NSString *key in @[@"Programs", @"ProgramDurationSeconds", @"NativeRenderQuality", @"AmigaBoot",
+            @"AmigaAnimation", @"AmigaDurationSeconds", @"CrtStrength"])
+        if (settings[key] && ([settings[key] doubleValue] != [settings[key] intValue])) return nil;
     return settings;
 }
 - (BOOL)saveSharedSettings:(NSDictionary *)settings error:(NSError **)error {

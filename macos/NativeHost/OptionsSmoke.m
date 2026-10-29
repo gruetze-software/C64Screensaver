@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.3]];
         if (sheet.isVisible || sheet.sheetParent) return 9;
 
-        NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:@"de.gruetze-software.C64Screensaver.Native"];
+        NSUserDefaults *defaults = [view valueForKey:@"preferences"];
         id original = [defaults objectForKey:@"Settings"];
         sheet = view.configureSheet;
         if (!sheet) return 10;
