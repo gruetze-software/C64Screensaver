@@ -10,3 +10,8 @@ docs/images/*
 snap/local/publish/
 *.snap
 !docs/images/glowing-crt.png
+
+!docs/images/retrosaver-companion.png
+!docs/images/amiga-plasma-scroller.png
+
+!docs/images/amiga-jump-and-run.png

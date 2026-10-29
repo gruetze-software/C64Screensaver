@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Text.Json;
 
 namespace C64Screensaver;
 
@@ -11,6 +9,16 @@ public class SaverSettings
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
+    public bool AmigaDiskActivity { get; set; } = true;
+    public AmigaBootStyle AmigaBoot { get; set; } = AmigaBootStyle.Classic13;
+    public AmigaDemo AmigaAnimation { get; set; } = AmigaDemo.Cycle;
+    public int AmigaDurationSeconds { get; set; } = 45;
+    public int NativeRenderQuality { get; set; }
+    public bool AmigaMode { get; set; }
+    public bool ShowAmigaScroller { get; set; } = true;
+    public string ScrollerText { get; set; } = "GRUETZE RETROSAVER - WELCOME TO THE AMIGA!   WWW.GRUETZE-SOFTWARE.DE";
+    public double ScrollerSpeed { get; set; } = 48;
+    public double ScrollerWave { get; set; } = 20;
     public bool PowerTransition { get; set; } = true;
     public bool FillScreen { get; set; }
     // Missing in older files: retain their framed or borderless presentation.
@@ -38,6 +46,15 @@ public class SaverSettings
 
     public void Validate()
     {
+        if (!Enum.IsDefined(AmigaBoot)) AmigaBoot = AmigaBootStyle.Classic13;
+        if (!Enum.IsDefined(AmigaAnimation)) AmigaAnimation = AmigaDemo.Cycle;
+        AmigaDurationSeconds = Math.Clamp(AmigaDurationSeconds, 15, 1800);
+        NativeRenderQuality = Math.Clamp(NativeRenderQuality, 0, 2);
+        ScrollerText = (ScrollerText ?? "").Replace("ä", "AE").Replace("ö", "OE").Replace("ü", "UE").Replace("ß", "SS").ToUpperInvariant();
+        ScrollerText = new string(System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(ScrollerText, c => c >= ' ' && c <= '~' ? c : ' ')));
+        if (ScrollerText.Length > 4096) ScrollerText = ScrollerText[..4096];
+        ScrollerSpeed = double.IsFinite(ScrollerSpeed) ? Math.Clamp(ScrollerSpeed, 8, 160) : 48;
+        ScrollerWave = double.IsFinite(ScrollerWave) ? Math.Clamp(ScrollerWave, 0, 48) : 20;
         CompanyName = BasicPrograms.DisplayText(CompanyName);
         CompanyWebsite = BasicPrograms.DisplayText(CompanyWebsite);
         CompanyTagline = BasicPrograms.DisplayText(CompanyTagline);
@@ -54,61 +71,5 @@ public class SaverSettings
         CrtStrength = Math.Clamp(CrtStrength, MinCount, MaxCount);
         SpeedMultiplier = double.IsFinite(SpeedMultiplier)
             ? Math.Clamp(SpeedMultiplier, MinSpeed, MaxSpeed) : 1;
-    }
-}
-
-public class ConfigManager
-{
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    public SaverSettings Settings { get; set; } = new();
-    public string ConfigPath { get; }
-    public string? LastError { get; private set; }
-
-    public ConfigManager(string? configPath = null)
-    {
-        ConfigPath = configPath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "C64Screensaver", "settings.json");
-        LoadSettings();
-    }
-
-    public void LoadSettings()
-    {
-        LastError = null;
-        Settings = new();
-        try
-        {
-            if (File.Exists(ConfigPath))
-                Settings = JsonSerializer.Deserialize<SaverSettings>(File.ReadAllText(ConfigPath)) ?? new();
-            Settings.Validate();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-        { LastError = Tools.GetExcMsg(ex); }
-    }
-
-    public bool SaveSettings()
-    {
-        LastError = null;
-        string? temporaryPath = null;
-        try
-        {
-            Settings.Validate();
-            string fullPath = Path.GetFullPath(ConfigPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-            temporaryPath = fullPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(Settings, JsonOptions));
-            File.Move(temporaryPath, fullPath, overwrite: true);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-        { LastError = Tools.GetExcMsg(ex); return false; }
-        finally
-        {
-            if (temporaryPath != null)
-            {
-                try { File.Delete(temporaryPath); }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
-            }
-        }
     }
 }

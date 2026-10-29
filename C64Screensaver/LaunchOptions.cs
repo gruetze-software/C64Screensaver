@@ -3,10 +3,10 @@ using System.Globalization;
 
 namespace C64Screensaver;
 
-public enum LaunchMode { Fullscreen, Windowed, Settings, About, Preview, Help }
+public enum LaunchMode { Companion, Fullscreen, Windowed, Settings, About, Preview, Help }
 public enum LinuxBackend { Auto, X11, Wayland }
 
-public sealed record LaunchOptions(LaunchMode Mode = LaunchMode.Fullscreen,
+public sealed record LaunchOptions(LaunchMode Mode = LaunchMode.Companion,
     long ParentHandle = 0, LinuxBackend Backend = LinuxBackend.Auto)
 {
     public static bool TryParse(string[] args, bool isWindows, out LaunchOptions options, out string? error)
@@ -30,6 +30,7 @@ public sealed record LaunchOptions(LaunchMode Mode = LaunchMode.Fullscreen,
             switch (arg)
             {
                 case "/s": case "--fullscreen": options = options with { Mode = LaunchMode.Fullscreen }; break;
+                case "--companion": options = options with { Mode = LaunchMode.Companion }; break;
                 case "--windowed": options = options with { Mode = LaunchMode.Windowed }; break;
                 case "/c": case "--settings": options = options with { Mode = LaunchMode.Settings }; break;
                 case "--about": options = options with { Mode = LaunchMode.About }; break;

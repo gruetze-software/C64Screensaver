@@ -1,6 +1,6 @@
 param(
-    [ValidateSet('win-x64','win-arm64','linux-x64','linux-arm64','osx-x64','osx-arm64')]
-    [string[]]$Runtimes = @('win-x64','win-arm64','linux-x64','linux-arm64','osx-x64','osx-arm64')
+    [ValidateSet('win-x64','win-arm64','linux-x64','linux-arm64')]
+    [string[]]$Runtimes = @('win-x64','win-arm64','linux-x64','linux-arm64')
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -24,10 +24,10 @@ foreach ($runtime in ($Runtimes | Select-Object -Unique)) {
     New-Item -ItemType Directory -Path $images -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $root 'docs/CRT-RESEARCH.md') -Destination (Join-Path $stage 'docs')
     Copy-Item -LiteralPath (Join-Path $root 'docs/SCREEN-SAVER-SETUP.md') -Destination (Join-Path $stage 'docs')
-    foreach ($image in @('c64screensaver.png','settings-playback.png','settings-monitor.png','glowing-crt.png')) {
+    foreach ($image in @('c64screensaver.png','settings-playback.png','settings-monitor.png','glowing-crt.png','retrosaver-companion.png','amiga-jump-and-run.png')) {
         Copy-Item -LiteralPath (Join-Path $root "docs/images/$image") -Destination $images
     }
-    $archive = Join-Path $release "C64Screensaver-$version-$runtime.zip"
+    $archive = Join-Path $release "Gruetze-RetroSaver-$version-$runtime.zip"
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -CompressionLevel Optimal -Force
     $archives += $archive
 }

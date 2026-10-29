@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <AssemblyName>c64screensaver</AssemblyName>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Authors>Grütze-Software</Authors>
-    <Product>C64Screensaver</Product>
+    <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
-    <Description>A C64 BASIC screensaver with animated CRT effects.</Description>
+    <Description>C64 BASIC and Amiga demo screensavers with configurable CRT effects.</Description>
     <Copyright>Copyright © 2026 Grütze-Software</Copyright>
     <Maintainer>schaefer.christoph@posteo.de</Maintainer>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -23,7 +23,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**;Assets\Runner\**" />
+    <EmbeddedResource Include="Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

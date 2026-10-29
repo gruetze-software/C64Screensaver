@@ -24,6 +24,16 @@ var optionsValid = LaunchOptions.TryParse(["/p", "1234"], true, out var options,
 Check(optionsValid && options.Mode == LaunchMode.Preview && options.ParentHandle == 1234, "Windows preview parsing");
 Check(!LaunchOptions.TryParse(["/p", "1234"], false, out _, out _), "Preview must be Windows only");
 
+Check(LaunchOptions.TryParse([], true, out var companionStart, out _) && companionStart.Mode == LaunchMode.Companion, "Normal launch opens companion");
+Check(LaunchOptions.TryParse(["/s"], true, out var saverStart, out _) && saverStart.Mode == LaunchMode.Fullscreen, "System screensaver still starts directly");
+var amigaSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None, ScrollerText = new string('A', 300), ScrollerSpeed = double.NaN, ScrollerWave = 200 };
+amigaSettings.Validate();
+Check(amigaSettings.ScrollerText.Length == 300 && amigaSettings.ScrollerSpeed == 48 && amigaSettings.ScrollerWave == 48, "Scroller is independent of 28-character company text and validates numeric settings");
+using (var firstAmiga = AmigaFrameBuffer.Capture(amigaSettings, 0))
+using (var secondAmiga = AmigaFrameBuffer.Capture(amigaSettings, 1))
+using (var firstPixels = SkiaSharp.SKBitmap.FromImage(firstAmiga))
+using (var secondPixels = SkiaSharp.SKBitmap.FromImage(secondAmiga))
+    Check(firstPixels.Pixels.Zip(secondPixels.Pixels).Count(pair => pair.First != pair.Second) > 1000, "Amiga animation advances");
 var editing = new BasicMachine();
 editing.Write("POKX");
 editing.Backspace();
@@ -192,6 +202,7 @@ AppBuilder.Configure<App>().UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOp
 Check(CrtDrawOperation.ShaderAvailable, "CRT shader compiles: " + CrtDrawOperation.ShaderError);
 string output = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../docs/images"));
 Directory.CreateDirectory(output);
+if (args.Contains("--companion-only")) { CompanionUi(); return; }
 void Capture(Window window, string name)
 {
     window.Show();
@@ -488,3 +499,34 @@ glowDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
 glowDialog.Height = 1000;
 Capture(glowDialog, "glowing-settings");
 Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");
+
+CompanionUi();
+
+void CompanionUi()
+{
+var companionConfig = new ConfigManager(Path.Combine(Path.GetTempPath(), "retrosaver-test-" + Guid.NewGuid() + ".json"));
+var companion = new CompanionWindow(companionConfig);
+companion.Show();
+Dispatcher.UIThread.RunJobs();
+var controls = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(companion).OfType<Control>().ToArray();
+var systemChoice = controls.OfType<ComboBox>().Single(c => c.Name == "SystemSelection");
+systemChoice.SelectedIndex = 1;
+controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").Text = "LONG SCROLLER " + new string('X', 150);
+controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.Purple31;
+controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
+controls.OfType<CheckBox>().Single(c => c.Name == "ShowScroller").IsChecked = false;
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 1;
+controls.OfType<ComboBox>().Single(c => c.Name == "RenderQuality").SelectedIndex = 1;
+controls.OfType<NumericUpDown>().Single(c => c.Name == "AmigaDuration").Value = 20;
+Dispatcher.UIThread.RunJobs();
+controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+Check(!controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").IsEnabled, "Hidden scrolling text disables its editor");
+var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
+Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
+companion.Close();
+Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings { AmigaMode = true } }), "retrosaver-companion");
+CaptureScene("amiga-plasma-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None, AmigaAnimation = AmigaDemo.Plasma });
+File.Delete(companionConfig.ConfigPath);
+Console.WriteLine("PASS: companion startup, direct system launch, Amiga animation and editable scrolling text persistence.");
+}

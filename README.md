@@ -1,4 +1,32 @@
-# C64Screensaver 1.1
+# Gruetze RetroSaver
+
+Version **1.2.0** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
+Normal launch opens the companion; --fullscreen starts the selected animation.
+
+The Amiga selection contains **Jump & run** and **Plasma**. Alternate both or repeat
+one with a configurable duration and CRT power transitions. Jump & run includes
+an automatically jumping explorer, crystals and two independently scrolling woodland
+layers. Scrolling text can be edited, adjusted or hidden. Choose the historical
+Kickstart 1.3, 2.0 or 3.1 startup, or skip startup; an optional red disk-activity
+reflection accompanies loading. No Kickstart ROM is loaded.
+See [screen artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
+
+The C64 retains all three BASIC programs, ghost typing, corrections and RUN.
+Windows and Linux packages remain free. macOS development builds include the
+companion app and a real native system screensaver, built for Apple Silicon and Intel.
+The native Options dialog now selects C64 or Amiga and configures both remaining demos.
+**Native screensaver and companion preferences are currently separate.** App Store
+submission and a shared settings bridge are pending. Mac test packages are ad-hoc
+signed, not notarized, and are kept as build artifacts rather than public release assets.
+See [Mac build instructions](macos/README.md) and the
+[Developer ID guide](macos/APPLE-DEVELOPER-DE.md).
+The downloads below describe the historical C64Screensaver 1.1.0 release.
+
+![Gruetze RetroSaver companion with editable Amiga scroller](docs/images/retrosaver-companion.png)
+
+![Autoplay Amiga jump-and-run with scrolling text](docs/images/amiga-jump-and-run.png)
+
+## Existing C64 release 1.1
 
 A C64-inspired screensaver for Windows, Linux and macOS, built with .NET 10 and Avalonia 12.
 
@@ -6,7 +34,7 @@ The familiar blue startup screen comes to life: an invisible typist enters real
 BASIC, makes mistakes, corrects them with Backspace and finally types RUN.
 Then the program takes over.
 
-![Ghost-typed BASIC on a curved CRT display](docs/images/c64screensaver.png)
+![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
 ## Features
 
@@ -132,8 +160,8 @@ Ordinary tests do not reset the user's settings.
 
     pwsh scripts/release.ps1
 
-Builds and tests Release, then creates self-contained ZIP files for six platforms
-and a SHA-256 checksum list in artifacts/release/1.1.0.
+Builds and tests Release, then creates free Windows/Linux self-contained ZIP files
+and a SHA-256 checksum list in artifacts/release/1.2.0.
 To publish one platform:
 
     pwsh scripts/publish.ps1 -Runtime win-x64
