@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
         void (*destroy)(uint64_t) = dlsym(module,"c64_destroy");
         if (!load || !metal || !backend || !create || !render || !destroy || !load((const uint8_t *)argv[2],(int)strlen(argv[2]))) return 4;
         id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-        id<MTLCommandQueue> queue = [device newCommandQueue];
+        __attribute__((objc_precise_lifetime)) id<MTLCommandQueue> queue = [device newCommandQueue];
         if (!device || !queue) { NSLog(@"SKIP: no Metal device in this runner; native CPU fallback remains covered."); return 0; }
         const int width=960,height=540,stride=width*4,bytes=stride*height;
         uint8_t *pixels = malloc(bytes);

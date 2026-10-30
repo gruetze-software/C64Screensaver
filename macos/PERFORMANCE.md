@@ -19,6 +19,11 @@ Metal is not used or returns a black frame; without one it explicitly skips GPU
 measurements. Hosted runners are not a Neo benchmark. OptionsSmoke also checks
 fullscreen async submission, stop/start, stale results and option availability.
 
+Measured on the macOS 26 hosted Apple Paravirtual device (960×540 output, default CRT):
+Runner CPU 25.39 ms/frame vs Metal 9.35 ms/frame; Plasma CPU 28.99 vs Metal 8.94.
+These include BGRA readback, exclude AppKit presentation and are not measurements
+of the user's Neo. The real AppKit fullscreen flag passed at 1024×768 client size.
+
 ## Earlier measurements / CPU fallback history
 
 # Native Mac performance

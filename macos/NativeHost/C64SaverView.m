@@ -665,10 +665,19 @@ static BOOL loadCore(NSBundle *bundle) {
     [self saveOptions:sender];
     _stopped = NO;
     if ([self ensureSession] && testPower) {
-        testPower(_session);
-        _previous = 0;
-        [self ensurePreviewTimer];
-        [self animateOneFrame];
+        uint64_t session = _session;
+        NSUInteger generation = _renderGeneration;
+        __weak C64SaverView *weakSelf = self;
+        dispatch_async(_previewQueue, ^{
+            testPower(session);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                C64SaverView *view = weakSelf;
+                if (!view || generation != view->_renderGeneration || view->_stopped) return;
+                view->_previous = view->_nextFrame = 0;
+                [view ensurePreviewTimer];
+                [view animateOneFrame];
+            });
+        });
     }
 }
 - (void)finishOptions:(NSModalResponse)response {
