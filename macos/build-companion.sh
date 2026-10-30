@@ -32,7 +32,7 @@ codesign --verify --deep --strict "$app"
 payload="$(mktemp -d "$out/dmg-payload.XXXXXX")"
 ditto "$app" "$payload/Gruetze RetroSaver.app"
 ln -s /Applications "$payload/Applications"
-cp "$root/macos/INSTALL-DE.txt" "$payload/Lies mich.txt"
+cp "$root/macos/INSTALL.txt" "$payload/Read me.txt"
 dmg="$out/Gruetze-RetroSaver-$version-macos-$arch.dmg"
 retrosaver_create_dmg "$payload" "$dmg"
 # Inspect the actual image, not just the source staging folder.
@@ -40,6 +40,7 @@ mount="$(mktemp -d "$out/mount.XXXXXX")"
 retrosaver_attach_dmg "$dmg" "$mount" readonly
 trap '/usr/sbin/diskutil eject "$mount" >/dev/null || true' EXIT
 codesign --verify --deep --strict "$mount/Gruetze RetroSaver.app"
+cmp "$root/macos/INSTALL.txt" "$mount/Read me.txt"
 test -f "$mount/Gruetze RetroSaver.app/Contents/Resources/C64Screensaver.saver/Contents/Info.plist"
 "$mount/Gruetze RetroSaver.app/Contents/MacOS/c64screensaver" --help
 /usr/sbin/diskutil eject "$mount"

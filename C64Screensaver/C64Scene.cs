@@ -26,7 +26,12 @@ public sealed class C64Scene : Control
         amiga = settings.AmigaMode ? new AmigaFrameBuffer() : null;
         session = new ScreenSession(random, settings.Programs, settings);
     }
-    public void ShowProgramPreview() { session.StartPreview(); InvalidateVisual(); }
+    public void ShowProgramPreview()
+    {
+        if (settings.AmigaMode) amigaTime = AmigaFrameBuffer.BootDuration(settings);
+        else session.StartPreview();
+        InvalidateVisual();
+    }
     public void Advance(double width, double height, double seconds)
     {
         if (settings.AmigaMode) amigaTime += seconds;
@@ -36,7 +41,7 @@ public sealed class C64Scene : Control
     public void PreviewPowerTransition() { session.BeginTransitionPreview(); InvalidateVisual(); }
     public void AdvancePreview(double seconds, bool runProgram)
     {
-        if (settings.AmigaMode) amigaTime += seconds;
+        if (settings.AmigaMode && runProgram) amigaTime += seconds;
         effectTime = (effectTime ?? session.Elapsed) + seconds;
         if ((!settings.AmigaMode && runProgram) || session.TransitionTime.HasValue) session.Advance(seconds, settings.SpeedMultiplier);
         InvalidateVisual();

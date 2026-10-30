@@ -10,6 +10,7 @@ public sealed class CompanionWindow : Window
 {
     private static readonly AmigaDemo[] DemoChoices = [AmigaDemo.Cycle, AmigaDemo.Runner, AmigaDemo.Plasma];
     private readonly ConfigManager config;
+    private readonly Button monitorSettingsButton;
     private readonly C64Scene scene = new() { MinHeight = 280 };
     private bool running;
     private readonly Stopwatch clock = new();
@@ -36,11 +37,18 @@ public sealed class CompanionWindow : Window
         var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Alternate Jump & run / Plasma", "Jump & run", "Plasma" }, SelectedIndex = Math.Max(0, Array.IndexOf(DemoChoices, config.Settings.AmigaAnimation)) };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
         var quality = new ComboBox { Name = "RenderQuality", ItemsSource = new[] { "Efficient", "Balanced", "Detailed" }, SelectedIndex = config.Settings.NativeRenderQuality };
+        var program = new ComboBox { Name = "ProgramCombo", ItemsSource = new[] { "All BASIC programs", "Endless maze", "Company card", "Twinkling starfield" }, SelectedIndex = (int)config.Settings.Programs };
+        var c64Duration = new NumericUpDown { Name = "DurationInput", Minimum = 15, Maximum = 1800, Value = config.Settings.ProgramDurationSeconds, Increment = 15 };
+        var c64Speed = new Slider { Name = "SpeedSlider", Minimum = .2, Maximum = 5, Value = config.Settings.SpeedMultiplier, Height = 32 };
+        var c64Colors = new CheckBox { Name = "ColorsCheckBox", Content = "Occasional border colour changes", IsChecked = config.Settings.CycleColors, FontSize = 13 };
+        var company = new TextBox { Name = "CompanyNameBox", Text = config.Settings.CompanyName, MaxLength = 28 };
+        var website = new TextBox { Name = "CompanyWebsiteBox", Text = config.Settings.CompanyWebsite, MaxLength = 28 };
+        var tagline = new TextBox { Name = "CompanyTaglineBox", Text = config.Settings.CompanyTagline, MaxLength = 28 };
         var save = new Button { Content = "Save settings" };
         save.Classes.Add("primary");
         var about = new Button { Content = "About" };
         about.Click += async (_, _) => await new AboutWindow().ShowDialog(this);
-        var settings = new Button { Content = "Monitor effects & C64 settings" };
+        var settings = monitorSettingsButton = new Button { Name = "MonitorSettings", Content = "Monitor effects" };
         var run = new Button { Content = "Start fullscreen preview" };
         var actions = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var button in new[] { settings, run, save, about }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
@@ -87,22 +95,35 @@ public sealed class CompanionWindow : Window
         header.Children.Add(new TextBlock { Text = "Your C64. Your Amiga. Your monitor." });
         body.Children.Add(header);
         var editor = new StackPanel { Spacing = 4 };
-        void Field(string label, Control control)
+        void Field(string label, Control control, StackPanel? target = null)
         {
-            editor.Children.Add(new TextBlock { Text = label, FontSize = 13 });
+            target ??= editor;
+            target.Children.Add(new TextBlock { Text = label, FontSize = 13 });
             control.HorizontalAlignment = HorizontalAlignment.Stretch;
-            editor.Children.Add(control);
+            target.Children.Add(control);
         }
         Field("System", system);
-        Field("Kickstart startup", boot);
-        editor.Children.Add(activity);
-        Field("Amiga animation", demo);
-        Field("Demo runtime · seconds", duration);
+        var c64Editor = new StackPanel { Name = "C64Editor", Spacing = 4 };
+        var amigaEditor = new StackPanel { Name = "AmigaEditor", Spacing = 4 };
+        Field("BASIC program", program, c64Editor);
+        Field("Runtime after RUN · seconds", c64Duration, c64Editor);
+        Field("C64 animation speed", c64Speed, c64Editor);
+        c64Editor.Children.Add(c64Colors);
+        Field("Company", company, c64Editor);
+        Field("Website", website, c64Editor);
+        Field("Extra text", tagline, c64Editor);
+        c64Editor.Children.Add(new TextBlock { Text = "Company card: 28 characters per line; displayed in uppercase.", FontSize = 12, TextWrapping = TextWrapping.Wrap });
+        Field("Kickstart startup", boot, amigaEditor);
+        amigaEditor.Children.Add(activity);
+        Field("Amiga animation", demo, amigaEditor);
+        Field("Demo runtime · seconds", duration, amigaEditor);
+        amigaEditor.Children.Add(showScroller);
+        Field("Amiga scrolling text", text, amigaEditor);
+        Field("Scrolling speed", speed, amigaEditor);
+        Field("Sine wave height", wave, amigaEditor);
+        editor.Children.Add(c64Editor);
+        editor.Children.Add(amigaEditor);
         Field("Software rendering quality", quality);
-        editor.Children.Add(showScroller);
-        Field("Amiga scrolling text", text);
-        Field("Scrolling speed", speed);
-        Field("Sine wave height", wave);
         var center = new Grid { ColumnDefinitions = new ColumnDefinitions("*,330"), Margin = new Thickness(0, 18, 0, 18) };
         center.Children.Add(new Border { Background = Brushes.Black, Child = scene, Margin = new Thickness(0, 0, 20, 0) });
         var editorScroll = new ScrollViewer { Content = editor };
@@ -121,6 +142,8 @@ public sealed class CompanionWindow : Window
         Content = body;
         void UpdateAvailability()
         {
+            c64Editor.IsVisible = !config.Settings.AmigaMode;
+            amigaEditor.IsVisible = config.Settings.AmigaMode;
             showScroller.IsEnabled = boot.IsEnabled = demo.IsEnabled = duration.IsEnabled = activity.IsEnabled = config.Settings.AmigaMode;
             text.IsEnabled = speed.IsEnabled = wave.IsEnabled = config.Settings.AmigaMode && showScroller.IsChecked == true;
             activity.IsEnabled = config.Settings.AmigaMode && config.Settings.AmigaBoot != AmigaBootStyle.None;
@@ -131,6 +154,13 @@ public sealed class CompanionWindow : Window
             UpdateAvailability();
             scene.Initialize(config.Settings, true, 640, 480, Random.Shared);
         }
+        program.SelectionChanged += (_, _) => { config.Settings.Programs = (ProgramSelection)Math.Max(0, program.SelectedIndex); Restart(); };
+        c64Duration.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(NumericUpDown.Value)) { config.Settings.ProgramDurationSeconds = (int)(c64Duration.Value ?? 100); Restart(); } };
+        c64Speed.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.SpeedMultiplier = c64Speed.Value; };
+        c64Colors.IsCheckedChanged += (_, _) => config.Settings.CycleColors = c64Colors.IsChecked == true;
+        company.TextChanged += (_, _) => config.Settings.CompanyName = company.Text ?? "";
+        website.TextChanged += (_, _) => config.Settings.CompanyWebsite = website.Text ?? "";
+        tagline.TextChanged += (_, _) => config.Settings.CompanyTagline = tagline.Text ?? "";
         system.SelectionChanged += (_, _) => { config.Settings.AmigaMode = system.SelectedIndex == 1; Restart(); };
         boot.SelectionChanged += (_, _) => { config.Settings.AmigaBoot = (AmigaBootStyle)Math.Max(0, boot.SelectedIndex); Restart(); };
         activity.IsCheckedChanged += (_, _) => { config.Settings.AmigaDiskActivity = activity.IsChecked == true; scene.InvalidateVisual(); };
@@ -143,6 +173,13 @@ public sealed class CompanionWindow : Window
         wave.PropertyChanged += (_, e) => { if (e.Property.Name == nameof(Slider.Value)) config.Settings.ScrollerWave = wave.Value; };
         void ReadEditor()
         {
+            config.Settings.Programs = (ProgramSelection)Math.Max(0, program.SelectedIndex);
+            config.Settings.ProgramDurationSeconds = (int)(c64Duration.Value ?? 100);
+            config.Settings.SpeedMultiplier = c64Speed.Value;
+            config.Settings.CycleColors = c64Colors.IsChecked == true;
+            config.Settings.CompanyName = company.Text ?? "";
+            config.Settings.CompanyWebsite = website.Text ?? "";
+            config.Settings.CompanyTagline = tagline.Text ?? "";
             config.Settings.AmigaMode = system.SelectedIndex == 1;
             config.Settings.AmigaDiskActivity = activity.IsChecked == true;
             config.Settings.AmigaBoot = (AmigaBootStyle)Math.Max(0, boot.SelectedIndex);
@@ -193,6 +230,10 @@ public sealed class CompanionWindow : Window
             config.LoadSettings();
             if (config.LastError != null) { status.Text = "Could not reload: " + config.LastError; return; }
             var loaded = System.Text.Json.JsonSerializer.Deserialize<SaverSettings>(System.Text.Json.JsonSerializer.Serialize(config.Settings))!;
+            program.SelectedIndex = (int)loaded.Programs;
+            c64Duration.Value = loaded.ProgramDurationSeconds;
+            c64Speed.Value = loaded.SpeedMultiplier; c64Colors.IsChecked = loaded.CycleColors;
+            company.Text = loaded.CompanyName; website.Text = loaded.CompanyWebsite; tagline.Text = loaded.CompanyTagline;
             system.SelectedIndex = loaded.AmigaMode ? 1 : 0;
             boot.SelectedIndex = (int)loaded.AmigaBoot;
             activity.IsChecked = loaded.AmigaDiskActivity;
@@ -211,4 +252,11 @@ public sealed class CompanionWindow : Window
             running = true; clock.Start(); RequestAnimationFrame(Animate); };
         Closed += (_, _) => { running = false; clock.Stop(); scene.Clear(); foreach (var preview in previews.ToArray()) preview.Close(); };
     }
+    public void OpenMonitorSettings()
+    {
+        var existing = OwnedWindows.FirstOrDefault(w => w.IsVisible);
+        if (existing != null) { existing.Activate(); return; }
+        monitorSettingsButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+    }
+
 }

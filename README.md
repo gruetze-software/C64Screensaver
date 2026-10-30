@@ -1,6 +1,6 @@
 # Gruetze RetroSaver
 
-Version **1.2.1** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
+Version **1.2.2** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
 Normal launch opens the companion; --fullscreen starts the selected animation.
 
 The Amiga selection contains **Jump & run** and **Plasma**. Alternate both or repeat
@@ -103,39 +103,29 @@ required.
 
 ## Settings
 
-### Playback
+The companion shows the controls for the selected system. C64 offers BASIC program,
+runtime, animation speed, border colour changes and the three company-card texts.
+Amiga offers Kickstart, Jump & run/Plasma, duration, disk reflection and scrolling text.
 
-Select a demo or play all programs in sequence. Run time ranges from 15 seconds
-to 30 minutes and starts after RUN. Each reset returns to the blue startup screen,
-then types the listing again. Border colours change about every four seconds
-rather than flashing constantly.
+![C64 playback and company text in the companion](docs/images/settings-playback.png)
 
-![Playback settings with default values](docs/images/settings-playback.png)
+**Monitor effects** opens the common C64/Amiga dialog: proportions, borderless picture,
+CRT controls, presets, power transitions and frame-rate display. Its live preview uses
+the selected system. The ↗ button opens a larger view; F11 toggles fullscreen and
+Escape closes it. Reset affects monitor/display options, preserving programs and texts.
 
-The company-card text is editable on the right. It is converted to uppercase,
-limited to 28 characters per line, and German umlauts become AE, OE and UE.
-Save applies changes; Cancel discards unsaved edits.
+![Shared monitor effects with default values](docs/images/settings-monitor.png)
 
-### Monitor effects
+On macOS, Screen Saver Options opens the installed companion. If Launch Services
+cannot find it, the native fallback editor stays available. Move the complete app
+into Applications before installing the embedded screensaver. The macOS app menu
+uses the Gruetze RetroSaver name, About and Settings entries and standard Hide/Quit.
+Mac DMGs include English installation instructions in **Read me.txt**.
 
-Choose 4:3 for the original picture shape or Stretch to fill the monitor with a
-distorted picture. **Hide C64 border** is independent of this choice.
-Stretch plus hidden border covers the whole monitor. With 4:3, black bars remain
-on wide or portrait displays.
-
-![Monitor effect settings with default values](docs/images/settings-monitor.png)
-
-Hiding the border removes outer margins, drift and curvature. A slow brightness
-cycle changes even untouched background pixels. Other CRT controls remain
-available. Flicker defaults to zero.
-
-The small preview enlarges fine CRT details to make changes visible. The ↗ button
-opens a separate, larger live preview with normal detail spacing; F11 toggles
-fullscreen there, and Escape closes that preview. Changes update both previews.
-
-Settings are stored in the platform application-data folder under
-C64Screensaver/settings.json. Reset restores defaults in the dialog; Save
-persists them.
+4:3 preserves the picture shape. Stretch plus borderless picture covers the monitor;
+4:3 leaves black bars on wide/portrait displays. Borderless mode removes curvature.
+Flicker is optional and defaults to zero. Settings are shared on macOS as described
+in the Mac guide; Windows/Linux retain C64Screensaver/settings.json.
 
 ## Build and test
 

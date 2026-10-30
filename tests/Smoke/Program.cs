@@ -295,7 +295,6 @@ CaptureScene("starfield", 0, new SaverSettings { Programs = ProgramSelection.Sta
 CaptureScene("stars-borderless", 0, new SaverSettings { Programs = ProgramSelection.Stars, FillScreen = true }, true, 1280, 720);
 Capture(new SettingsWindow(), "settings");
 var monitorDialog = new SettingsWindow();
-monitorDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
 monitorDialog.Width = 980; monitorDialog.Height = 640;
 monitorDialog.Show();
 Dispatcher.UIThread.RunJobs();
@@ -316,13 +315,13 @@ foreach (string name in new[] { "CurvatureSlider", "ScanlineStrengthSlider", "Ma
 }
 Capture(monitorDialog, "monitor-settings-small");
 var monitorLarge = new SettingsWindow();
-monitorLarge.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
 monitorLarge.Height = 880;
 Capture(monitorLarge, "monitor-settings");
 Capture(new AboutWindow(), "about");
 string configBeforePreview = File.ReadAllText(configPath);
 var previewConfig = new ConfigManager(configPath);
 var previewDialog = new SettingsWindow(previewConfig);
+Check(previewDialog.FindControl<TextBlock>("VersionLabel") != null, "Shared monitor dialog loads");
 previewDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 2;
 Check(previewDialog.FindControl<CheckBox>("CrtCheckBox")!.IsChecked == true &&
     previewDialog.FindControl<Slider>("CurvatureSlider")!.Value == 45, "Classic preset applies controls");
@@ -330,13 +329,11 @@ previewDialog.FindControl<Slider>("CurvatureSlider")!.Value = 66;
 Check(previewDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex == 3, "Manual slider adjustment selects Custom");
 Check(!previewConfig.Settings.CrtEnabled && previewConfig.Settings.Curvature == 48,
     "Live preview does not mutate saved configuration");
-previewDialog.FindControl<NumericUpDown>("DurationInput")!.Value = 45;
+Check(previewDialog.FindControl<NumericUpDown>("DurationInput") == null, "Runtime belongs in the companion, not the monitor dialog");
 Check(previewConfig.Settings.ProgramDurationSeconds == 100, "Unsaved duration does not change persisted settings");
 previewDialog.FindControl<CheckBox>("FillScreenCheckBox")!.IsChecked = true;
 Check(!previewDialog.FindControl<Slider>("CurvatureSlider")!.IsEnabled, "Borderless mode disables curvature in the UI");
-previewDialog.FindControl<TextBox>("CompanyNameBox")!.Text = "My Company";
-previewDialog.FindControl<TextBox>("CompanyWebsiteBox")!.Text = "www.example.de";
-previewDialog.FindControl<TextBox>("CompanyTaglineBox")!.Text = "Hello World";
+Check(previewDialog.FindControl<TextBox>("CompanyNameBox") == null, "Company text belongs in the companion");
 Dispatcher.UIThread.RunJobs();
 Check(previewConfig.Settings.CompanyWebsite == "WWW.GRUETZE-SOFTWARE.DE" && !previewConfig.Settings.FillScreen,
     "Edited texts and borderless preview do not mutate saved settings");
@@ -374,7 +371,6 @@ var probeConfig = new ConfigManager(Path.Combine(Path.GetDirectoryName(configPat
 probeConfig.Settings = new SaverSettings { CrtEnabled = true, FillScreen = false, Curvature = 0,
     ScanlineStrength = 0, MaskStrength = 0, Softness = 0, Glow = 0, Vignette = 0, Flicker = 0, PowerTransition = false };
 var probe = new SettingsWindow(probeConfig);
-probe.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
 probe.FindControl<CheckBox>("PreviewProgramCheckBox")!.IsChecked = false;
 probe.Show();
 SkiaSharp.SKColor[] SmallPreviewPixels()
@@ -474,10 +470,9 @@ if (args.Contains("--release-screenshots"))
     Check(reset.Settings.UsesFourThree && !reset.Settings.FillScreen &&
         reset.Settings.Flicker == 0 && reset.Settings.ProgramDurationSeconds == 100 &&
         reset.Settings.CompanyWebsite == "WWW.GRUETZE-SOFTWARE.DE", "User defaults saved and reloaded");
-    var playback = new SettingsWindow(reset) { Height = 960 };
+    var playback = new CompanionWindow(reset) { Height = 960 };
     Capture(playback, "settings-playback");
     var monitor = new SettingsWindow(new ConfigManager()) { Height = 960 };
-    monitor.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
     Capture(monitor, "settings-monitor");
     Check(!string.IsNullOrEmpty(AppInfo.Version), "Release version is populated");
     Console.WriteLine("Release screenshots captured with saved user defaults; previous settings backed up in artifacts.");
@@ -504,7 +499,6 @@ glowDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 4;
 Check(glowDialog.FindControl<Slider>("GlowSlider")!.Value == 85 &&
     glowDialog.FindControl<Slider>("GlowSpreadSlider")!.Value == 65 &&
     glowDialog.FindControl<Slider>("FlickerSlider")!.Value == 0, "Glowing CRT preset has broad stable bloom");
-glowDialog.FindControl<TabControl>("SettingsTabs")!.SelectedIndex = 1;
 glowDialog.Height = 1000;
 Capture(glowDialog, "glowing-settings");
 Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");
@@ -518,8 +512,22 @@ var companion = new CompanionWindow(companionConfig);
 companion.Show();
 Dispatcher.UIThread.RunJobs();
 var controls = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(companion).OfType<Control>().ToArray();
+Check(Application.Current!.Name == AppInfo.Name, "Application name is branded for the native menu");
+Check(controls.OfType<StackPanel>().Single(c => c.Name == "C64Editor").IsVisible && !controls.OfType<StackPanel>().Single(c => c.Name == "AmigaEditor").IsVisible,
+    "C64 launch shows its own editor");
+controls.OfType<ComboBox>().Single(c => c.Name == "ProgramCombo").SelectedIndex = (int)ProgramSelection.Company;
+controls.OfType<NumericUpDown>().Single(c => c.Name == "DurationInput").Value = 60;
+controls.OfType<TextBox>().Single(c => c.Name == "CompanyNameBox").Text = "My Company";
+controls.OfType<TextBox>().Single(c => c.Name == "CompanyWebsiteBox").Text = "www.example.de";
+controls.OfType<TextBox>().Single(c => c.Name == "CompanyTaglineBox").Text = "Hello World";
+controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+var c64Saved = new ConfigManager(companionConfig.ConfigPath).Settings;
+Check(c64Saved.Programs == ProgramSelection.Company && c64Saved.ProgramDurationSeconds == 60 && c64Saved.CompanyName == "MY COMPANY" && c64Saved.CompanyWebsite == "WWW.EXAMPLE.DE",
+    "C64 playback and company text save from the companion");
 var systemChoice = controls.OfType<ComboBox>().Single(c => c.Name == "SystemSelection");
 systemChoice.SelectedIndex = 1;
+Check(!controls.OfType<StackPanel>().Single(c => c.Name == "C64Editor").IsVisible && controls.OfType<StackPanel>().Single(c => c.Name == "AmigaEditor").IsVisible,
+    "System switch replaces the C64 editor with Amiga controls");
 controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").Text = "LONG SCROLLER " + new string('X', 150);
 controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.Purple31;
@@ -535,6 +543,26 @@ var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
 Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
 companion.Close();
 Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings { AmigaMode = true } }), "retrosaver-companion");
+Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings() }), "settings-playback");
+Capture(new SettingsWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings() }) { Height = 940 }, "settings-monitor");
+var sharedConfig = new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings {
+    AmigaMode = true, AmigaBoot = AmigaBootStyle.Purple31, AmigaAnimation = AmigaDemo.Plasma,
+    ScrollerText = "KEEP THIS SCROLLER", AmigaDurationSeconds = 75,
+    Programs = ProgramSelection.Stars, CompanyWebsite = "WWW.EXAMPLE.DE", ProgramDurationSeconds = 60 } };
+var sharedDialog = new SettingsWindow(sharedConfig);
+sharedDialog.Show();
+Dispatcher.UIThread.RunJobs();
+Check(sharedDialog.FindControl<TabControl>("SettingsTabs") == null && sharedDialog.FindControl<TextBox>("CompanyWebsiteBox") == null,
+    "Shared monitor settings contain no C64-only editor or playback tabs");
+var dialogButtons = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(sharedDialog).OfType<Button>().ToArray();
+dialogButtons.Single(b => Equals(b.Content, "Reset")).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+dialogButtons.Single(b => Equals(b.Content, "Save")).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+var afterMonitor = new ConfigManager(companionConfig.ConfigPath).Settings;
+Capture(new SettingsWindow(new ConfigManager(companionConfig.ConfigPath)), "monitor-amiga");
+Check(afterMonitor.AmigaMode && afterMonitor.AmigaBoot == AmigaBootStyle.Purple31 && afterMonitor.AmigaAnimation == AmigaDemo.Plasma
+    && afterMonitor.ScrollerText == "KEEP THIS SCROLLER" && afterMonitor.AmigaDurationSeconds == 75
+    && afterMonitor.Programs == ProgramSelection.Stars && afterMonitor.CompanyWebsite == "WWW.EXAMPLE.DE" && afterMonitor.ProgramDurationSeconds == 60,
+    "Resetting and saving monitor effects preserves both systems' playback and text settings");
 CaptureScene("amiga-plasma-scroller", 180, new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.None, AmigaAnimation = AmigaDemo.Plasma });
 File.Delete(companionConfig.ConfigPath);
 Console.WriteLine("PASS: companion startup, direct system launch, Amiga animation and editable scrolling text persistence.");

@@ -11,6 +11,20 @@ public partial class App : Application
 {
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
+    private async void AboutMenu_Click(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop || desktop.MainWindow == null) return;
+        await new AboutWindow().ShowDialog(desktop.MainWindow);
+    }
+    private void SettingsMenu_Click(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
+        var companion = desktop.Windows.OfType<CompanionWindow>().FirstOrDefault();
+        if (companion == null) { companion = new CompanionWindow(); companion.Show(); }
+        companion.Activate();
+        companion.OpenMonitorSettings();
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

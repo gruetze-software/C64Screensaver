@@ -39,10 +39,10 @@ if [[ "$source_bundle" == *.app ]]; then
   codesign --verify --deep --strict --verbose=2 "$app"
   "$app/Contents/MacOS/c64screensaver" --help
   ln -s /Applications "$work/payload/Applications"
-  cp "$root/macos/INSTALL-DE.txt" "$work/payload/Lies mich.txt"
+  cp "$root/macos/INSTALL.txt" "$work/payload/Read me.txt"
   # Replace the developer-build note in the signed distribution's instructions.
-  sed -i '' '/Dieses Entwickler-Testpaket/,$d' "$work/payload/Lies mich.txt"
-  echo "Mit Developer ID signierte Distribution. www.gruetze-software.de" >> "$work/payload/Lies mich.txt"
+  sed -i '' '/Developer test build:/,$d' "$work/payload/Read me.txt"
+  echo "Developer ID signed distribution. www.gruetze-software.de" >> "$work/payload/Read me.txt"
 fi
 dmg="$work/Gruetze-RetroSaver.dmg"
 retrosaver_create_dmg "$work/payload" "$dmg"

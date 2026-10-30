@@ -1,5 +1,6 @@
 #import <ScreenSaver/ScreenSaver.h>
 #import <unistd.h>
+#import <objc/runtime.h>
 
 static BOOL runManaged(NSString *dotnet, NSString *tool, NSString *operation) {
     NSTask *task = [[NSTask alloc] init];
@@ -37,6 +38,10 @@ int main(int argc, char **argv) {
         NSBundle *bundle = [NSBundle bundleWithPath:@(argv[1])];
         NSError *error = nil;
         if (![bundle loadAndReturnError:&error]) { NSLog(@"%@",error); return 4; }
+        Method findCompanion = class_getInstanceMethod(bundle.principalClass, NSSelectorFromString(@"companionApplicationURL"));
+        IMP originalFind = method_getImplementation(findCompanion);
+        IMP unavailable = imp_implementationWithBlock(^NSURL *(id receiver) { (void)receiver; return nil; });
+        method_setImplementation(findCompanion, unavailable);
         ScreenSaverView *view = [[bundle.principalClass alloc] initWithFrame:NSMakeRect(0,0,384,288) isPreview:YES];
         NSDictionary *settings = [view valueForKey:@"settings"];
         if (![settings[@"AmigaMode"] boolValue] || [settings[@"Glow"] doubleValue] != 37
@@ -73,6 +78,7 @@ int main(int argc, char **argv) {
             if ([[view valueForKey:@"settings"][@"Glow"] doubleValue] != 37) return 13;
         }
         [view stopAnimation]; [view removeFromSuperview];
+        method_setImplementation(findCompanion, originalFind); imp_removeBlock(unavailable);
         [NSFileManager.defaultManager removeItemAtPath:folder error:nil];
         NSLog(@"PASS: cross-process companion/native settings, native save, nullable aspect, live reload and corrupt-file fallback.");
     }

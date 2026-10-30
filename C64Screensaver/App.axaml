@@ -1,8 +1,14 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="C64Screensaver.App"
+             x:Class="C64Screensaver.App" Name="Gruetze RetroSaver"
              RequestedThemeVariant="Dark">
 
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="About Gruetze RetroSaver" Click="AboutMenu_Click"/>
+            <NativeMenuItem Header="Settings…" Gesture="Meta+OemComma" Click="SettingsMenu_Click"/>
+        </NativeMenu>
+    </NativeMenu.Menu>
     <Application.Styles>
         <FluentTheme>
             <FluentTheme.Palettes>

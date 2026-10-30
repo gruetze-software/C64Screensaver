@@ -35,10 +35,11 @@ retrosaver_create_dmg() (
   # Reserve 50% plus 64 MiB beyond the payload for APFS metadata and copy growth.
   # du does not follow the payload's /Applications shortcut.
   size="$(du -sk "$source" | awk '{print int($1 * 1.5) + 65536}')"
-  /usr/sbin/diskutil image create blank -format RAW -size "$size"k -volumeName "Gruetze RetroSaver" -fs APFS "$raw"
+  /usr/sbin/diskutil image create blank -format RAW -size "$size"k -volumeName "Gruetze RetroSaver" "$raw"
   retrosaver_attach_dmg "$raw" "$mount" writable
   mounted=true
   ditto "$source" "$mount"
+  chmod 755 "$mount"
   /usr/sbin/diskutil eject "$mount"
   mounted=false
   major="$(sw_vers -productVersion | cut -d. -f1)"
