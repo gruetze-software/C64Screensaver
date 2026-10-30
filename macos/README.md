@@ -1,5 +1,11 @@
 # Gruetze RetroSaver 1.2.1 on macOS
 
+DMG creation uses diskutil image create blank/from; mounting and ejecting also
+use diskutil. A temporary APFS image preserves the volume name and payload
+permissions, then converts to compressed read-only UDZO. macOS 15 uses its older
+-source syntax; macOS 26 and later use a positional source. Failed builds retain
+the previous output. Both developer and Developer ID packaging share this path.
+
 Build one integrated distribution on a Mac:
 
     bash macos/build-native.sh arm64

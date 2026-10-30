@@ -1,5 +1,11 @@
 # Changelog
 
+## Packaging update — 2026-10-30
+
+- Replace deprecated hdiutil calls with diskutil image create blank/from, image attach
+  and eject in developer and notarized Mac packaging. Keep compressed UDZO output,
+  the named volume, signatures and embedded screensaver.
+
 ## 1.2.1 — 2026-10-29
 
 - Distribute one Mac DMG with the native screensaver embedded inside the companion.

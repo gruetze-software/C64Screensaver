@@ -11,6 +11,7 @@ profile="$3"
 [[ -d "$source_bundle" && ( "$source_bundle" == *.saver || "$source_bundle" == *.app ) ]] || { echo "Expected a .app or .saver bundle." >&2; exit 2; }
 [[ "$identity" == "Developer ID Application: "* ]] || { echo "Use a Developer ID Application identity." >&2; exit 2; }
 root="$(cd "$(dirname "$0")/.." && pwd)"
+source "$root/macos/disk-image.sh"
 mkdir -p "$root/artifacts/macos-signed"
 work="$(mktemp -d "$root/artifacts/macos-signed/distribution.XXXXXX")"
 mkdir "$work/payload"
@@ -44,7 +45,7 @@ if [[ "$source_bundle" == *.app ]]; then
   echo "Mit Developer ID signierte Distribution. www.gruetze-software.de" >> "$work/payload/Lies mich.txt"
 fi
 dmg="$work/Gruetze-RetroSaver.dmg"
-hdiutil create -volname "Gruetze RetroSaver" -srcfolder "$work/payload" -format UDZO "$dmg"
+retrosaver_create_dmg "$work/payload" "$dmg"
 codesign --timestamp --sign "$identity" "$dmg"
 # Credentials have already been stored interactively in the Mac login keychain.
 # This command uploads the signed disk image to Apple's notary service.
