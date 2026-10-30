@@ -2,8 +2,8 @@
 
 DMG creation uses diskutil image create blank/from; mounting and ejecting also
 use diskutil. A temporary APFS image preserves the volume name and payload
-permissions, then converts to compressed read-only UDZO. macOS 15 uses its older
--source syntax; macOS 26 and later use a positional source. Failed builds retain
+permissions, then converts to compressed read-only UDZO using a positional source.
+Failed builds retain
 the previous output. Both developer and Developer ID packaging share this path.
 
 Build one integrated distribution on a Mac:
