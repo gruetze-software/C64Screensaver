@@ -126,7 +126,9 @@ public sealed class CompanionWindow : Window
         Field("Software rendering quality", quality);
         var center = new Grid { ColumnDefinitions = new ColumnDefinitions("*,330"), Margin = new Thickness(0, 18, 0, 18) };
         center.Children.Add(new Border { Background = Brushes.Black, Child = scene, Margin = new Thickness(0, 0, 20, 0) });
-        var editorScroll = new ScrollViewer { Content = editor };
+        editor.Margin = new Thickness(0, 0, 10, 0);
+        var editorScroll = new ScrollViewer { Name = "EditorScroll", Content = editor };
+        editorScroll.Classes.Add("settingsScroll");
         Grid.SetColumn(editorScroll, 1);
         center.Children.Add(editorScroll);
         Grid.SetRow(center, 1);

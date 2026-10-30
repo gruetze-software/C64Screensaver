@@ -10,6 +10,8 @@ unsafe
     delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
     void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
     Check(version() == 1, "ABI version");
+    delegate* unmanaged[Cdecl]<IntPtr,IntPtr,int> setMetal = &Exports.SetMetal;
+    Check(setMetal(IntPtr.Zero,IntPtr.Zero)==0, "Missing Metal device retains CPU fallback");
     byte[] invalid = [123];
     fixed (byte* p = invalid) Check(create(p, invalid.Length, 1) == 0, "Reject malformed JSON");
     Check(create(null, 1, 1) == 0, "Reject null JSON");

@@ -1,4 +1,4 @@
-# Gruetze RetroSaver 1.2.2 on macOS
+# Gruetze RetroSaver 1.2.3 on macOS
 
 DMG creation uses diskutil image create blank/from; mounting and ejecting also
 use diskutil. A temporary APFS image preserves the volume name and payload
@@ -16,6 +16,7 @@ Use x86_64 for Intel. The single DMG is under artifacts/macos-companion/osx-*.
 Its app contains C64Screensaver.saver. Drag the app into Applications, open it and
 click Install / update system screensaver; macOS handles the installation confirmation.
 Select Gruetze RetroSaver (older installations may show C64Screensaver) in Screen Saver settings.
+Native fallback tabs are General, C64, Amiga and Monitor effects.
 Options opens the installed companion automatically; if it cannot be located, the
 native editor remains as fallback. The common Monitor effects dialog has no duplicate
 program/text editors. Mac menus are branded; DMG instructions are in Read me.txt.
@@ -37,6 +38,10 @@ mounted-DMG content and signatures on Apple Silicon and Intel. It does not repla
 checking Apple's actual screensaver host and Gatekeeper on each macOS release.
 
 ## Architecture
+
+Native rendering now uses Metal when available and CPU fallback otherwise. All
+frames and session disposal run off AppKit. See PERFORMANCE.md for limits and tests.
+
 
 The Objective-C view in NativeHost is loaded by Apple's screensaver host. A self-contained
 .NET 10 NativeAOT shared library supplies the same BASIC interpreter, ghost typing,

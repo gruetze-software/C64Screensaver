@@ -24,6 +24,7 @@ public static unsafe class Exports
         internal double Elapsed;
         internal readonly AmigaFrameBuffer? Amiga = settings.AmigaMode ? new AmigaFrameBuffer() : null;
         internal readonly CpuCrtRenderer Crt = new();
+        internal readonly MetalRenderTarget Metal = new();
     }
 
     private static readonly ConcurrentDictionary<ulong, Session> Sessions = new();
@@ -57,6 +58,12 @@ public static unsafe class Exports
         catch { return 0; }
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "c64_set_metal", CallConvs = [typeof(CallConvCdecl)])]
+    public static int SetMetal(IntPtr device, IntPtr queue) => MetalRenderTarget.Configure(device, queue) ? 1 : 0;
+
+    [UnmanagedCallersOnly(EntryPoint = "c64_render_backend", CallConvs = [typeof(CallConvCdecl)])]
+    public static int RenderBackend(ulong id) => Sessions.TryGetValue(id, out var session) && session.Metal.Active ? 1 : 0;
+
     [UnmanagedCallersOnly(EntryPoint = "c64_create", CallConvs = [typeof(CallConvCdecl)])]
     public static ulong Create(byte* json, int length, int seed)
     {
@@ -85,27 +92,47 @@ public static unsafe class Exports
             lock (session.Gate)
             {
                 if (session.Closed) return 0;
-                using var surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Bgra8888,
-                    SKAlphaType.Premul), (IntPtr)pixels, stride);
-                if (surface == null) return 0;
+                var info = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
                 session.Elapsed += Math.Min(seconds, .25);
                 if (!session.Settings.AmigaMode || session.Screen.TransitionTime.HasValue) session.Screen.Advance(Math.Min(seconds, .25), session.Settings.SpeedMultiplier);
                 using var image = session.Settings.AmigaMode
                     ? session.Amiga!.CaptureFrame(session.Settings, session.Elapsed)
                     : session.Frame.Capture(session.Screen, session.Settings, session.Screen.Elapsed);
-                surface.Canvas.Clear(SKColors.Black);
-                session.Crt.Draw(surface.Canvas, new SKRect(0, 0, width, height), image,
-                    CrtParameters.From(session.Settings), session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed, session.Settings.NativeRenderQuality);
-                if (session.Settings.AmigaMode && session.Settings.AmigaDiskActivity
-                    && AmigaFrameBuffer.StartupTime(session.Settings, session.Elapsed) is double activity)
-                    DiskActivityReflection.Draw(surface.Canvas, new SKRect(0, 0, width, height), CrtParameters.From(session.Settings), activity);
-                if ((session.Screen.TransitionTime ?? (session.Settings.AmigaMode ? AmigaFrameBuffer.PowerTime(session.Settings, session.Elapsed) : null)) is double transition)
-                    CrtPowerRenderer.Draw(surface.Canvas, width, height, transition);
+                var gpu = session.Metal.GetSurface(info);
+                if (gpu != null)
+                {
+                    try
+                    {
+                        DrawFrame(session, gpu.Canvas, image, width, height, true);
+                        gpu.Canvas.Flush();
+                        if (gpu.ReadPixels(info, (IntPtr)pixels, stride, 0, 0)) return 1;
+                    }
+                    catch { /* A device/context failure must fall back to the same CPU frame. */ }
+                    session.Metal.Disable();
+                }
+                using var surface = SKSurface.Create(info, (IntPtr)pixels, stride);
+                if (surface == null) return 0;
+                DrawFrame(session, surface.Canvas, image, width, height, false);
                 surface.Canvas.Flush();
                 return 1;
             }
         }
         catch { return 0; }
+    }
+
+    private static void DrawFrame(Session session, SKCanvas canvas, SKImage image, int width, int height, bool gpu)
+    {
+        canvas.Clear(SKColors.Black);
+        var bounds = new SKRect(0, 0, width, height);
+        var parameters = CrtParameters.From(session.Settings);
+        double time = session.Settings.AmigaMode ? session.Elapsed : session.Screen.Elapsed;
+        if (gpu) CrtRenderer.Draw(canvas, bounds, image, parameters, time);
+        else session.Crt.Draw(canvas, bounds, image, parameters, time, session.Settings.NativeRenderQuality);
+        if (session.Settings.AmigaMode && session.Settings.AmigaDiskActivity
+            && AmigaFrameBuffer.StartupTime(session.Settings, session.Elapsed) is double activity)
+            DiskActivityReflection.Draw(canvas, bounds, parameters, activity);
+        if ((session.Screen.TransitionTime ?? (session.Settings.AmigaMode ? AmigaFrameBuffer.PowerTime(session.Settings, session.Elapsed) : null)) is double transition)
+            CrtPowerRenderer.Draw(canvas, width, height, transition);
     }
 
     [UnmanagedCallersOnly(EntryPoint = "c64_test_power", CallConvs = [typeof(CallConvCdecl)])]
@@ -134,6 +161,7 @@ public static unsafe class Exports
                     session.Closed = true;
                     session.Amiga?.Dispose();
                     session.Crt.Dispose();
+                    session.Metal.Dispose();
                 }
         }
         catch { }

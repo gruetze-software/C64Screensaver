@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private double _fpsElapsed;
     private int _frameCount;
     private Point? _initialMouse;
+    private readonly System.Diagnostics.Stopwatch _opening = new();
     private bool _running;
 
     public MainWindow() : this(false, IntPtr.Zero) { }
@@ -57,6 +58,14 @@ public partial class MainWindow : Window
         }
         else
         {
+            // AppKit cannot toggle a borderless, non-resizable style into native
+            // fullscreen. BorderOnly supplies its required native style bits.
+            if (OperatingSystem.IsMacOS())
+            {
+                WindowDecorations = WindowDecorations.BorderOnly;
+                Topmost = false;
+                CanResize = CanMaximize = true;
+            }
             // Position is set by App before entering fullscreen.
             WindowState = WindowState.Normal;
             Cursor = new Cursor(StandardCursorType.None);
@@ -65,13 +74,13 @@ public partial class MainWindow : Window
 
         PointerMoved += (_, e) =>
         {
-            if (IsPreviewMode || _windowed) return;
+            if (IsPreviewMode || _windowed || _opening.Elapsed.TotalSeconds < 1) return;
             Point current = e.GetPosition(this);
             if (_initialMouse is not { } initial) { _initialMouse = current; return; }
             double dx = current.X - initial.X, dy = current.Y - initial.Y;
             if (dx * dx + dy * dy > 100) Close();
         };
-        PointerPressed += (_, _) => { if (!IsPreviewMode && !_windowed) Close(); };
+        PointerPressed += (_, _) => { if (!IsPreviewMode && !_windowed && _opening.Elapsed.TotalSeconds >= 1) Close(); };
         KeyDown += (_, e) =>
         {
             if (IsPreviewMode) return;
@@ -138,6 +147,7 @@ public partial class MainWindow : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
+        _opening.Restart();
         if (IsPreviewMode)
         {
             if (!OperatingSystem.IsWindows() || ParentWindowHandle == IntPtr.Zero || !IsWindow(ParentWindowHandle))
@@ -151,7 +161,21 @@ public partial class MainWindow : Window
             Width = rect.Right / RenderScaling;
             Height = rect.Bottom / RenderScaling;
         }
-        else if (!_windowed) WindowState = WindowState.FullScreen;
+        else if (!_windowed)
+        {
+            if (OperatingSystem.IsMacOS())
+            {
+                // AppKit temporarily suppresses fullscreen during Show. Request it
+                // after the native window has actually become visible/active.
+                Topmost = false;
+                CanResize = CanMaximize = true;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (IsVisible) { Activate(); WindowState = WindowState.FullScreen; }
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
+            else WindowState = WindowState.FullScreen;
+        }
         InitializeObjects();
         _running = true;
         RequestAnimationFrame(_frameCallback);

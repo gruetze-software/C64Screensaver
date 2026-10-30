@@ -27,7 +27,7 @@ cp "$root/C64Screensaver/Assets/app-icon.icns" "$bundle/Contents/Resources/"
 cp "$root/C64Screensaver/Assets/logogs.png" "$bundle/Contents/Resources/"
 xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
   -Wall -Wextra -Wno-unused-parameter -bundle \
-  -framework Cocoa -framework ScreenSaver -framework QuartzCore \
+  -framework Cocoa -framework ScreenSaver -framework QuartzCore -framework Metal \
   "$root/macos/NativeHost/C64SaverView.m" -o "$bundle/Contents/MacOS/C64Screensaver"
 plutil -lint "$bundle/Contents/Info.plist"
 # Ad-hoc signing is for local tests, not notarized distribution.
@@ -39,5 +39,10 @@ xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
   -Wall -Wextra -Werror -framework Cocoa -framework ScreenSaver \
   "$root/macos/NativeHost/OptionsSmoke.m" -o "$out/options-smoke"
 "$out/options-smoke" "$bundle" "$out/screenshots"
+xcrun clang -arch "$arch" -mmacosx-version-min=14.0 -fobjc-arc -fmodules \
+  -Wall -Wextra -Werror -framework Foundation -framework Metal \
+  "$root/macos/NativeHost/MetalSmoke.m" -o "$out/metal-smoke"
+"$out/metal-smoke" "$publish/C64Screensaver.NativeCore.dylib" "$publish/libSkiaSharp.dylib"
+
 echo "Experimental bundle: $bundle"
 echo "Inspect dependencies: otool -L \"$bundle/Contents/Frameworks/C64Screensaver.NativeCore.dylib\""

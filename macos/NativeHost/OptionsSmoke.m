@@ -105,6 +105,9 @@ int main(int argc, char **argv) {
         }
         NSTabView *tabs = (NSTabView *)findTag(sheet.contentView,203);
         if (![tabs isKindOfClass:NSTabView.class] || tabs.numberOfTabViewItems != 4) return 31;
+        NSArray *expectedTabs = @[@"General", @"C64", @"Amiga", @"Monitor effects"];
+        for (NSUInteger index = 0; index < expectedTabs.count; index++)
+            if (![[tabs.tabViewItems[index] label] isEqualToString:expectedTabs[index]]) return 38;
         for (NSTabViewItem *item in tabs.tabViewItems) {
             [tabs selectTabViewItem:item];
             for (NSView *control in item.view.subviews)
@@ -300,6 +303,21 @@ int main(int argc, char **argv) {
             && !launcher.isVisible && !launcher.sheetParent && !findTag(launcher.contentView,203);
         method_setImplementation(findCompanion, originalFindCompanion);
         method_setImplementation(launch, originalLaunch);
+        // Fullscreen must queue its first frame too, never rasterize on AppKit.
+        method_setImplementation(findCompanion, unavailable);
+        ScreenSaverView *fullscreen = [[bundle.principalClass alloc] initWithFrame:NSMakeRect(0,0,960,540) isPreview:NO];
+        [parent.contentView addSubview:fullscreen];
+        [fullscreen startAnimation];
+        passed = passed && [[fullscreen valueForKey:@"renderInFlight"] boolValue];
+        NSWindow *whileRendering = fullscreen.configureSheet;
+        passed = passed && whileRendering != nil;
+        [fullscreen stopAnimation];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.4]];
+        passed = passed && [fullscreen valueForKey:@"image"] == nil;
+        [fullscreen startAnimation];
+        passed = passed && hasPicture(fullscreen);
+        [fullscreen stopAnimation]; [fullscreen removeFromSuperview];
+        method_setImplementation(findCompanion, originalFindCompanion);
         imp_removeBlock(unavailable); imp_removeBlock(available); imp_removeBlock(fakeLaunch);
         if (!passed) return 12;
         NSLog(@"Options smoke: nonblack frames, detach/reattach, stop/start, sheet, CRT sliders, saved values and borderless full-screen passed.");

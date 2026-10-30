@@ -1,6 +1,6 @@
 # Gruetze RetroSaver
 
-Version **1.2.2** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
+Version **1.2.3** introduces the .NET 10 / Avalonia 12 companion for C64 and Amiga.
 Normal launch opens the companion; --fullscreen starts the selected animation.
 
 The Amiga selection contains **Jump & run** and **Plasma**. Alternate both or repeat
@@ -16,6 +16,7 @@ Windows and Linux packages remain free. macOS development builds include the
 companion app and a real native system screensaver, built for Apple Silicon and Intel.
 A single DMG contains the companion with the native screensaver embedded inside it.
 Move the app into Applications, open it, and use **Install / update system screensaver**.
+Native Mac rendering uses Metal when available and keeps rendering/disposal off the UI thread.
 Both interfaces use one per-user settings file; the running screensaver reloads saves
 automatically. The native Options dialog remains available. App Store submission is
 pending. Mac developer packages are ad-hoc signed, not notarized, and are kept as
