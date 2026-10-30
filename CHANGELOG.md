@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.2 — 2026-10-30
+
+- Make Monitor effects a shared C64/Amiga dialog; move C64 playback and company
+  text to the companion and show only the selected system's editor.
+- Preserve both systems' playback/text when resetting monitor settings.
+- Brand the macOS application menu and add About/Settings actions.
+- Open the installed companion from native Screen Saver Options; retain the native
+  editor when the app cannot be found. Test automatic launch and sheet closure.
+- Ship English installation instructions as Read me.txt in developer and signed DMGs.
+- Show the running Amiga demo in monitor previews; allow the animation to pause.
+
+## Packaging update — 2026-10-30
+
+- Replace deprecated hdiutil calls with diskutil image create blank/from, image attach
+  and eject in developer and notarized Mac packaging. Keep compressed UDZO output,
+  the named volume, signatures and embedded screensaver.
+
 ## 1.2.1 — 2026-10-29
 
 - Distribute one Mac DMG with the native screensaver embedded inside the companion.

@@ -1,4 +1,10 @@
-# Gruetze RetroSaver 1.2.1 on macOS
+# Gruetze RetroSaver 1.2.2 on macOS
+
+DMG creation uses diskutil image create blank/from; mounting and ejecting also
+use diskutil. A temporary APFS image preserves the volume name and payload
+permissions, then converts to compressed read-only UDZO using a positional source.
+Failed builds retain
+the previous output. Both developer and Developer ID packaging share this path.
 
 Build one integrated distribution on a Mac:
 
@@ -10,6 +16,9 @@ Use x86_64 for Intel. The single DMG is under artifacts/macos-companion/osx-*.
 Its app contains C64Screensaver.saver. Drag the app into Applications, open it and
 click Install / update system screensaver; macOS handles the installation confirmation.
 Select Gruetze RetroSaver (older installations may show C64Screensaver) in Screen Saver settings.
+Options opens the installed companion automatically; if it cannot be located, the
+native editor remains as fallback. The common Monitor effects dialog has no duplicate
+program/text editors. Mac menus are branded; DMG instructions are in Read me.txt.
 
 Both interfaces use /Users/Shared/GruetzeRetroSaver-<uid>/settings.json, where uid
 is the login user's numeric UID. The directory is restricted to its owner; the name

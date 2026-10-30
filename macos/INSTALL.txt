@@ -1,0 +1,16 @@
+Gruetze RetroSaver for macOS
+
+1. Drag Gruetze RetroSaver.app to Applications.
+2. Open the app from Applications, choose C64 or Amiga, and save your settings.
+3. Click "Install / update system screensaver" and confirm the macOS installation.
+4. Select Gruetze RetroSaver in System Settings > Screen Saver.
+   Older installations may still display the name C64Screensaver.
+
+The app includes the real system screensaver. No separate download is needed.
+Both use the same settings. A running preview reloads saved changes within about
+a second. The app reloads external changes when you return to its window.
+The Options button opens the companion app when macOS can find it.
+
+Developer test build: ad-hoc signed, not notarized.
+For public distribution, use Developer ID signing and notarization.
+www.gruetze-software.de

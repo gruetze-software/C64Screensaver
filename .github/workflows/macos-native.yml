@@ -1,7 +1,7 @@
 name: macOS builds
 on:
   push:
-    branches: [main, codex/macos-native-screensaver, codex/macos-integrated-package]
+    branches: [main, codex/macos-native-screensaver, codex/macos-integrated-package, codex/macos-diskutil]
   workflow_dispatch:
 concurrency:
   group: macos-build-${{ github.ref }}
@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15
+          - runner: macos-26
             arch: arm64
           - runner: macos-15-intel
             arch: x86_64

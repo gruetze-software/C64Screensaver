@@ -62,6 +62,8 @@ static BOOL loadCore(NSBundle *bundle) {
     BOOL _failed, _stopped;
     NSDictionary *_lastSettings, *_sessionSettings;
     CFTimeInterval _settingsChecked;
+    NSTextField *_companionStatus;
+    BOOL _companionLaunching;
     NSWindow *_options;
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
@@ -336,6 +338,58 @@ static BOOL loadCore(NSBundle *bundle) {
     button.frame = NSMakeRect(20, y, 510, 24); button.state = value ? NSControlStateValueOn : NSControlStateValueOff;
     [_optionsBody addSubview:button]; return button;
 }
+- (NSURL *)companionApplicationURL {
+    return [NSWorkspace.sharedWorkspace URLForApplicationWithBundleIdentifier:@"de.gruetze-software.RetroSaver"];
+}
+- (void)openCompanionURL:(NSURL *)url completion:(void (^)(NSError *))completion {
+    NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration configuration];
+    configuration.activates = YES;
+    [NSWorkspace.sharedWorkspace openApplicationAtURL:url configuration:configuration
+        completionHandler:^(NSRunningApplication *app, NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion(error ?: (app ? nil : [NSError errorWithDomain:@"GruetzeRetroSaver" code:1 userInfo:nil]));
+            });
+        }];
+}
+- (void)launchCompanion:(id)sender {
+    if (_companionLaunching) return;
+    NSURL *url = [self companionApplicationURL];
+    if (!url) { _companionStatus.stringValue = @"Move Gruetze RetroSaver.app to Applications, then try again."; return; }
+    _companionLaunching = YES;
+    NSWindow *sheet = _options;
+    __weak C64SaverView *weakSelf = self;
+    [self openCompanionURL:url completion:^(NSError *error) {
+        C64SaverView *view = weakSelf;
+        if (!view) return;
+        view->_companionLaunching = NO;
+        if (view->_options != sheet) return;
+        if (error) { view->_companionStatus.stringValue = error.localizedDescription; return; }
+        // Allow the system host to attach its sheet before ending that modal session.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 5), dispatch_get_main_queue(), ^{
+            if (view->_options == sheet) [view finishOptions:NSModalResponseOK];
+        });
+    }];
+}
+- (NSWindow *)companionConfigureSheet {
+    _options = [[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,500,230)
+        styleMask:NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+    _options.releasedWhenClosed = NO;
+    _options.title = @"Gruetze RetroSaver";
+    _options.contentView = [[C64SettingsBackground alloc] initWithFrame:NSMakeRect(0,0,500,230)];
+    _optionsBody = _options.contentView;
+    [self brandImage:@"app-icon.icns" frame:NSMakeRect(22,136,64,64) tag:201];
+    [self label:@"Gruetze RetroSaver" frame:NSMakeRect(105,167,370,30) font:[NSFont boldSystemFontOfSize:22]];
+    [self label:@"C64 and Amiga settings" frame:NSMakeRect(105,141,370,24) font:[NSFont systemFontOfSize:14]];
+    _companionStatus = [self label:@"Opening the companion app… Saved changes are applied automatically."
+        frame:NSMakeRect(25,77,450,50) font:[NSFont systemFontOfSize:13]];
+    NSButton *open = [NSButton buttonWithTitle:@"Open app" target:self action:@selector(launchCompanion:)];
+    open.frame = NSMakeRect(345,22,130,32); open.keyEquivalent = @"\r"; [_optionsBody addSubview:open];
+    NSButton *cancel = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancelOptions:)];
+    cancel.frame = NSMakeRect(225,22,110,32); cancel.keyEquivalent = @"\e"; [_optionsBody addSubview:cancel];
+    _optionsBody = nil;
+    dispatch_async(dispatch_get_main_queue(), ^{ if (self->_options) [self launchCompanion:nil]; });
+    return _options;
+}
 - (NSWindow *)configureSheet {
     // macOS can request options independently of the animation view's window.
     // Keep one sheet alive and perform all AppKit construction on the main thread.
@@ -345,6 +399,7 @@ static BOOL loadCore(NSBundle *bundle) {
         return sheet;
     }
     if (_options) return _options;
+    if ([self companionApplicationURL]) return [self companionConfigureSheet];
     NSLog(@"C64Screensaver: creating options sheet");
     @try {
         return [self buildConfigureSheet];

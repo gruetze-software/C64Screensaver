@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+source "$root/macos/disk-image.sh"
 arch="$(uname -m)"
 if [[ $# -gt 0 ]]; then arch="$1"; fi
 case "$arch" in
@@ -31,17 +32,17 @@ codesign --verify --deep --strict "$app"
 payload="$(mktemp -d "$out/dmg-payload.XXXXXX")"
 ditto "$app" "$payload/Gruetze RetroSaver.app"
 ln -s /Applications "$payload/Applications"
-cp "$root/macos/INSTALL-DE.txt" "$payload/Lies mich.txt"
+cp "$root/macos/INSTALL.txt" "$payload/Read me.txt"
 dmg="$out/Gruetze-RetroSaver-$version-macos-$arch.dmg"
-hdiutil create -volname "Gruetze RetroSaver" -srcfolder "$payload" -format UDZO -ov "$dmg"
-hdiutil verify "$dmg"
+retrosaver_create_dmg "$payload" "$dmg"
 # Inspect the actual image, not just the source staging folder.
 mount="$(mktemp -d "$out/mount.XXXXXX")"
-hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount"
-trap 'hdiutil detach "$mount" >/dev/null || true' EXIT
+retrosaver_attach_dmg "$dmg" "$mount" readonly
+trap '/usr/sbin/diskutil eject "$mount" >/dev/null || true' EXIT
 codesign --verify --deep --strict "$mount/Gruetze RetroSaver.app"
+cmp "$root/macos/INSTALL.txt" "$mount/Read me.txt"
 test -f "$mount/Gruetze RetroSaver.app/Contents/Resources/C64Screensaver.saver/Contents/Info.plist"
 "$mount/Gruetze RetroSaver.app/Contents/MacOS/c64screensaver" --help
-hdiutil detach "$mount"
+/usr/sbin/diskutil eject "$mount"
 trap - EXIT
 echo "Developer test app (ad-hoc signed, not notarized): $app"

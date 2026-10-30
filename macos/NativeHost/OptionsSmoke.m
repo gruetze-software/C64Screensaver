@@ -17,6 +17,7 @@ static NSView *findTag(NSView *root, NSInteger tag) {
     return nil;
 }
 static NSURL *openedHomepage;
+static NSURL *openedCompanion;
 
 static BOOL hasPicture(ScreenSaverView *view) {
     NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
@@ -47,6 +48,11 @@ int main(int argc, char **argv) {
         NSBundle *bundle = [NSBundle bundleWithPath:[NSString stringWithUTF8String:argv[1]]];
         NSError *error = nil;
         if (![bundle loadAndReturnError:&error]) { NSLog(@"%@", error); return 3; }
+        // Exercise the fallback editor independently of Launch Services registration.
+        Method findCompanion = class_getInstanceMethod(bundle.principalClass, NSSelectorFromString(@"companionApplicationURL"));
+        IMP originalFindCompanion = method_getImplementation(findCompanion);
+        IMP unavailable = imp_implementationWithBlock(^NSURL *(id receiver) { (void)receiver; return nil; });
+        method_setImplementation(findCompanion, unavailable);
         ScreenSaverView *view = [[bundle.principalClass alloc] initWithFrame:NSMakeRect(0,0,384,288) isPreview:YES];
         if (!view.hasConfigureSheet) return 4;
         NSWindow *sheet = view.configureSheet;
@@ -276,6 +282,25 @@ int main(int argc, char **argv) {
         [view removeFromSuperview];
         if (original) [defaults setObject:original forKey:@"Settings"]; else [defaults removeObjectForKey:@"Settings"];
         [NSFileManager.defaultManager removeItemAtPath:sharedPath.stringByDeletingLastPathComponent error:nil];
+        IMP available = imp_implementationWithBlock(^NSURL *(id receiver) {
+            (void)receiver; return [NSURL fileURLWithPath:@"/Applications/Gruetze RetroSaver.app"];
+        });
+        method_setImplementation(findCompanion, available);
+        Method launch = class_getInstanceMethod(bundle.principalClass, NSSelectorFromString(@"openCompanionURL:completion:"));
+        IMP originalLaunch = method_getImplementation(launch);
+        IMP fakeLaunch = imp_implementationWithBlock(^(id receiver, NSURL *url, void (^completion)(NSError *)) {
+            (void)receiver; openedCompanion = url; completion(nil);
+        });
+        method_setImplementation(launch, fakeLaunch);
+        ScreenSaverView *gateway = [[bundle.principalClass alloc] initWithFrame:NSMakeRect(0,0,384,288) isPreview:YES];
+        NSWindow *launcher = gateway.configureSheet;
+        [parent beginSheet:launcher completionHandler:nil];
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.6]];
+        passed = passed && [openedCompanion.path isEqualToString:@"/Applications/Gruetze RetroSaver.app"]
+            && !launcher.isVisible && !launcher.sheetParent && !findTag(launcher.contentView,203);
+        method_setImplementation(findCompanion, originalFindCompanion);
+        method_setImplementation(launch, originalLaunch);
+        imp_removeBlock(unavailable); imp_removeBlock(available); imp_removeBlock(fakeLaunch);
         if (!passed) return 12;
         NSLog(@"Options smoke: nonblack frames, detach/reattach, stop/start, sheet, CRT sliders, saved values and borderless full-screen passed.");
     }

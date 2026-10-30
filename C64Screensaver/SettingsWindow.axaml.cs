@@ -8,7 +8,7 @@ namespace C64Screensaver;
 public partial class SettingsWindow : Window
 {
     private readonly ConfigManager config;
-    private readonly SaverSettings previewSettings = new();
+    private readonly SaverSettings previewSettings;
     private readonly DispatcherTimer timer;
     private bool loading;
     private Window? enlargedPreview;
@@ -20,16 +20,8 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         config = configManager;
-        previewSettings.AmigaMode = config.Settings.AmigaMode;
-        previewSettings.AmigaDiskActivity = config.Settings.AmigaDiskActivity;
-        previewSettings.AmigaBoot = config.Settings.AmigaBoot;
-        previewSettings.AmigaAnimation = config.Settings.AmigaAnimation;
-        previewSettings.AmigaDurationSeconds = config.Settings.AmigaDurationSeconds;
-        previewSettings.NativeRenderQuality = config.Settings.NativeRenderQuality;
-        previewSettings.ShowAmigaScroller = config.Settings.ShowAmigaScroller;
-        previewSettings.ScrollerText = config.Settings.ScrollerText;
-        previewSettings.ScrollerSpeed = config.Settings.ScrollerSpeed;
-        previewSettings.ScrollerWave = config.Settings.ScrollerWave;
+        previewSettings = System.Text.Json.JsonSerializer.Deserialize<SaverSettings>(
+            System.Text.Json.JsonSerializer.Serialize(config.Settings))!;
         LogoImage.Source = SpriteAssets.Instance.Logo;
         VersionLabel.Text = AppInfo.DisplayName;
         Apply(config.Settings);
@@ -41,26 +33,11 @@ public partial class SettingsWindow : Window
                 if (e.Property.Name == nameof(Slider.Value) && !loading)
                 { PresetCombo.SelectedIndex = 3; RefreshPreview(); }
             };
-        SpeedSlider.PropertyChanged += (_, e) =>
-        { if (e.Property.Name == nameof(Slider.Value) && !loading) RefreshPreview(); };
         CrtCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = 3; RefreshPreview(); } };
         ScanlinesCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = 3; RefreshPreview(); } };
         PowerTransitionCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RestartPreview(); };
-        ColorsCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RefreshPreview(); };
         AspectCombo.SelectionChanged += (_, _) => { if (!loading) RefreshPreview(); };
         FillScreenCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RefreshPreview(); };
-        foreach (var box in new[] { CompanyNameBox, CompanyWebsiteBox, CompanyTaglineBox })
-            box.TextChanged += (_, _) =>
-            {
-                if (!loading && (
-                    BasicPrograms.DisplayText(CompanyNameBox.Text) != previewSettings.CompanyName ||
-                    BasicPrograms.DisplayText(CompanyWebsiteBox.Text) != previewSettings.CompanyWebsite ||
-                    BasicPrograms.DisplayText(CompanyTaglineBox.Text) != previewSettings.CompanyTagline))
-                    RestartPreview(true);
-            };
-        DurationInput.PropertyChanged += (_, e) =>
-        { if (!loading && e.Property.Name == nameof(NumericUpDown.Value)) RestartPreview(); };
-        ProgramCombo.SelectionChanged += (_, _) => { if (!loading) RestartPreview(); };
         PreviewProgramCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RestartPreview(); };
         PresetCombo.SelectionChanged += (_, _) =>
         {
@@ -112,15 +89,8 @@ public partial class SettingsWindow : Window
         SetEffects(s);
         FillScreenCheckBox.IsChecked = s.FillScreen;
         AspectCombo.SelectedIndex = s.UsesFourThree ? 0 : 1;
-        CompanyNameBox.Text = s.CompanyName;
-        CompanyWebsiteBox.Text = s.CompanyWebsite;
-        CompanyTaglineBox.Text = s.CompanyTagline;
-        SpeedSlider.Value = s.SpeedMultiplier;
-        ColorsCheckBox.IsChecked = s.CycleColors;
         FpsCheckBox.IsChecked = s.ShowFps;
         PowerTransitionCheckBox.IsChecked = s.PowerTransition;
-        ProgramCombo.SelectedIndex = (int)s.Programs;
-        DurationInput.Value = s.ProgramDurationSeconds;
         loading = false;
     }
     private void ReadInto(SaverSettings s)
@@ -128,18 +98,12 @@ public partial class SettingsWindow : Window
         s.PowerTransition = PowerTransitionCheckBox.IsChecked == true;
         s.FillScreen = FillScreenCheckBox.IsChecked == true;
         s.KeepAspectRatio = AspectCombo.SelectedIndex == 0;
-        s.CompanyName = CompanyNameBox.Text ?? "";
-        s.CompanyWebsite = CompanyWebsiteBox.Text ?? "";
-        s.CompanyTagline = CompanyTaglineBox.Text ?? "";
         s.CrtEnabled = CrtCheckBox.IsChecked == true;
         s.Curvature = CurvatureSlider.Value; s.ScanlineStrength = ScanlineStrengthSlider.Value;
         s.MaskStrength = MaskStrengthSlider.Value; s.Softness = SoftnessSlider.Value;
         s.Glow = GlowSlider.Value; s.GlowSpread = GlowSpreadSlider.Value; s.Vignette = VignetteSlider.Value; s.Flicker = FlickerSlider.Value;
         s.Scanlines = ScanlinesCheckBox.IsChecked == true;
-        s.CycleColors = ColorsCheckBox.IsChecked == true;
-        s.SpeedMultiplier = SpeedSlider.Value; s.ShowFps = FpsCheckBox.IsChecked == true;
-        s.ProgramDurationSeconds = (int)(DurationInput.Value ?? 100m);
-        s.Programs = (ProgramSelection)Math.Max(0, ProgramCombo.SelectedIndex);
+        s.ShowFps = FpsCheckBox.IsChecked == true;
         s.Validate();
     }
     private void RefreshPreview()
@@ -149,7 +113,6 @@ public partial class SettingsWindow : Window
             SoftnessLabel, GlowLabel, GlowSpreadLabel, VignetteLabel, FlickerLabel };
         var sliders = EffectSliders;
         for (int i = 0; i < sliders.Length; i++) labels[i].Text = $"{sliders[i].Value:F0}%";
-        SpeedLabel.Text = FormattableString.Invariant($"{SpeedSlider.Value:F1}×");
         PowerPreviewButton.IsEnabled = previewSettings.PowerTransition;
         EffectsPanel.IsEnabled = previewSettings.CrtEnabled;
         CurvatureSlider.IsEnabled = !previewSettings.FillScreen;
@@ -162,14 +125,11 @@ public partial class SettingsWindow : Window
         PreviewScene.InvalidateVisual();
         enlargedScene?.InvalidateVisual();
     }
-    private void RestartPreview(bool companyText = false)
+    private void RestartPreview()
     {
         RefreshPreview();
-        var selected = previewSettings.Programs;
-        if (companyText) previewSettings.Programs = ProgramSelection.Company;
         PreviewScene.Initialize(previewSettings, false, 384, 288, new Random(64));
         enlargedScene?.Initialize(previewSettings, false, 960, 720, new Random(64));
-        previewSettings.Programs = selected;
         if (PreviewProgramCheckBox.IsChecked == true) { PreviewScene.ShowProgramPreview(); enlargedScene?.ShowProgramPreview(); }
     }
     private void PowerPreview_Click(object? sender, RoutedEventArgs e)
@@ -186,7 +146,7 @@ public partial class SettingsWindow : Window
         var scene = enlargedScene;
         var window = new Window
         {
-            Title = "C64Screensaver · Live CRT preview · F11 fullscreen · Esc close",
+            Title = "Gruetze RetroSaver · Live CRT preview · F11 fullscreen · Esc close",
             Icon = Icon, Width = 960, Height = 720, MinWidth = 640, MinHeight = 480,
             Background = Avalonia.Media.Brushes.Black,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
