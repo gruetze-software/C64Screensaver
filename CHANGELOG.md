@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.3 — 2026-10-30
+
+- Reserve scrollbar gutters in companion/monitor editors; verify field bounds at minimum window size.
+- Give the native options clear General, C64, Amiga and Monitor effects tabs.
+- Render fullscreen native frames off AppKit as well as previews; retire sessions behind outstanding renders without blocking the UI.
+- Add optional Metal CRT rendering with cached per-session targets and CPU fallback. Request 60 fps for Amiga scenes and preserve immutable frame ownership.
+- Fix native Mac fullscreen window style/timing in the companion and ignore launch mouse movement for one second.
+- Add fullscreen lifecycle and real-Metal Runner/Plasma rendering checks.
+
 ## 1.2.2 — 2026-10-30
 
 - Make Monitor effects a shared C64/Amiga dialog; move C64 playback and company

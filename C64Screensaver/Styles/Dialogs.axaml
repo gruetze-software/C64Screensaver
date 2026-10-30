@@ -7,6 +7,10 @@
         <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter"/>
         <Setter Property="FontSize" Value="14"/>
     </Style>
+    <Style Selector="ScrollViewer.settingsScroll">
+        <Setter Property="AllowAutoHide" Value="False"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+    </Style>
     <Style Selector="Window.dialog TextBlock.hint">
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Foreground" Value="#A5B5BD"/>

@@ -507,6 +507,33 @@ CompanionUi();
 
 void CompanionUi()
 {
+// Check actual rendered widget geometry where the editor must scroll.
+foreach (bool amiga in new[] { false, true })
+{
+    var small = new CompanionWindow(new ConfigManager(Path.Combine(Path.GetTempPath(), "retrosaver-layout-" + Guid.NewGuid() + ".json"))
+        { Settings = new SaverSettings { AmigaMode = amiga } }) { Width = 880, Height = 620 };
+    small.Show();
+    Dispatcher.UIThread.RunJobs();
+    var descendants = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(small).OfType<Control>().ToArray();
+    var scroller = descendants.OfType<ScrollViewer>().Single(c => c.Name == "EditorScroll");
+    var bar = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(scroller)
+        .OfType<Avalonia.Controls.Primitives.ScrollBar>().Single(c => c.Orientation == Avalonia.Layout.Orientation.Vertical &&
+            Avalonia.VisualTree.VisualExtensions.GetVisualAncestors(c).OfType<ScrollViewer>().FirstOrDefault() == scroller);
+    Check(bar.IsVisible && bar.Bounds.Width > 0, "Small editor has a visible vertical scrollbar");
+    var barLeft = bar.TranslatePoint(default, small)!.Value.X;
+    foreach (var field in descendants.Where(c => c.IsEffectivelyVisible && c is TextBox or ComboBox or NumericUpDown or Slider))
+    {
+        var origin = field.TranslatePoint(default, small)!.Value;
+        Check(origin.X + field.Bounds.Width <= barLeft - 5,
+            "Scrollbar has a separate gutter beyond the editor field: " + field.Name);
+    }
+    Capture(small, amiga ? "companion-small-amiga" : "companion-small-c64");
+}
+var fullscreenCheck = new MainWindow(false, IntPtr.Zero, settings: new SaverSettings());
+fullscreenCheck.Show();
+Dispatcher.UIThread.RunJobs();
+Check(fullscreenCheck.WindowState == WindowState.FullScreen, "Fullscreen preview enters fullscreen after opening");
+fullscreenCheck.Close();
 var companionConfig = new ConfigManager(Path.Combine(Path.GetTempPath(), "retrosaver-test-" + Guid.NewGuid() + ".json"));
 var companion = new CompanionWindow(companionConfig);
 companion.Show();

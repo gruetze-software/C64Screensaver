@@ -1,5 +1,6 @@
 #import <ScreenSaver/ScreenSaver.h>
 #import <QuartzCore/QuartzCore.h>
+#import <Metal/Metal.h>
 #import <dlfcn.h>
 #import <stdint.h>
 #import <unistd.h>
@@ -14,6 +15,7 @@ static CreateFn createSession;
 static RenderFn renderSession;
 static DestroyFn destroySession;
 static int (*testPower)(uint64_t);
+static int (*renderBackend)(uint64_t);
 static BOOL loadCore(NSBundle *bundle) {
     static dispatch_once_t once;
     static BOOL ready;
@@ -31,6 +33,16 @@ static BOOL loadCore(NSBundle *bundle) {
         if (!version || version() != 1 || !load || !createSession || !renderSession || !destroySession || !testPower) return;
         NSData *skia = [[bundle.privateFrameworksPath stringByAppendingPathComponent:@"libSkiaSharp.dylib"] dataUsingEncoding:NSUTF8StringEncoding];
         ready = load(skia.bytes, (int)skia.length) == 1;
+        renderBackend = (int (*)(uint64_t))dlsym(module, "c64_render_backend");
+        int (*setMetal)(void *, void *) = (int (*)(void *, void *))dlsym(module, "c64_set_metal");
+        // These Objective-C objects outlive every NativeAOT session in this process.
+        static id<MTLDevice> device;
+        static id<MTLCommandQueue> queue;
+        if (ready && setMetal) {
+            device = MTLCreateSystemDefaultDevice();
+            queue = [device newCommandQueue];
+            if (device && queue) setMetal((__bridge void *)device, (__bridge void *)queue);
+        }
     });
     return ready;
 }
@@ -49,14 +61,12 @@ static BOOL loadCore(NSBundle *bundle) {
 
 @interface C64SaverView : ScreenSaverView {
     uint64_t _session;
-    uint8_t *_pixels;
-    int _capacity;
-    CFTimeInterval _previous;
+    CFTimeInterval _previous, _nextFrame;
+    NSInteger _backend;
     NSTimer *_previewTimer;
     dispatch_queue_t _previewQueue;
     NSUInteger _renderGeneration;
     BOOL _renderInFlight;
-    CGColorSpaceRef _colors;
     NSInteger _renderQuality;
     NSImage *_image;
     BOOL _failed, _stopped;
@@ -81,10 +91,9 @@ static BOOL loadCore(NSBundle *bundle) {
 - (instancetype)initWithFrame:(NSRect)frame isPreview:(BOOL)preview {
     self = [super initWithFrame:frame isPreview:preview];
     if (self) {
-        self.animationTimeInterval = 1.0 / 30.0;
-        _colors = CGColorSpaceCreateDeviceRGB();
+        self.animationTimeInterval = 1.0 / 60.0;
         _previewQueue = dispatch_queue_create("de.gruetze-software.C64Screensaver.preview",
-            dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
+            dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, preview ? QOS_CLASS_UTILITY : QOS_CLASS_USER_INITIATED, 0));
     }
     return self;
 }
@@ -165,10 +174,14 @@ static BOOL loadCore(NSBundle *bundle) {
     // Queued results from an earlier start/stop cycle must never replace a new frame.
     _renderGeneration++;
     _renderInFlight = NO;
-    if (_session && destroySession) destroySession(_session);
+    uint64_t retired = _session;
     _session = 0;
-    free(_pixels); _pixels = NULL; _capacity = 0;
-    _image = nil; _previous = 0;
+    if (retired && destroySession) {
+        // Destroy behind outstanding renders, never wait on a managed render lock
+        // from AppKit's thread (including detach, stop and configure callbacks).
+        dispatch_async(_previewQueue, ^{ destroySession(retired); });
+    }
+    _image = nil; _previous = _nextFrame = 0; _backend = -1;
 }
 - (BOOL)ensureSession {
     if (_session) return YES;
@@ -177,6 +190,7 @@ static BOOL loadCore(NSBundle *bundle) {
     if (!_failed) {
         NSDictionary *settings = [self settings];
         _sessionSettings = settings;
+        self.animationTimeInterval = [settings[@"AmigaMode"] boolValue] ? 1.0 / 60.0 : 1.0 / 30.0;
         _renderQuality = MAX(0, MIN(2, [settings[@"NativeRenderQuality"] integerValue]));
         NSData *json = [NSJSONSerialization dataWithJSONObject:settings options:0 error:nil];
         _session = createSession(json.bytes, (int)json.length, (int)arc4random());
@@ -190,7 +204,7 @@ static BOOL loadCore(NSBundle *bundle) {
     // Some System Settings hosts render a single frame but do not keep calling
     // animateOneFrame after options close. Own a preview-only clock as fallback.
     __weak C64SaverView *weakSelf = self;
-    _previewTimer = [NSTimer timerWithTimeInterval:1.0 / 20.0 repeats:YES block:^(NSTimer *timer) {
+    _previewTimer = [NSTimer timerWithTimeInterval:1.0 / 30.0 repeats:YES block:^(NSTimer *timer) {
         C64SaverView *view = weakSelf;
         if (!view || !view.window || view->_stopped) {
             [timer invalidate];
@@ -236,7 +250,7 @@ static BOOL loadCore(NSBundle *bundle) {
         [self animateOneFrame];
     }
 }
-- (void)dealloc { [self stopPreviewTimer]; [self releaseSession]; if (_colors) CGColorSpaceRelease(_colors); }
+- (void)dealloc { [self stopPreviewTimer]; [self releaseSession]; }
 - (void)animateOneFrame {
     if (_renderInFlight || _stopped || self.bounds.size.width <= 0 || self.bounds.size.height <= 0) return;
     CFTimeInterval now = CACurrentMediaTime();
@@ -250,15 +264,17 @@ static BOOL loadCore(NSBundle *bundle) {
     if (![self ensureSession]) return;
     // AppKit may request multiple draws/start callbacks within one timer tick.
     // Retain the last immutable frame rather than recomputing identical images.
-    if (_image && _previous && now - _previous < self.animationTimeInterval * .95) return;
+    if (_image && _previous && now + self.animationTimeInterval * .1 < _nextFrame) return;
+    _nextFrame = now - _nextFrame > self.animationTimeInterval
+        ? now + self.animationTimeInterval : _nextFrame + self.animationTimeInterval;
     CGFloat scale = self.window.backingScaleFactor ?: 1;
     double w = self.bounds.size.width * scale, h = self.bounds.size.height * scale;
     const double maxWidth[] = {960, 1280, 1920};
     const double maxHeight[] = {540, 720, 1080};
     double limit = fmin(1, fmin(maxWidth[_renderQuality] / w, maxHeight[_renderQuality] / h));
     int width = MAX(1, (int)(w * limit)), height = MAX(1, (int)(h * limit));
-    if (self.isPreview) {
-        // AppKit must remain responsive while the CPU CRT shader runs. The worker
+    {
+        // All views render off AppKit, including fullscreen. The worker
         // owns its buffer; stopping the view cannot free memory beneath a render.
         double delta = _previous ? fmin(.25, now - _previous) : 0;
         _previous = now;
@@ -281,12 +297,17 @@ static BOOL loadCore(NSBundle *bundle) {
                 CGDataProviderRelease(provider);
                 CFRelease(data);
             } else free(pixels);
+            int backend = renderBackend ? renderBackend(session) : 0;
             dispatch_async(dispatch_get_main_queue(), ^{
                 C64SaverView *view = weakSelf;
                 if (view && generation == view->_renderGeneration) {
                     view->_renderInFlight = NO;
                     if (!view->_stopped && frame) {
                         view->_image = [[NSImage alloc] initWithCGImage:frame size:view.bounds.size];
+                        if (view->_backend != backend) {
+                            view->_backend = backend;
+                            NSLog(@"Gruetze RetroSaver: %@ rendering", backend ? @"Metal GPU" : @"CPU fallback");
+                        }
                         [view setNeedsDisplay:YES];
                     }
                 }
@@ -295,27 +316,6 @@ static BOOL loadCore(NSBundle *bundle) {
         });
         return;
     }
-    int stride = width * 4, needed = stride * height;
-    if (needed != _capacity) {
-        void *replacement = realloc(_pixels, needed);
-        if (!replacement) { _failed = YES; [self setNeedsDisplay:YES]; return; }
-        _pixels = replacement; _capacity = needed;
-    }
-    double delta = _previous ? fmin(.25, now - _previous) : 0;
-    _previous = now;
-    if (!renderSession(_session, _pixels, _capacity, width, height, stride, delta)) {
-        _failed = YES; [self setNeedsDisplay:YES]; return;
-    }
-    // Immutable copy: AppKit may retain the frame after the next render starts.
-    CFDataRef data = CFDataCreate(kCFAllocatorDefault, _pixels, needed);
-    CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
-
-    CGImageRef cg = CGImageCreate(width, height, 8, 32, stride, _colors,
-        kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, provider, NULL, false, kCGRenderingIntentDefault);
-    _image = cg ? [[NSImage alloc] initWithCGImage:cg size:self.bounds.size] : nil;
-    if (cg) CGImageRelease(cg);
-    CGDataProviderRelease(provider); CFRelease(data);
-    [self setNeedsDisplay:YES];
 }
 - (void)drawRect:(NSRect)dirty {
     if (!_image && !_stopped) [self animateOneFrame];
@@ -483,7 +483,7 @@ static BOOL loadCore(NSBundle *bundle) {
     tabs.tabViewType = NSNoTabsNoBorder;
     _settingsTabs = tabs;
     NSMutableArray<NSButton *> *navigation = [NSMutableArray array];
-    NSArray<NSString *> *titles = @[@"Playback",@"Monitor effects",@"Company card",@"Amiga"];
+    NSArray<NSString *> *titles = @[@"General",@"C64",@"Amiga",@"Monitor effects"];
     for (NSInteger index = 0; index < 4; index++) {
         NSButton *button = [NSButton buttonWithTitle:titles[index] target:self action:@selector(selectSettingsTab:)];
         button.frame = NSMakeRect(20 + index*145,477,140,30);
@@ -497,60 +497,41 @@ static BOOL loadCore(NSBundle *bundle) {
     _settingsTabButtons = navigation;
     tabs.identifier = @"C64SettingsTabs";
     [_options.contentView addSubview:tabs];
-    _optionsBody = [self page:@"Playback" tabs:tabs];
-    [self label:@"C64 BASIC programs" frame:NSMakeRect(20,294,510,25) font:[NSFont boldSystemFontOfSize:14]];
-    _system = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,337,510,30) pullsDown:NO];
+    _optionsBody = [self page:@"General" tabs:tabs];
+    [self label:@"Active system" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _system = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,300,510,30) pullsDown:NO];
     _system.tag = 301;
     [_system addItemsWithTitles:@[@"System: Commodore 64", @"System: Amiga"]];
     [_system selectItemAtIndex:[s[@"AmigaMode"] boolValue] ? 1 : 0];
     [_optionsBody addSubview:_system];
-    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,260,510,30) pullsDown:NO];
+    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,235,510,30) pullsDown:NO];
+    [_quality addItemsWithTitles:@[@"Rendering: Efficient — up to 540p (recommended)",
+        @"Rendering: Balanced — up to 720p", @"Rendering: Detailed — up to 1080p, higher GPU/CPU use"]];
+    [_quality selectItemAtIndex:MAX(0,MIN(2,[s[@"NativeRenderQuality"] integerValue]))];
+    [_optionsBody addSubview:_quality];
+    _power = [self check:@"CRT power-off / dot / power-on between programs"
+        value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:180];
+    NSTextField *generalHint = [self label:@"Choose the active system here. C64 and Amiga have their own tabs for programs, timing and text. Monitor effects apply to both systems."
+        frame:NSMakeRect(20,65,510,85) font:[NSFont systemFontOfSize:12]];
+    generalHint.textColor = NSColor.secondaryLabelColor;
+
+    _optionsBody = [self page:@"C64" tabs:tabs];
+    [self label:@"BASIC programs" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _program = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,300,510,30) pullsDown:NO];
     [_program addItemsWithTitles:@[@"All programs", @"Maze", @"Company card", @"Stars"]];
     [_program selectItemAtIndex:MAX(0, MIN(3, [s[@"Programs"] integerValue]))];
     [_optionsBody addSubview:_program];
-    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:210];
-    _power = [self check:@"CRT power-off / dot / power-on between programs"
-        value:s[@"PowerTransition"] ? [s[@"PowerTransition"] boolValue] : YES y:165];
-    _quality = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,115,510,30) pullsDown:NO];
-    [_quality addItemsWithTitles:@[@"Rendering: Efficient — up to 540p (recommended)",
-        @"Rendering: Balanced — up to 720p", @"Rendering: Detailed — up to 1080p, higher CPU use"]];
-    [_quality selectItemAtIndex:MAX(0,MIN(2,[s[@"NativeRenderQuality"] integerValue]))];
-    [_optionsBody addSubview:_quality];
-    NSTextField *playbackHint = [self label:@"The C64 types each listing, corrects its mistakes and enters RUN. The program timer begins after RUN. Efficient rendering uses less CPU."
-        frame:NSMakeRect(20,20,510,70) font:[NSFont systemFontOfSize:12]];
-    playbackHint.textColor = NSColor.secondaryLabelColor;
-
-    _optionsBody = [self page:@"Monitor effects" tabs:tabs];
-    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : ![s[@"FillScreen"] boolValue];
-    BOOL border = [s[@"FillScreen"] boolValue];
-    _fullScreen = [self check:@"Fill entire screen — no black bars or C64 border" value:!aspect && border y:335];
-    _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
-    _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:300];
-    _border = [self check:@"Hide C64 border" value:border y:265];
-    _border.target = self; _border.action = @selector(fullScreenChanged:);
-    _borderColors = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,228,510,26) pullsDown:NO];
+    _duration = [self field:[(s[@"ProgramDurationSeconds"] ?: @100) stringValue] label:@"Seconds / program" y:255];
+    _borderColors = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,210,510,26) pullsDown:NO];
     _borderColors.tag = 204;
     [_borderColors addItemsWithTitles:@[@"C64 border: Original blue", @"C64 border: Colors from the BASIC program"]];
     [_borderColors selectItemAtIndex:(s[@"CycleColors"] ? [s[@"CycleColors"] boolValue] : YES) ? 1 : 0];
-    _borderColors.toolTip = @"The boot screen always keeps its original blue border. Program-controlled colors start after RUN.";
+    _borderColors.toolTip = @"The boot screen keeps its original blue border. Program colors start after RUN.";
     [_optionsBody addSubview:_borderColors];
-    [self fullScreenChanged:nil];
-    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:190 tag:1];
-    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:145 tag:2];
-    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:100 tag:3];
-    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:55 tag:4];
-    NSTextField *monitorHint = [self label:@"Fine-tune the tube from a clear picture to a softly glowing CRT. All effects range from 0 to 100%."
-        frame:NSMakeRect(20,5,510,35) font:[NSFont systemFontOfSize:12]];
-    monitorHint.textColor = NSColor.secondaryLabelColor;
-
-    _optionsBody = [self page:@"Company card" tabs:tabs];
-    [self label:@"Your message on the C64" frame:NSMakeRect(20,342,510,25) font:[NSFont boldSystemFontOfSize:14]];
-    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:285];
-    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:230];
-    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:175];
-    NSTextField *companyHint = [self label:@"Up to 28 characters per line. Text appears in uppercase; umlauts become AE, OE and UE. Choose Company card or All programs on the Playback tab."
-        frame:NSMakeRect(20,70,510,75) font:[NSFont systemFontOfSize:12]];
-    companyHint.textColor = NSColor.secondaryLabelColor;
+    [self label:@"Company card text" frame:NSMakeRect(20,165,510,25) font:[NSFont boldSystemFontOfSize:14]];
+    _company = [self field:s[@"CompanyName"] ?: @"GRUETZE-SOFTWARE" label:@"Company" y:125];
+    _website = [self field:s[@"CompanyWebsite"] ?: @"WWW.GRUETZE-SOFTWARE.DE" label:@"Website" y:85];
+    _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:45];
 
     _optionsBody = [self page:@"Amiga" tabs:tabs];
     _amigaBoot = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,335,510,30) pullsDown:NO];
@@ -573,6 +554,23 @@ static BOOL loadCore(NSBundle *bundle) {
     _amigaText.tag = 306;
     _amigaSpeed = [self field:[(s[@"ScrollerSpeed"] ?: @48) stringValue] label:@"Scroll speed" y:72];
     _amigaWave = [self field:[(s[@"ScrollerWave"] ?: @20) stringValue] label:@"Wave height" y:22];
+
+    _optionsBody = [self page:@"Monitor effects" tabs:tabs];
+    BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : ![s[@"FillScreen"] boolValue];
+    BOOL border = [s[@"FillScreen"] boolValue];
+    _fullScreen = [self check:@"Fill entire screen — no black bars or border" value:!aspect && border y:335];
+    _fullScreen.target = self; _fullScreen.action = @selector(fullScreenChanged:);
+    _aspect = [self check:@"Original 4:3 proportions (with black bars)" value:aspect y:300];
+    _border = [self check:@"Borderless picture" value:border y:265];
+    _border.target = self; _border.action = @selector(fullScreenChanged:);
+    [self fullScreenChanged:nil];
+    _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:190 tag:1];
+    _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:145 tag:2];
+    _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:100 tag:3];
+    _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:55 tag:4];
+    NSTextField *monitorHint = [self label:@"Fine-tune the tube from a clear picture to a softly glowing CRT. All effects range from 0 to 100%."
+        frame:NSMakeRect(20,5,510,35) font:[NSFont systemFontOfSize:12]];
+    monitorHint.textColor = NSColor.secondaryLabelColor;
 
     C64HomepageButton *homepage = [[C64HomepageButton alloc] initWithFrame:NSMakeRect(20,20,235,30)];
     homepage.title = @"www.gruetze-software.de";

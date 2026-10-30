@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <AssemblyName>c64screensaver</AssemblyName>
-    <AssemblyVersion>1.2.2.0</AssemblyVersion>
-    <FileVersion>1.2.2.0</FileVersion>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.0</FileVersion>
     <Authors>Grütze-Software</Authors>
     <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>

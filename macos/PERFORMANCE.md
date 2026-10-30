@@ -1,3 +1,26 @@
+# Native Mac performance: 1.2.3
+
+The native host now creates a Metal device/command queue and offers it to the
+NativeAOT renderer. Each session lazily creates its own serialized GPU context,
+reuses a GPU surface and limits its resource cache to 64 MiB. CRT composition
+uses the existing shader rather than a gamma approximation. BGRA readback stays
+on the worker queue; AppKit receives an independently owned immutable frame.
+If Metal is unavailable or its target/readback fails, that session uses the bounded
+CPU renderer. Bloom extraction still uses the small CPU source surface.
+
+Fullscreen rendering and session retirement now join the asynchronous queue used
+by previews; stopping/detaching never waits for a render lock on AppKit. Stale
+completions are rejected by generation. Amiga requests 60 fps, C64 30 fps; preview
+fallback ticks at 30 fps. Requested rates are targets, not guaranteed measurements.
+
+MetalSmoke.m measures Runner and Plasma CPU sessions before enabling Metal, then
+measures real GPU sessions including readback. With a device present it fails if
+Metal is not used or returns a black frame; without one it explicitly skips GPU
+measurements. Hosted runners are not a Neo benchmark. OptionsSmoke also checks
+fullscreen async submission, stop/start, stale results and option availability.
+
+## Earlier measurements / CPU fallback history
+
 # Native Mac performance
 
 The prototype uses Skia CPU raster rendering, not a Metal/GPU render target.
