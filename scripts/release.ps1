@@ -10,8 +10,15 @@ $release = Join-Path $root "artifacts/release/$version"
 New-Item -ItemType Directory -Path $release -Force | Out-Null
 dotnet build (Join-Path $root 'C64Screensaver.sln') -c Release --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed' }
-dotnet run --project (Join-Path $root 'tests/Smoke/Smoke.csproj') -c Release --no-build
-if ($LASTEXITCODE -ne 0) { throw 'Release checks failed' }
+# Preserve the curated hero image; the smoke suite writes a diagnostic with the same name.
+$heroPath = Join-Path $root 'docs/images/glowing-crt.png'
+$heroBytes = [IO.File]::ReadAllBytes($heroPath)
+try {
+    dotnet run --project (Join-Path $root 'tests/Smoke/Smoke.csproj') -c Release --no-build
+    if ($LASTEXITCODE -ne 0) { throw 'Release checks failed' }
+} finally {
+    [IO.File]::WriteAllBytes($heroPath, $heroBytes)
+}
 $archives = @()
 foreach ($runtime in ($Runtimes | Select-Object -Unique)) {
     # A fresh staging directory prevents stale files from an earlier publish.
@@ -26,6 +33,14 @@ foreach ($runtime in ($Runtimes | Select-Object -Unique)) {
     Copy-Item -LiteralPath (Join-Path $root 'docs/SCREEN-SAVER-SETUP.md') -Destination (Join-Path $stage 'docs')
     foreach ($image in @('c64screensaver.png','settings-playback.png','settings-monitor.png','glowing-crt.png','retrosaver-companion.png','amiga-jump-and-run.png')) {
         Copy-Item -LiteralPath (Join-Path $root "docs/images/$image") -Destination $images
+    }
+    Copy-Item -LiteralPath (Join-Path $root 'C64Screensaver/Assets/Kickstart/CREDITS.md') -Destination (Join-Path $stage 'docs/KICKSTART-CREDITS.md')
+    $packagedReadme = Join-Path $stage 'README.md'
+    (Get-Content -LiteralPath $packagedReadme -Raw).Replace('C64Screensaver/Assets/Kickstart/CREDITS.md', 'docs/KICKSTART-CREDITS.md') | Set-Content -LiteralPath $packagedReadme -Encoding utf8
+    $macDocs = Join-Path $stage 'macos'
+    New-Item -ItemType Directory -Path $macDocs -Force | Out-Null
+    foreach ($doc in @('README.md','APPLE-DEVELOPER-DE.md','PERFORMANCE.md')) {
+        Copy-Item -LiteralPath (Join-Path $root "macos/$doc") -Destination $macDocs
     }
     $archive = Join-Path $release "Gruetze-RetroSaver-$version-$runtime.zip"
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -CompressionLevel Optimal -Force

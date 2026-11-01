@@ -1,6 +1,6 @@
-# Set up C64Screensaver on Linux and macOS
+# Set up Gruetze RetroSaver on Linux and macOS
 
-C64Screensaver renders the animation and exits fullscreen on input.
+Gruetze RetroSaver renders the animation and exits fullscreen on input.
 It does not monitor desktop inactivity, install a background helper, create
 login autostart entries or replace the operating system's password lock.
 
@@ -93,54 +93,23 @@ Names and placement depend on the Plasma version. Configure the relevant power
 profile. This documents PowerDevil's feature, not a native KDE compatibility
 test of this application's package. Keep the normal screen lock enabled.
 
-## macOS: automatic fullscreen with Keyboard Maestro
+## macOS: native system screensaver
 
-The Mac package currently is a desktop executable. It does not contain a
-native screensaver bundle and cannot simply be selected in macOS Screen Saver
-settings or converted by renaming it.
+Gruetze RetroSaver now has a native `.saver` embedded in its companion app.
+The Mac developer DMG is built separately; public GitHub releases contain only
+Windows and Linux packages. App Store distribution is planned and is not live yet.
 
-[Keyboard Maestro](https://www.keyboardmaestro.com/main/) is a commercial external
-automation app. Its [Idle trigger](https://wiki.keyboardmaestro.com/trigger/Idle)
-explicitly runs a macro after a configurable period without user input.
-Its [Execute a Shell Script action](https://wiki.keyboardmaestro.com/action/Execute_a_Shell_Script)
-can start the extracted executable.
+1. Move **Gruetze RetroSaver.app** from the DMG to Applications and open it.
+2. Choose C64 or Amiga, configure playback and monitor effects, then save.
+3. Click **Install / update system screensaver** and complete Apple's installer.
+4. Select Gruetze RetroSaver in the macOS Screen Saver settings.
+5. Options opens the companion when available, with a native fallback editor.
 
-1. Extract the macOS package to a permanent folder, for example
-   /Users/alex/Applications/C64Screensaver.
-2. In Terminal, make the executable runnable:
-
-       chmod +x "/Users/alex/Applications/C64Screensaver/c64screensaver"
-
-3. Verify manual fullscreen launch:
-
-       "/Users/alex/Applications/C64Screensaver/c64screensaver" --fullscreen
-
-4. In Keyboard Maestro, create an enabled macro in a group available in all
-   applications.
-5. Add an Idle trigger, for example five minutes. Leave the optional
-   every-minute retrigger disabled.
-6. Add Execute a Shell Script and enter the fullscreen command above.
-7. Enable Keyboard Maestro Engine at login in its preferences if desired.
-   Grant only the permissions macOS and the tool request for the selected actions.
-8. Keep the normal macOS password lock. Choose an animation delay earlier than
-   screen blanking/locking. Do not expect a visible saver while already locked
-   or while the display/computer is asleep.
-
-This is an external idle-triggered fullscreen animation, not registration as a
-native macOS screensaver. The setup is based on the documented trigger/action;
-it still needs testing with the specific macOS release and our unsigned package.
-
-### Native macOS Screen Saver settings
-
-For the app to appear directly in those settings, we would need a separately
-implemented and tested native integration. Apple's
-[ScreenSaverView documentation](https://developer.apple.com/documentation/screensaver/screensaverview)
-describes a custom view in a screensaver bundle. The current Avalonia executable
-does not provide that view.
-
-Video-only savers such as SaveHollywood do not launch this application or
-execute its live BASIC programs. They are not a wrapper for this package.
-No generic wrapper has been verified for current macOS versions.
+The system handles inactivity and password locking. The app and screensaver
+share settings, and the screensaver reloads saved changes. After replacing an
+older native build, restart the Mac so the host releases the previous code.
+Developer builds require signing/notarization for normal distribution; see the
+[Mac guide](../macos/README.md) and [Developer ID guide](../macos/APPLE-DEVELOPER-DE.md).
 
 ## If an earlier 1.1 preview enabled automatic start
 

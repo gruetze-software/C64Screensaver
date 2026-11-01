@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.2.3 — 2026-10-30
+## 1.2.3 — 2026-11-01
 
+- Publish as Gruetze RetroSaver with updated C64/Amiga documentation, current settings screenshots and free Windows/Linux packages.
 - Reserve scrollbar gutters in companion/monitor editors; verify field bounds at minimum window size.
 - Give the native options clear General, C64, Amiga and Monitor effects tabs.
 - Render fullscreen native frames off AppKit as well as previews; retire sessions behind outstanding renders without blocking the UI.
