@@ -19,9 +19,9 @@ See [artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
 
 ![Amiga jump-and-run with scrolling text](docs/images/amiga-jump-and-run.png)
 
-## Download 1.2.3
+## Download 1.2.4
 
-[Download Gruetze RetroSaver 1.2.3](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.3)
+[Download Gruetze RetroSaver 1.2.4](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.4)
 
 Free, self-contained ZIP packages are available for **Windows and Linux**, on
 x64 and ARM64. No separate .NET installation is needed. Extract the entire ZIP
@@ -125,7 +125,11 @@ pwsh scripts/release.ps1
 ```
 
 Builds and tests Release, then creates Windows/Linux ZIPs and SHA-256 checksums
-in `artifacts/release/1.2.3`. For one platform use
+in `artifacts/release/1.2.4`. Download packages include a short offline guide and
+credits; screenshots and Mac developer instructions stay in the repository.
+Publish output excludes dependency debug symbols as well as application symbols.
+Use `-OutputDirectory artifacts/package-audit/optimized` for separate trial packages.
+For one platform use
 `pwsh scripts/publish.ps1 -Runtime win-x64`. Public release targets are win-x64,
 win-arm64, linux-x64 and linux-arm64. Publishing locally does not upload a release.
 

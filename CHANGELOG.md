@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.4 — 2026-11-01
+
+- Remove native dependency PDB/DBG files from symbol-free publish output; reject debug symbols in release archives.
+- Replace bundled website screenshots and Mac developer guides with a compact offline package guide, retaining setup instructions and artwork/license credits.
+- Stop embedding the Mac-only ICNS icon in every application DLL; keep it in native Mac bundles.
+- Reduce Windows ZIPs by about one third and Linux ZIPs by about 5%; document measured results in docs/PACKAGE-SIZE.md.
+- Keep self-contained runtimes and all runtime libraries; no trimming or rendering changes.
+
 ## 1.2.3 — 2026-11-01
 
 - Publish as Gruetze RetroSaver with updated C64/Amiga documentation, current settings screenshots and free Windows/Linux packages.

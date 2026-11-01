@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.2.3</Version>
+    <Version>1.2.4</Version>
     <AssemblyName>c64screensaver</AssemblyName>
-    <AssemblyVersion>1.2.3.0</AssemblyVersion>
-    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.4.0</AssemblyVersion>
+    <FileVersion>1.2.4.0</FileVersion>
     <Authors>Grütze-Software</Authors>
     <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**;Assets\Runner\**" />
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**;Assets\Runner\**;Assets\app-icon.icns" />
     <EmbeddedResource Include="Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
   </ItemGroup>
@@ -35,4 +35,13 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
   </ItemGroup>
+  <!-- Native NuGet assets may classify PDBs as runtime files, independently of
+       DebugType. Keep them out when publishing explicitly without symbols. -->
+  <Target Name="ExcludePublishedDebugSymbols" AfterTargets="ComputeFilesToPublish"
+          Condition="'$(DebugSymbols)' == 'false'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                            Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb' or '%(ResolvedFileToPublish.Extension)' == '.dbg'" />
+    </ItemGroup>
+  </Target>
 </Project>
