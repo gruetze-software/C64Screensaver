@@ -28,7 +28,7 @@ Noch kein Upload; der positive Freigabe-/Installationsablauf ist auf dem Neo zu 
 
 ## Noch fehlende technische Nachweise
 
-1. **Sandbox:** macos/Companion.entitlements enthält derzeit allow-jit, aber
+1. **Sandbox:** Der bisherige Developer-ID-Weg macos/Companion.entitlements enthält allow-jit, aber
    nicht com.apple.security.app-sandbox. Der gemeinsame Einstellungsweg ist
    /Users/Shared/GruetzeRetroSaver-<uid>/settings.json. Ein erfolgreicher Test
    ohne Sandbox beweist keinen erlaubten Zugriff mit Sandbox.

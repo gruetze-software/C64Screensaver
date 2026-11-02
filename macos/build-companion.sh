@@ -14,8 +14,8 @@ version="$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$root/C64Screensave
 out="$root/artifacts/macos-companion/$rid"
 app="$out/Gruetze RetroSaver.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-publish_options=()
-if [[ "${RETROSAVER_MAC_APP_STORE:-0}" == 1 ]]; then publish_options+=(-p:MacAppStore=true); fi
+publish_options=(-p:MacAppStore=false)
+if [[ "${RETROSAVER_MAC_APP_STORE:-0}" == 1 ]]; then publish_options=(-p:MacAppStore=true); fi
 dotnet publish "$root/C64Screensaver/C64Screensaver.csproj" -c Release -r "$rid" --self-contained true \
   "${publish_options[@]}" -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "$app/Contents/MacOS"
 cp "$root/macos/Companion-Info.plist" "$app/Contents/Info.plist"

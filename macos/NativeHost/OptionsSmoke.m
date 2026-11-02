@@ -21,19 +21,24 @@ static NSURL *openedCompanion;
 
 static BOOL hasPicture(ScreenSaverView *view) {
     NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
-    while (![view valueForKey:@"image"] && deadline.timeIntervalSinceNow > 0)
+    do {
+        NSImage *image = [view valueForKey:@"image"];
+        CGImageRef cg = image ? [image CGImageForProposedRect:NULL context:nil hints:nil] : NULL;
+        if (cg) {
+            CFDataRef data = CGDataProviderCopyData(CGImageGetDataProvider(cg));
+            const UInt8 *bytes = CFDataGetBytePtr(data);
+            BOOL colored = NO;
+            for (CFIndex i = 0; i + 3 < CFDataGetLength(data); i += 4)
+                if (bytes[i] || bytes[i+1] || bytes[i+2]) { colored = YES; break; }
+            CFRelease(data);
+            if (colored) return YES;
+        }
+        // The CRT power-on transition intentionally starts black. Wait for an
+        // actual colored frame, rather than failing on its first black image.
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.01]];
-    NSImage *image = [view valueForKey:@"image"];
-    if (!image) return NO;
-    CGImageRef cg = [image CGImageForProposedRect:NULL context:nil hints:nil];
-    if (!cg) return NO;
-    CFDataRef data = CGDataProviderCopyData(CGImageGetDataProvider(cg));
-    const UInt8 *bytes = CFDataGetBytePtr(data);
-    BOOL colored = NO;
-    for (CFIndex i = 0; i + 3 < CFDataGetLength(data); i += 4)
-        if (bytes[i] || bytes[i+1] || bytes[i+2]) { colored = YES; break; }
-    CFRelease(data);
-    return colored;
+    } while (deadline.timeIntervalSinceNow > 0);
+    NSLog(@"Preview timed out: image=%@ failed=%@", [view valueForKey:@"image"], [view valueForKey:@"failed"]);
+    return NO;
 }
 
 // Loads the real bundle, creates its options independently of any preview window,
