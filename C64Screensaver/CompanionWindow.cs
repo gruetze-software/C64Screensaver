@@ -115,8 +115,11 @@ public sealed class CompanionWindow : Window
         Field("Website", website, c64Editor);
         Field("Extra text", tagline, c64Editor);
         c64Editor.Children.Add(new TextBlock { Text = "Company card: 28 characters per line; displayed in uppercase.", FontSize = 12, TextWrapping = TextWrapping.Wrap });
-        Field("Kickstart startup", boot, amigaEditor);
-        amigaEditor.Children.Add(activity);
+        if (SaverSettings.SupportsKickstart)
+        {
+            Field("Kickstart startup", boot, amigaEditor);
+            amigaEditor.Children.Add(activity);
+        }
         Field("Amiga animation", demo, amigaEditor);
         Field("Demo runtime · seconds", duration, amigaEditor);
         amigaEditor.Children.Add(showScroller);

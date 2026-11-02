@@ -5,6 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
     <NativeLib>Shared</NativeLib>
+    <DefineConstants>$(DefineConstants);NO_KICKSTART_ARTWORK</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
@@ -12,7 +13,6 @@
     <Compile Include="../../C64Screensaver/BasicPrograms.cs" Link="Shared/BasicPrograms.cs" />
     <Compile Include="../../C64Screensaver/ScreenSession.cs" Link="Shared/ScreenSession.cs" />
     <Compile Include="../../C64Screensaver/PixelCharacters.cs" Link="Shared/PixelCharacters.cs" />
-    <EmbeddedResource Include="../../C64Screensaver/Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
     <Compile Include="../../C64Screensaver/KickstartFrames.cs" Link="Shared/KickstartFrames.cs" />
     <EmbeddedResource Include="../../C64Screensaver/Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
     <Compile Include="../../C64Screensaver/RunnerArtwork.cs" Link="Shared/RunnerArtwork.cs" />

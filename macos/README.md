@@ -1,4 +1,8 @@
-# Gruetze RetroSaver 1.2.5 on macOS
+# Gruetze RetroSaver 1.2.6 development on macOS
+
+Mac builds no longer embed historical Kickstart images or show startup/drive-reflection
+controls. Saved startup selections are ignored safely; animations start directly.
+Windows/Linux packages retain their startup artwork and controls.
 
 DMG creation uses diskutil image create blank/from; mounting and ejecting also
 use diskutil. A temporary APFS image preserves the volume name and payload

@@ -591,8 +591,12 @@ Check(!controls.OfType<StackPanel>().Single(c => c.Name == "C64Editor").IsVisibl
     "System switch replaces the C64 editor with Amiga controls");
 controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").Text = "LONG SCROLLER " + new string('X', 150);
 controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
-controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.All;
-controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
+if (SaverSettings.SupportsKickstart)
+{
+    controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.All;
+    controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
+}
+else Check(!controls.Any(c => c.Name is "AmigaBoot" or "DiskActivity"), "Mac exposes no Kickstart controls");
 controls.OfType<CheckBox>().Single(c => c.Name == "ShowScroller").IsChecked = false;
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 1;
 controls.OfType<ComboBox>().Single(c => c.Name == "RenderQuality").SelectedIndex = 1;
@@ -601,7 +605,7 @@ Dispatcher.UIThread.RunJobs();
 controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 Check(!controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").IsEnabled, "Hidden scrolling text disables its editor");
 var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
-Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.All && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
+Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == (SaverSettings.SupportsKickstart ? AmigaBootStyle.All : AmigaBootStyle.None) && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 3;
 controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 Check(new ConfigManager(companionConfig.ConfigPath).Settings.AmigaAnimation == AmigaDemo.Boing,
@@ -624,7 +628,7 @@ dialogButtons.Single(b => Equals(b.Content, "Reset")).RaiseEvent(new Avalonia.In
 dialogButtons.Single(b => Equals(b.Content, "Save")).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 var afterMonitor = new ConfigManager(companionConfig.ConfigPath).Settings;
 Capture(new SettingsWindow(new ConfigManager(companionConfig.ConfigPath)), "monitor-amiga");
-Check(afterMonitor.AmigaMode && afterMonitor.AmigaBoot == AmigaBootStyle.Purple31 && afterMonitor.AmigaAnimation == AmigaDemo.Plasma
+Check(afterMonitor.AmigaMode && afterMonitor.AmigaBoot == (SaverSettings.SupportsKickstart ? AmigaBootStyle.Purple31 : AmigaBootStyle.None) && afterMonitor.AmigaAnimation == AmigaDemo.Plasma
     && afterMonitor.ScrollerText == "KEEP THIS SCROLLER" && afterMonitor.AmigaDurationSeconds == 75
     && afterMonitor.Programs == ProgramSelection.Stars && afterMonitor.CompanyWebsite == "WWW.EXAMPLE.DE" && afterMonitor.ProgramDurationSeconds == 60,
     "Resetting and saving monitor effects preserves both systems' playback and text settings");

@@ -67,6 +67,9 @@ helper or autostart entry and does not replace the password lock.
 
 ### macOS
 
+The upcoming macOS 1.2.6 removes historical Kickstart startup images and starts
+the selected animation directly. Windows/Linux retain the Kickstart selection.
+
 A native system screensaver and companion app are in development for Apple
 Silicon and Intel. The app contains the `.saver` and offers **Install / update
 system screensaver**. Both interfaces share settings; native rendering uses

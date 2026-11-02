@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.2.5</Version>
+    <Version>1.2.6</Version>
     <AssemblyName>c64screensaver</AssemblyName>
-    <AssemblyVersion>1.2.5.0</AssemblyVersion>
-    <FileVersion>1.2.5.0</FileVersion>
+    <AssemblyVersion>1.2.6.0</AssemblyVersion>
+    <FileVersion>1.2.6.0</FileVersion>
     <Authors>Grütze-Software</Authors>
     <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
@@ -22,10 +22,15 @@
     <PackageId>c64screensaver</PackageId>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IncludeKickstartArtwork>true</IncludeKickstartArtwork>
+    <IncludeKickstartArtwork Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('osx-')) or ('$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX')))">false</IncludeKickstartArtwork>
+    <DefineConstants Condition="'$(IncludeKickstartArtwork)' == 'false'">$(DefineConstants);NO_KICKSTART_ARTWORK</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" Exclude="Assets\Kickstart\**;Assets\Runner\**;Assets\app-icon.icns" />
     <EmbeddedResource Include="Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
+    <EmbeddedResource Condition="'$(IncludeKickstartArtwork)' == 'true'" Include="Assets/Kickstart/*.gif" LogicalName="GruetzeRetroSaver.Kickstart.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

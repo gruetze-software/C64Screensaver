@@ -4,13 +4,24 @@ namespace C64Screensaver;
 
 public class SaverSettings
 {
+    public static bool SupportsKickstart
+    {
+        get
+        {
+#if NO_KICKSTART_ARTWORK
+            return false;
+#else
+            return !OperatingSystem.IsMacOS();
+#endif
+        }
+    }
     private static double Percent(double value, double fallback) => double.IsFinite(value) ? Math.Clamp(value, 0, 100) : fallback;
     public const int MinCount = 0, MaxCount = 100;
     public const double MinSpeed = 0.2, MaxSpeed = 5;
     // Kept readable for older settings files.
     public int CrtStrength { get; set; } = 45;
-    public bool AmigaDiskActivity { get; set; } = true;
-    public AmigaBootStyle AmigaBoot { get; set; } = AmigaBootStyle.Classic13;
+    public bool AmigaDiskActivity { get; set; } = SupportsKickstart;
+    public AmigaBootStyle AmigaBoot { get; set; } = SupportsKickstart ? AmigaBootStyle.Classic13 : AmigaBootStyle.None;
     public AmigaDemo AmigaAnimation { get; set; } = AmigaDemo.Cycle;
     public int AmigaDurationSeconds { get; set; } = 45;
     public int NativeRenderQuality { get; set; }
@@ -47,6 +58,7 @@ public class SaverSettings
     public void Validate()
     {
         if (!Enum.IsDefined(AmigaBoot)) AmigaBoot = AmigaBootStyle.Classic13;
+        if (!SupportsKickstart) { AmigaBoot = AmigaBootStyle.None; AmigaDiskActivity = false; }
         if (!Enum.IsDefined(AmigaAnimation)) AmigaAnimation = AmigaDemo.Cycle;
         AmigaDurationSeconds = Math.Clamp(AmigaDurationSeconds, 15, 1800);
         NativeRenderQuality = Math.Clamp(NativeRenderQuality, 0, 2);

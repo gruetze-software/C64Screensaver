@@ -3,6 +3,11 @@ on:
   push:
     branches: [main, codex/macos-native-screensaver, codex/macos-integrated-package, codex/macos-diskutil, codex/scrollbar-spacing]
   workflow_dispatch:
+    inputs:
+      screenshots_only:
+        description: Capture product views without rebuilding distribution packages
+        type: boolean
+        default: false
 concurrency:
   group: macos-build-${{ github.ref }}
   cancel-in-progress: true
@@ -10,6 +15,7 @@ permissions:
   contents: read
 jobs:
   native-saver:
+    if: ${{ inputs.screenshots_only != true }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,6 +44,16 @@ jobs:
         run: dotnet run --project tests/MacUi -c Release
       - name: Test shared companion and screensaver settings
         run: bash macos/test-shared-settings.sh
+      - name: Capture Mac product screenshots with isolated settings
+        if: matrix.arch == 'arm64'
+        run: dotnet run --project tests/StoreScreenshots -c Release
+      - uses: actions/upload-artifact@v4
+        if: matrix.arch == 'arm64'
+        with:
+          name: Gruetze-RetroSaver-Mac-Store-Screenshots
+          path: |
+            artifacts/store-screenshots/*.png
+            artifacts/store-screenshots/README.txt
       - uses: actions/upload-artifact@v4
         with:
           name: Gruetze-RetroSaver-macOS-${{ matrix.arch }}
@@ -45,3 +61,20 @@ jobs:
             artifacts/macos-companion/osx-*/Gruetze-RetroSaver-*.dmg
             artifacts/macos-native/**/screenshots/*.png
             artifacts/amiga-review/*.png
+
+  product-screenshots:
+    if: ${{ inputs.screenshots_only == true }}
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Capture actual Mac app views with isolated settings
+        run: dotnet run --project tests/StoreScreenshots -c Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gruetze-RetroSaver-Mac-Store-Screenshots
+          path: |
+            artifacts/store-screenshots/*.png
+            artifacts/store-screenshots/README.txt
