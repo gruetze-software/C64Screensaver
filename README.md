@@ -4,14 +4,13 @@ C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable
 
 ![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
-## Next version: 1.2.5
+## New in 1.2.5
 
-Development adds compact dialogs that fit the display's working area, a smaller
+Version 1.2.5 adds compact dialogs that fit the display's working area, a smaller
 preview, an explicit Close button, All Kickstarts rotation and a classic-style
-Boing ball. All animations cycles Jump & run, Plasma and Boing. These changes are
-not included in the stable 1.2.4 downloads below.
+Boing ball. All animations cycles Jump & run, Plasma and Boing. 
 
-![Classic-style Boing ball (development)](docs/images/amiga-boing.png)
+![Classic-style Boing ball](docs/images/amiga-boing.png)
 
 ## Two retro worlds
 
@@ -21,16 +20,17 @@ editable company card or a twinkling starfield. Cycle through all three or repea
 one, with configurable runtime and optional border colour changes.
 
 **Amiga:** choose a Kickstart 1.3, 2.0 or 3.1 startup image, then enjoy an autoplay
-Jump & run with layered woodland parallax or colourful Plasma. Alternate both
-or repeat your favourite. Edit, adjust or hide the sine-wave scrolling text;
+Jump & run with layered woodland parallax, colourful Plasma or a classic-style
+Boing ball. Cycle all three or repeat your favourite. All Kickstarts rotates
+the original startup prompts between runs. Edit, adjust or hide the sine-wave scrolling text;
 add a subtle disk-activity reflection during startup. No Kickstart ROM is loaded.
 See [artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
 
 ![Amiga jump-and-run with scrolling text](docs/images/amiga-jump-and-run.png)
 
-## Download 1.2.4
+## Download 1.2.5
 
-[Download Gruetze RetroSaver 1.2.4](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.4)
+[Download Gruetze RetroSaver 1.2.5](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5)
 
 Free, self-contained ZIP packages are available for **Windows and Linux**, on
 x64 and ARM64. No separate .NET installation is needed. Extract the entire ZIP
@@ -134,7 +134,7 @@ pwsh scripts/release.ps1
 ```
 
 Builds and tests Release, then creates Windows/Linux ZIPs and SHA-256 checksums
-in `artifacts/release/1.2.4`. Download packages include a short offline guide and
+in `artifacts/release/1.2.5`. Download packages include a short offline guide and
 credits; screenshots and Mac developer instructions stay in the repository.
 Publish output excludes dependency debug symbols as well as application symbols.
 Use `-OutputDirectory artifacts/package-audit/optimized` for separate trial packages.
