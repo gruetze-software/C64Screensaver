@@ -38,6 +38,9 @@ jobs:
         run: dotnet run --project tests/NativePerformance -c Release
       - name: Build native screensaver
         run: bash macos/build-native.sh ${{ matrix.arch }}
+      - name: Test App Store sandbox startup and denied external access
+        timeout-minutes: 5
+        run: bash macos/test-store-sandbox.sh ${{ matrix.arch }}
       - name: Build companion application
         run: bash macos/build-companion.sh ${{ matrix.arch }}
       - name: Test actual macOS fullscreen

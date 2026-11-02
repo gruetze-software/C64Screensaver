@@ -9,6 +9,7 @@ public class ConfigManager
     public SaverSettings Settings { get; set; } = new();
     public string ConfigPath { get; }
     public string? LastError { get; private set; }
+    private bool NeedsStoreAccess => StoreSettingsAccess.Required && ConfigPath == DefaultConfigPath;
 
     [DllImport("libSystem.B.dylib", EntryPoint = "getuid")]
     private static extern uint GetUserId();
@@ -25,7 +26,7 @@ public class ConfigManager
         LoadSettings();
         // Migrate the old desktop JSON only when no common settings exist.
         if (configPath == null && OperatingSystem.IsMacOS() && !File.Exists(ConfigPath)
-            && File.Exists(LegacyConfigPath))
+            && !NeedsStoreAccess && File.Exists(LegacyConfigPath))
         {
             try
             {
@@ -41,6 +42,7 @@ public class ConfigManager
     public void LoadSettings()
     {
         LastError = null;
+        if (NeedsStoreAccess && !StoreSettingsAccess.Granted) return;
         try
         {
             if (File.Exists(ConfigPath))
@@ -58,6 +60,8 @@ public class ConfigManager
     public bool SaveSettings()
     {
         LastError = null;
+        if (NeedsStoreAccess && !StoreSettingsAccess.Granted)
+        { LastError = "Choose the shared settings folder first."; return false; }
         string? temporaryPath = null;
         try
         {

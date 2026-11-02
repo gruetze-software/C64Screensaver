@@ -18,6 +18,14 @@ und Länderpreise sind in App Store Connect zu bestätigen.
 Das ist ein getesteter Developer-ID-Vertriebsstand. Es wurde noch kein Mac-App-
 Store-Build hochgeladen oder von Apple freigegeben.
 
+## Getrennter Store-Build in Vorbereitung
+
+`build-store.sh` und `Store.entitlements` bilden jetzt einen getrennten
+Sandbox-Test-/Store-Paketweg. Die Store-App fordert eine explizite Ordnerwahl an
+und stellt deren Security-Scoped Bookmark beim nächsten Start wieder her.
+Anleitung und noch erforderliche Mac-Tests: [STORE-BUILD-DE.md](STORE-BUILD-DE.md).
+Noch kein Upload; der positive Freigabe-/Installationsablauf ist auf dem Neo zu testen.
+
 ## Noch fehlende technische Nachweise
 
 1. **Sandbox:** macos/Companion.entitlements enthält derzeit allow-jit, aber
@@ -28,8 +36,9 @@ Store-Build hochgeladen oder von Apple freigegeben.
    C64Screensaver.saver mit /usr/bin/open an den macOS-Installer. Ob dieser
    Ablauf für dieses Store-Produkt akzeptiert wird, ist noch offen. Keine
    Ausnahme allein aus der Nutzerbestätigung ableiten.
-3. **Store-Paket:** eigenes Store-Profil, passende App-/Installer-Signierung,
-   Sandbox-Build und Xcode-kompatibler validierter Upload fehlen. Das bestehende
+3. **Store-Paket:** Store-Profil und passende Zertifikate sind auf dem Nutzer-Mac
+   einzusetzen. Der neue Sandbox-/Paketweg benötigt die dortige Validierung; ein
+   erfolgreicher Store-Upload fehlt weiterhin. Das bestehende
    sign-notarize.sh ist ausdrücklich Developer ID, kein Store-Upload.
 
 Apple 2.4.5 verlangt Sandbox und ein eigenständiges App-Paket und beschränkt die
