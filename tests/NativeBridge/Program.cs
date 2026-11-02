@@ -102,19 +102,22 @@ unsafe
     delegate* unmanaged[Cdecl]<byte*, int, int, ulong> create = &Exports.Create;
     delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> render = &Exports.Render;
     delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
-    byte[] json = System.Text.Encoding.UTF8.GetBytes("""{"AmigaMode":true,"AmigaBoot":0,"AmigaAnimation":5,"CrtEnabled":false}""");
-    ulong id;
-    fixed (byte* p = json) id = create(p, json.Length, 42);
-    if (id == 0) throw new Exception("Native jump-and-run session failed");
-    byte[] first = new byte[384 * 288 * 4], next = new byte[first.Length];
-    fixed (byte* a = first)
-    fixed (byte* b = next)
+    foreach (int demo in new[] { 5, 6 })
     {
-        if (render(id, a, first.Length, 384, 288, 384 * 4, 0) != 1 ||
-            render(id, b, next.Length, 384, 288, 384 * 4, .25) != 1)
-            throw new Exception("Native jump-and-run frame failed");
+        byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { AmigaMode = true, AmigaBoot = 0, AmigaAnimation = demo, CrtEnabled = false });
+        ulong id;
+        fixed (byte* p = json) id = create(p, json.Length, 42);
+        if (id == 0) throw new Exception("Native jump-and-run session failed");
+        byte[] first = new byte[384 * 288 * 4], next = new byte[first.Length];
+        fixed (byte* a = first)
+        fixed (byte* b = next)
+        {
+            if (render(id, a, first.Length, 384, 288, 384 * 4, 0) != 1 ||
+                render(id, b, next.Length, 384, 288, 384 * 4, .25) != 1)
+                throw new Exception("Native jump-and-run frame failed");
+        }
+        if (System.Linq.Enumerable.SequenceEqual(first, next)) throw new Exception("Native game did not scroll");
+        destroy(id);
+        Console.WriteLine($"Native Amiga demo {demo}: selection and animated frames passed.");
     }
-    if (System.Linq.Enumerable.SequenceEqual(first, next)) throw new Exception("Native game did not scroll");
-    destroy(id);
-    Console.WriteLine("Native jump-and-run: selection and scrolling frames passed.");
 }

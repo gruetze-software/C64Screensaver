@@ -8,10 +8,10 @@ using System.Linq;
 namespace C64Screensaver;
 public sealed class CompanionWindow : Window
 {
-    private static readonly AmigaDemo[] DemoChoices = [AmigaDemo.Cycle, AmigaDemo.Runner, AmigaDemo.Plasma];
+    private static readonly AmigaDemo[] DemoChoices = [AmigaDemo.Cycle, AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing];
     private readonly ConfigManager config;
     private readonly Button monitorSettingsButton;
-    private readonly C64Scene scene = new() { MinHeight = 280 };
+    private readonly C64Scene scene = new() { MinHeight = 160 };
     private bool running;
     private readonly Stopwatch clock = new();
     private double previous;
@@ -25,16 +25,16 @@ public sealed class CompanionWindow : Window
         Classes.Add("dialog");
         using (var iconStream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://C64Screensaver/Assets/app-icon.ico")))
             Icon = new WindowIcon(iconStream);
-        Width = 1160; Height = 860; MinWidth = 880; MinHeight = 620;
+        Width = 960; Height = 640; MinWidth = 760; MinHeight = 480;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var system = new ComboBox { ItemsSource = new[] { "Commodore 64", "Amiga" }, SelectedIndex = config.Settings.AmigaMode ? 1 : 0 };
         var text = new TextBox { Text = config.Settings.ScrollerText, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MaxLength = 4096, MinHeight = 60 };
         var showScroller = new CheckBox { Name = "ShowScroller", Content = "Show scrolling text", IsChecked = config.Settings.ShowAmigaScroller, FontSize = 13 };
         var speed = new Slider { Height = 32, Minimum = 8, Maximum = 160, Value = config.Settings.ScrollerSpeed };
         var wave = new Slider { Height = 32, Minimum = 0, Maximum = 48, Value = config.Settings.ScrollerWave };
-        var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1" }, SelectedIndex = (int)config.Settings.AmigaBoot };
+        var boot = new ComboBox { Name = "AmigaBoot", ItemsSource = new[] { "Skip startup", "Kickstart 1.3", "Kickstart 2.0", "Kickstart 3.1", "All Kickstarts · alternate" }, SelectedIndex = (int)config.Settings.AmigaBoot };
         var activity = new CheckBox { Name = "DiskActivity", Content = "Disk activity reflection", IsChecked = config.Settings.AmigaDiskActivity, FontSize = 13 };
-        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "Alternate Jump & run / Plasma", "Jump & run", "Plasma" }, SelectedIndex = Math.Max(0, Array.IndexOf(DemoChoices, config.Settings.AmigaAnimation)) };
+        var demo = new ComboBox { Name = "AmigaDemo", ItemsSource = new[] { "All animations", "Jump & run", "Plasma", "Boing ball · classic Amiga" }, SelectedIndex = Math.Max(0, Array.IndexOf(DemoChoices, config.Settings.AmigaAnimation)) };
         var duration = new NumericUpDown { Name = "AmigaDuration", Minimum = 15, Maximum = 1800, Value = config.Settings.AmigaDurationSeconds, Increment = 5 };
         var quality = new ComboBox { Name = "RenderQuality", ItemsSource = new[] { "Efficient", "Balanced", "Detailed" }, SelectedIndex = config.Settings.NativeRenderQuality };
         var program = new ComboBox { Name = "ProgramCombo", ItemsSource = new[] { "All BASIC programs", "Endless maze", "Company card", "Twinkling starfield" }, SelectedIndex = (int)config.Settings.Programs };
@@ -50,8 +50,10 @@ public sealed class CompanionWindow : Window
         about.Click += async (_, _) => await new AboutWindow().ShowDialog(this);
         var settings = monitorSettingsButton = new Button { Name = "MonitorSettings", Content = "Monitor effects" };
         var run = new Button { Content = "Start fullscreen preview" };
+        var close = new Button { Name = "CloseCompanion", Content = "Close" };
+        close.Click += (_, _) => Close();
         var actions = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var button in new[] { settings, run, save, about }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
+        foreach (var button in new[] { settings, run, save, about, close }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
         if (OperatingSystem.IsMacOS())
         {
             var install = new Button { Name = "InstallMacScreensaver", Content = "Install / update system screensaver" };
@@ -73,14 +75,14 @@ public sealed class CompanionWindow : Window
             };
             actions.Children.Insert(0, install);
         }
-        var body = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(28) };
-        var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("70,*,70") };
-        var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 60, Height = 60 };
-        var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 30, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
-        var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 60, Height = 60 };
+        var body = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(20) };
+        var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("54,*,54") };
+        var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 44, Height = 44 };
+        var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 26, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
+        var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 44, Height = 44 };
         var companyInfo = new Button
         {
-            Name = "CompanyInfo", Content = companyLogo, Width = 70, Height = 70,
+            Name = "CompanyInfo", Content = companyLogo, Width = 54, Height = 54,
             Padding = new Thickness(0), Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
@@ -124,7 +126,7 @@ public sealed class CompanionWindow : Window
         editor.Children.Add(c64Editor);
         editor.Children.Add(amigaEditor);
         Field("Software rendering quality", quality);
-        var center = new Grid { ColumnDefinitions = new ColumnDefinitions("*,330"), Margin = new Thickness(0, 18, 0, 18) };
+        var center = new Grid { ColumnDefinitions = new ColumnDefinitions("*,330"), Margin = new Thickness(0, 12, 0, 12) };
         center.Children.Add(new Border { Background = Brushes.Black, Child = scene, Margin = new Thickness(0, 0, 20, 0) });
         editor.Margin = new Thickness(0, 0, 10, 0);
         var editorScroll = new ScrollViewer { Name = "EditorScroll", Content = editor };
@@ -249,6 +251,7 @@ public sealed class CompanionWindow : Window
         };
         Restart();
         Opened += (_, _) => {
+            DialogSizing.FitToWorkingArea(this);
             if (OperatingSystem.IsMacOS() && !System.IO.File.Exists(config.ConfigPath))
                 status.Text = config.SaveSettings() ? "Shared screensaver settings are ready." : "Could not prepare shared settings: " + config.LastError;
             running = true; clock.Start(); RequestAnimationFrame(Animate); };

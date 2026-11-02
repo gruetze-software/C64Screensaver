@@ -511,7 +511,7 @@ void CompanionUi()
 foreach (bool amiga in new[] { false, true })
 {
     var small = new CompanionWindow(new ConfigManager(Path.Combine(Path.GetTempPath(), "retrosaver-layout-" + Guid.NewGuid() + ".json"))
-        { Settings = new SaverSettings { AmigaMode = amiga } }) { Width = 880, Height = 620 };
+        { Settings = new SaverSettings { AmigaMode = amiga } }) { Width = 800, Height = 480 };
     small.Show();
     Dispatcher.UIThread.RunJobs();
     var descendants = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(small).OfType<Control>().ToArray();
@@ -527,8 +527,23 @@ foreach (bool amiga in new[] { false, true })
         Check(origin.X + field.Bounds.Width <= barLeft - 5,
             "Scrollbar has a separate gutter beyond the editor field: " + field.Name);
     }
+    var closeButton = descendants.OfType<Button>().Single(c => c.Name == "CloseCompanion");
+    var closeOrigin = closeButton.TranslatePoint(default, small)!.Value;
+    Check(closeOrigin.Y >= 0 && closeOrigin.Y + closeButton.Bounds.Height <= small.ClientSize.Height,
+        "Close remains reachable at 800x480 for both systems");
     Capture(small, amiga ? "companion-small-amiga" : "companion-small-c64");
 }
+var compactMonitor = new SettingsWindow(new ConfigManager(configPath)) { Width = 800, Height = 480 };
+compactMonitor.Show();
+Dispatcher.UIThread.RunJobs();
+foreach (var button in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(compactMonitor).OfType<Button>()
+    .Where(b => Equals(b.Content, "Save") || Equals(b.Content, "Cancel")))
+{
+    var origin = button.TranslatePoint(default, compactMonitor)!.Value;
+    Check(origin.Y >= 0 && origin.Y + button.Bounds.Height <= compactMonitor.ClientSize.Height,
+        "Monitor actions remain reachable at 800x480: " + button.Content);
+}
+Capture(compactMonitor, "monitor-compact");
 var fullscreenCheck = new MainWindow(false, IntPtr.Zero, settings: new SaverSettings());
 fullscreenCheck.Show();
 Dispatcher.UIThread.RunJobs();
@@ -557,7 +572,7 @@ Check(!controls.OfType<StackPanel>().Single(c => c.Name == "C64Editor").IsVisibl
     "System switch replaces the C64 editor with Amiga controls");
 controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").Text = "LONG SCROLLER " + new string('X', 150);
 controls.OfType<Slider>().Single(c => c.Name == "ScrollerSpeed").Value = 80;
-controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.Purple31;
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaBoot").SelectedIndex = (int)AmigaBootStyle.All;
 controls.OfType<CheckBox>().Single(c => c.Name == "DiskActivity").IsChecked = false;
 controls.OfType<CheckBox>().Single(c => c.Name == "ShowScroller").IsChecked = false;
 controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 1;
@@ -567,7 +582,11 @@ Dispatcher.UIThread.RunJobs();
 controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 Check(!controls.OfType<TextBox>().Single(c => c.Name == "ScrollerText").IsEnabled, "Hidden scrolling text disables its editor");
 var reloadedCompanion = new ConfigManager(companionConfig.ConfigPath).Settings;
-Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.Purple31 && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
+Check(reloadedCompanion.AmigaMode && !reloadedCompanion.ShowAmigaScroller && reloadedCompanion.ScrollerText.Length > 150 && reloadedCompanion.ScrollerSpeed == 80 && reloadedCompanion.AmigaBoot == AmigaBootStyle.All && !reloadedCompanion.AmigaDiskActivity && reloadedCompanion.AmigaAnimation == AmigaDemo.Runner && reloadedCompanion.AmigaDurationSeconds == 20 && reloadedCompanion.NativeRenderQuality == 1, "Companion controls persist Amiga selection and long text");
+controls.OfType<ComboBox>().Single(c => c.Name == "AmigaDemo").SelectedIndex = 3;
+controls.OfType<Button>().Single(c => c.Name == "SaveSettings").RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+Check(new ConfigManager(companionConfig.ConfigPath).Settings.AmigaAnimation == AmigaDemo.Boing,
+    "Boing selection persists from the companion");
 companion.Close();
 Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings { AmigaMode = true } }), "retrosaver-companion");
 Capture(new CompanionWindow(new ConfigManager(companionConfig.ConfigPath) { Settings = new SaverSettings() }), "settings-playback");

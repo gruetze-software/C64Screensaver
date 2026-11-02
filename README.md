@@ -4,6 +4,15 @@ C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable
 
 ![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
+## Next version: 1.2.5
+
+Development adds compact dialogs that fit the display's working area, a smaller
+preview, an explicit Close button, All Kickstarts rotation and a classic-style
+Boing ball. All animations cycles Jump & run, Plasma and Boing. These changes are
+not included in the stable 1.2.4 downloads below.
+
+![Classic-style Boing ball (development)](docs/images/amiga-boing.png)
+
 ## Two retro worlds
 
 **Commodore 64:** watch an invisible typist enter BASIC line by line, make mistakes,

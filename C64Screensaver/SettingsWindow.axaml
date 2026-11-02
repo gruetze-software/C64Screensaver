@@ -3,8 +3,8 @@
  xmlns:ui="using:C64Screensaver.Controls" xmlns:local="using:C64Screensaver"
  x:Class="C64Screensaver.SettingsWindow" Classes="dialog"
  Title="Gruetze RetroSaver · Settings" Icon="/Assets/app-icon.ico"
- Width="1080" Height="740" MinWidth="980" MinHeight="640" WindowStartupLocation="CenterScreen">
- <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+ Width="960" Height="640" MinWidth="800" MinHeight="480" WindowStartupLocation="CenterScreen">
+ <Grid RowDefinitions="Auto,*,Auto" Margin="20">
   <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,18">
    <StackPanel Spacing="5">
     <TextBlock Text="Monitor effects" FontSize="25" FontWeight="SemiBold"/>
@@ -12,7 +12,7 @@
    </StackPanel>
    <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="None"/>
   </Grid>
-  <Grid Grid.Row="1" ColumnDefinitions="*,420" ColumnSpacing="18">
+  <Grid Grid.Row="1" ColumnDefinitions="*,350" ColumnSpacing="18">
      <ScrollViewer Classes="settingsScroll" HorizontalScrollBarVisibility="Disabled" Margin="0">
       <StackPanel Margin="0,0,8,12">
        <Border Classes="card">
@@ -80,7 +80,7 @@
        </Button>
       </Grid>
       <Border Background="Black" CornerRadius="6" ClipToBounds="True">
-       <local:C64Scene Name="PreviewScene" Height="200" PreviewDetails="True"/>
+       <local:C64Scene Name="PreviewScene" Height="140" PreviewDetails="True"/>
       </Border>
       <TextBlock Name="PreviewHint" Classes="hint"/>
       <TextBlock Text="Monitor preset" Classes="hint"/>
