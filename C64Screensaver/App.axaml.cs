@@ -30,7 +30,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var options = Program.Options;
-            desktop.Exit += (_, _) => SpriteAssets.Release();
+            desktop.Exit += (_, _) => { StoreSettingsAccess.Release(); SpriteAssets.Release(); };
             if (options.Mode == LaunchMode.Companion) desktop.MainWindow = new CompanionWindow();
             else if (options.Mode == LaunchMode.Settings) desktop.MainWindow = new CompanionWindow();
             else if (options.Mode == LaunchMode.About) desktop.MainWindow = new AboutWindow();

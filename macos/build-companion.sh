@@ -11,11 +11,13 @@ case "$arch" in
 esac
 [[ "$(uname -s)" == Darwin ]] || { echo "Build on macOS." >&2; exit 1; }
 version="$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$root/C64Screensaver/C64Screensaver.csproj" | head -1)"
-out="$root/artifacts/macos-companion/$rid"
+out="${RETROSAVER_COMPANION_OUTPUT:-$root/artifacts/macos-companion/$rid}"
 app="$out/Gruetze RetroSaver.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+publish_options=(-p:MacAppStore=false)
+if [[ "${RETROSAVER_MAC_APP_STORE:-0}" == 1 ]]; then publish_options=(-p:MacAppStore=true); fi
 dotnet publish "$root/C64Screensaver/C64Screensaver.csproj" -c Release -r "$rid" --self-contained true \
-  -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "$app/Contents/MacOS"
+  "${publish_options[@]}" -p:PublishSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o "$app/Contents/MacOS"
 cp "$root/macos/Companion-Info.plist" "$app/Contents/Info.plist"
 plutil -replace CFBundleShortVersionString -string "$version" "$app/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$version" "$app/Contents/Info.plist"
@@ -29,6 +31,7 @@ done < <(find "$app/Contents/MacOS" -type f -print0)
 codesign --force --sign - "$app"
 codesign --verify --deep --strict "$app"
 "$app/Contents/MacOS/c64screensaver" --help
+if [[ "${2:-}" == --app-only ]]; then echo "Application: $app"; exit 0; fi
 payload="$(mktemp -d "$out/dmg-payload.XXXXXX")"
 ditto "$app" "$payload/Gruetze RetroSaver.app"
 ln -s /Applications "$payload/Applications"

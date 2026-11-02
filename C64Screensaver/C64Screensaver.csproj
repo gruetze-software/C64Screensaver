@@ -23,6 +23,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <DefineConstants Condition="'$(MacAppStore)' == 'true'">$(DefineConstants);MAC_APP_STORE</DefineConstants>
     <IncludeKickstartArtwork>true</IncludeKickstartArtwork>
     <IncludeKickstartArtwork Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('osx-')) or ('$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX')))">false</IncludeKickstartArtwork>
     <DefineConstants Condition="'$(IncludeKickstartArtwork)' == 'false'">$(DefineConstants);NO_KICKSTART_ARTWORK</DefineConstants>

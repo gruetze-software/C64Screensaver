@@ -65,6 +65,8 @@ public sealed class CompanionWindow : Window
                 // The system installer handles installation and update confirmation.
                 string saver = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory,
                     "..", "Resources", "C64Screensaver.saver"));
+                if (!System.IO.Directory.Exists(saver)) saver = System.IO.Path.GetFullPath(System.IO.Path.Combine(
+                    AppContext.BaseDirectory, "..", "PlugIns", "C64Screensaver.saver"));
                 if (!System.IO.Directory.Exists(saver)) { status.Text = "Use the complete Mac app from the DMG to install the screensaver."; return; }
                 try
                 {
@@ -228,11 +230,11 @@ public sealed class CompanionWindow : Window
         // Reload another process's saves when returning to the companion. Clone first,
         // because setting controls fires handlers that update the live settings object.
         DateTime savedStamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
-        Activated += (_, _) =>
+        void ReloadEditor()
         {
             if (!OperatingSystem.IsMacOS() || OwnedWindows.Any(w => w.IsVisible)) return;
             DateTime stamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
-            if (stamp == savedStamp || !System.IO.File.Exists(config.ConfigPath)) return;
+            if (!System.IO.File.Exists(config.ConfigPath)) return;
             savedStamp = stamp;
             config.LoadSettings();
             if (config.LastError != null) { status.Text = "Could not reload: " + config.LastError; return; }
@@ -251,13 +253,37 @@ public sealed class CompanionWindow : Window
             text.Text = loaded.ScrollerText; speed.Value = loaded.ScrollerSpeed; wave.Value = loaded.ScrollerWave;
             config.Settings = loaded;
             Restart();
+        }
+        if (StoreSettingsAccess.Required)
+        {
+            var grant = new Button { Name = "GrantSettingsFolder", Content = "Connect settings folder", Margin = new Thickness(0, 0, 12, 8) };
+            ToolTip.SetTip(grant, "Select Macintosh HD → Users → Shared to share settings with the system screensaver.");
+            grant.Click += async (_, _) => {
+                try {
+                    if (!await StoreSettingsAccess.ChooseAsync(this)) return;
+                    if (System.IO.File.Exists(config.ConfigPath)) ReloadEditor();
+                    else { ReadEditor(); config.SaveSettings(); }
+                    status.Text = config.LastError == null ? "Shared settings connected." : config.LastError;
+                } catch (Exception ex) { status.Text = "Could not connect settings: " + ex.Message; }
+            };
+            actions.Children.Add(grant);
+        }
+        Activated += (_, _) => {
+            if (!StoreSettingsAccess.Granted) return;
+            if (System.IO.File.GetLastWriteTimeUtc(config.ConfigPath) != savedStamp) ReloadEditor();
         };
         Restart();
-        Opened += (_, _) => {
+        Opened += async (_, _) => {
             DialogSizing.FitToWorkingArea(this);
-            if (OperatingSystem.IsMacOS() && !System.IO.File.Exists(config.ConfigPath))
+            if (StoreSettingsAccess.Required) {
+                try {
+                    if (await StoreSettingsAccess.RestoreAsync(this)) ReloadEditor();
+                    else status.Text = "Connect settings folder: select Macintosh HD → Users → Shared. Only this user's RetroSaver settings are written there.";
+                } catch (Exception ex) { status.Text = "Reconnect the settings folder: " + ex.Message; }
+            }
+            if (OperatingSystem.IsMacOS() && StoreSettingsAccess.Granted && !System.IO.File.Exists(config.ConfigPath))
                 status.Text = config.SaveSettings() ? "Shared screensaver settings are ready." : "Could not prepare shared settings: " + config.LastError;
-            running = true; clock.Start(); RequestAnimationFrame(Animate); };
+            if (IsVisible) { running = true; clock.Start(); RequestAnimationFrame(Animate); } };
         Closed += (_, _) => { running = false; clock.Stop(); scene.Clear(); foreach (var preview in previews.ToArray()) preview.Close(); };
     }
     public void OpenMonitorSettings()
