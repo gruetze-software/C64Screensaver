@@ -112,7 +112,9 @@ void Save(Control view, string name)
     using var bytes = new MemoryStream(); capture.Save(bytes, PngBitmapEncoderOptions.Default);
     using var bitmap = SKBitmap.Decode(bytes.ToArray()) ?? throw new Exception("Empty capture: " + name);
     using var surface = SKSurface.Create(new SKImageInfo(Width, Height, SKColorType.Rgb888x, SKAlphaType.Opaque));
-    surface.Canvas.Clear(SKColors.Black); surface.Canvas.DrawBitmap(bitmap, 0, 0);
+    var background = TopLevel.GetTopLevel(view) is Window owner && owner.Background is ISolidColorBrush brush
+        ? new SKColor(brush.Color.R, brush.Color.G, brush.Color.B, brush.Color.A) : SKColors.Black;
+    surface.Canvas.Clear(background); surface.Canvas.DrawBitmap(bitmap, 0, 0);
     using var image = surface.Snapshot(); using var png = image.Encode(SKEncodedImageFormat.Png, 100);
     string path = Path.Combine(output, name + ".png");
     using var file = File.Create(path); png.SaveTo(file);
