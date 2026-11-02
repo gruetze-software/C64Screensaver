@@ -76,7 +76,8 @@ unsafe
     delegate* unmanaged[Cdecl]<byte*, int, int, ulong> create = &Exports.Create;
     delegate* unmanaged[Cdecl]<ulong, byte*, int, int, int, int, double, int> render = &Exports.Render;
     delegate* unmanaged[Cdecl]<ulong, void> destroy = &Exports.Destroy;
-    foreach (int boot in new[] { 1, 2, 3 })
+    if (System.Linq.Enumerable.Any(typeof(Exports).Assembly.GetManifestResourceNames(), n => n.Contains(".Kickstart."))) throw new Exception("Mac core embeds Kickstart artwork");
+    foreach (int boot in new[] { 1, 2, 3, 4 })
     {
         byte[] json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { AmigaMode = true, AmigaBoot = boot, AmigaDiskActivity = false, CrtEnabled = false, PowerTransition = false });
         ulong id;
@@ -91,10 +92,10 @@ unsafe
                 if (render(id, b, after.Length, 384, 288, 384 * 4, .25) != 1) throw new Exception("Original Kickstart frame failed");
         }
         bool equal = System.Linq.Enumerable.SequenceEqual(before, after);
-        if ((boot == 1) != equal) throw new Exception("Original static/animated native playback mismatch");
+        if (equal) throw new Exception("Legacy Kickstart choice did not start an animated Mac demo");
         destroy(id);
     }
-    Console.WriteLine("Native Kickstart: all three embedded captures and original static/animated playback passed.");
+    Console.WriteLine("Native Mac: no Kickstart resources; all legacy startup selections migrate to animated demos.");
 }
 
 unsafe

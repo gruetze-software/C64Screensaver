@@ -19,6 +19,8 @@ int Difference(SKImage a, SKImage b)
     using var right = SKBitmap.FromImage(b);
     return left.Pixels.Zip(right.Pixels).Count(p => p.First != p.Second);
 }
+if (SaverSettings.SupportsKickstart)
+{
 foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, AmigaBootStyle.Purple31 })
 {
     settings.AmigaBoot = boot;
@@ -31,6 +33,18 @@ foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, 
     Save(first, "boot-" + boot);
     using var demo = renderer.CaptureFrame(settings, AmigaFrameBuffer.BootDuration(settings) + 1);
     Check(Difference(first, demo) > 10000, "Startup proceeds to demo: " + boot);
+}
+}
+else
+{
+    Check(!typeof(SaverSettings).Assembly.GetManifestResourceNames().Any(n => n.Contains(".Kickstart.")), "Mac companion embeds no Kickstart images");
+    foreach (var boot in Enum.GetValues<AmigaBootStyle>())
+    {
+        var legacy = new SaverSettings { AmigaBoot = boot, AmigaDiskActivity = true, AmigaMode = true };
+        Check(AmigaFrameBuffer.BootDuration(legacy) == 0 && AmigaFrameBuffer.StartupTime(legacy, .1) == null, "Mac never loads a legacy Kickstart");
+        legacy.Validate();
+        Check(legacy.AmigaBoot == AmigaBootStyle.None && !legacy.AmigaDiskActivity, "Mac migrates saved startup choices to direct playback");
+    }
 }
 settings.AmigaBoot = AmigaBootStyle.None;
 foreach (var effect in new[] { AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing })
@@ -58,16 +72,18 @@ settings.AmigaAnimation = AmigaDemo.Cycle;
 settings.AmigaBoot = AmigaBootStyle.Classic13;
 settings.PowerTransition = true;
 settings.AmigaDurationSeconds = 15;
+double bootSeconds = AmigaFrameBuffer.BootDuration(settings);
+double playbackCycle = bootSeconds + 15 + 1.42;
 for (int i = 0; i < 10; i++)
-    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (new[] { AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing }[i % 3]), "Playlist cycles all effects");
-Check(AmigaFrameBuffer.PowerTime(settings, 20.5) is > .49 and < .51, "CRT transition occurs after runtime");
-Check(AmigaFrameBuffer.PowerTime(settings, 21.43) == null, "CRT transition finishes on next boot");
+    Check(AmigaFrameBuffer.CurrentDemo(settings, i * playbackCycle + .001) == (new[] { AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing }[i % 3]), "Playlist cycles all effects");
+Check(AmigaFrameBuffer.PowerTime(settings, bootSeconds + 15.5) is > .49 and < .51, "CRT transition occurs after runtime");
+Check(AmigaFrameBuffer.PowerTime(settings, playbackCycle + .01) == null, "CRT transition finishes on next boot");
 settings.AmigaAnimation = AmigaDemo.Plasma;
 Check(AmigaFrameBuffer.CurrentDemo(settings, 250) == AmigaDemo.Plasma, "Individual effect repeats without changing selection");
 settings.AmigaAnimation = (AmigaDemo)999; settings.AmigaBoot = (AmigaBootStyle)999;
 settings.AmigaDurationSeconds = 0; settings.NativeRenderQuality = 99;
 settings.Validate();
-Check(settings.AmigaAnimation == AmigaDemo.Cycle && settings.AmigaBoot == AmigaBootStyle.Classic13 &&
+Check(settings.AmigaAnimation == AmigaDemo.Cycle && settings.AmigaBoot == (SaverSettings.SupportsKickstart ? AmigaBootStyle.Classic13 : AmigaBootStyle.None) &&
     settings.AmigaDurationSeconds == 15 && settings.NativeRenderQuality == 2, "Validate persisted Amiga options");
 settings.AmigaBoot = AmigaBootStyle.None;
 using (var first = renderer.CaptureFrame(settings, 1))
@@ -83,6 +99,8 @@ try { using var invalid = renderer.CaptureFrame(settings, 0); } catch (ObjectDis
 Check(rejected, "Disposed renderer cannot draw");
 Console.WriteLine("PASS: three startup motifs, three animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
 
+if (SaverSettings.SupportsKickstart)
+{
 var reflectedSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.Classic13, CrtEnabled = false };
 using (var originalBoot = AmigaFrameBuffer.Capture(reflectedSettings, .46))
 using (var target = SKSurface.Create(new SKImageInfo(640, 480)))
@@ -108,6 +126,8 @@ using (var target = SKSurface.Create(new SKImageInfo(640, 480)))
 }
 Check(AmigaFrameBuffer.StartupTime(reflectedSettings, 6) == null, "No disk activity during demos");
 Console.WriteLine("PASS: localized disk reflection, original-screen preservation, quiet intervals and startup-only timing.");
+
+}
 
 var autoplay = new AmigaRunner();
 for (int frame = 0; frame <= 60 * 180; frame++)
@@ -163,6 +183,8 @@ foreach (int removed in new[] {1,2,3})
 }
 Check((int)AmigaDemo.Runner == 5 && (int)AmigaDemo.Plasma == 4, "Existing supported settings keep their numeric identity");
 
+if (SaverSettings.SupportsKickstart)
+{
 var allBoots = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.All,
     AmigaAnimation = AmigaDemo.Boing, AmigaDurationSeconds = 15, PowerTransition = true };
 double startupSlot = AmigaFrameBuffer.BootDuration(allBoots);
@@ -182,3 +204,4 @@ for (int cycle = 0; cycle < 6; cycle++)
 allBoots.Validate();
 Check(allBoots.AmigaBoot == AmigaBootStyle.All && allBoots.AmigaAnimation == AmigaDemo.Boing, "New settings remain valid");
 Console.WriteLine("PASS: all Kickstarts rotate with original artwork and consistent transition/reflection timing.");
+}

@@ -33,7 +33,7 @@ return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont()
                     "Frames use the product's C64Scene and CRT renderer; editors use the actual companion/monitor views.\n" +
                     "Native Avalonia platform on macOS; offscreen view capture, not a desktop screen recording.\n" +
                     "Isolated settings only; personal settings are not reset. No marketing overlays or Kickstart artwork.\n" +
-                    "These depict release 1.2.5. Recheck against the final sandboxed Store build before submission.\n");
+                    "Recheck these views against the final sandboxed Store build before submission.\n");
                 File.Delete(configFile);
                 lifetime.Shutdown(0);
             }

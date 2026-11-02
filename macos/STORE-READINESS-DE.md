@@ -40,7 +40,9 @@ Store-Produkte. Historische Anbieterrecherche: APP-STORE-PLAN-DE.md.
 
 ## Inhalte und Einreichungsangaben
 
-- Die historischen Kickstart-GIFs sind übernommene Originaldarstellungen. Ihre
+- Für den macOS-Entwicklungsstand 1.2.6 werden die historischen Kickstart-GIFs
+  nicht mehr eingebettet und nicht angeboten; Windows/Linux behalten sie. Die
+  folgenden Hinweise gelten für die dort weiterhin enthaltenen Originaldarstellungen. Ihre
   CREDITS.md nennt Quellen und Rechteinhaber und nimmt sie ausdrücklich von der
   MIT-Lizenz aus. Ein Nutzungsnachweis für die geplante kommerzielle Verteilung
   ist im Repository nicht dokumentiert. Vor Verkauf klären oder den betreffenden

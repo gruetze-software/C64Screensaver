@@ -78,8 +78,8 @@ static BOOL loadCore(NSBundle *bundle) {
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
     NSArray<NSButton *> *_settingsTabButtons;
-    NSPopUpButton *_program, *_quality, *_borderColors, *_system, *_amigaBoot, *_amigaDemo;
-    NSButton *_amigaScroller, *_amigaActivity;
+    NSPopUpButton *_program, *_quality, *_borderColors, *_system, *_amigaDemo;
+    NSButton *_amigaScroller;
     NSTextField *_amigaText, *_amigaDuration, *_amigaSpeed, *_amigaWave;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
     NSSlider *_phosphor, *_glow, *_spread, *_scanlines;
@@ -534,26 +534,19 @@ static BOOL loadCore(NSBundle *bundle) {
     _tagline = [self field:s[@"CompanyTagline"] ?: @"SOFTWARE MIT CHARAKTER" label:@"Extra text" y:45];
 
     _optionsBody = [self page:@"Amiga" tabs:tabs];
-    _amigaBoot = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,335,510,30) pullsDown:NO];
-    _amigaBoot.tag = 302;
-    [_amigaBoot addItemsWithTitles:@[@"Skip Kickstart", @"Kickstart 1.3", @"Kickstart 2.0", @"Kickstart 3.1", @"All Kickstarts (alternate)"]];
-    [_amigaBoot selectItemAtIndex:MAX(0,MIN(4,s[@"AmigaBoot"] ? [s[@"AmigaBoot"] integerValue] : 1))];
-    [_optionsBody addSubview:_amigaBoot];
-    _amigaDemo = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,290,510,30) pullsDown:NO];
+    _amigaDemo = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,335,510,30) pullsDown:NO];
     _amigaDemo.tag = 303;
     [_amigaDemo addItemsWithTitles:@[@"All animations", @"Jump & run", @"Plasma", @"Boing ball (classic Amiga)"]];
     NSInteger selectedDemo = [s[@"AmigaAnimation"] integerValue];
     [_amigaDemo selectItemAtIndex:selectedDemo == 5 ? 1 : selectedDemo == 4 ? 2 : selectedDemo == 6 ? 3 : 0];
     [_optionsBody addSubview:_amigaDemo];
-    _amigaDuration = [self field:[(s[@"AmigaDurationSeconds"] ?: @45) stringValue] label:@"Seconds / demo" y:245];
-    _amigaScroller = [self check:@"Show scrolling text" value:s[@"ShowAmigaScroller"] ? [s[@"ShowAmigaScroller"] boolValue] : YES y:205];
+    _amigaDuration = [self field:[(s[@"AmigaDurationSeconds"] ?: @45) stringValue] label:@"Seconds / demo" y:290];
+    _amigaScroller = [self check:@"Show scrolling text" value:s[@"ShowAmigaScroller"] ? [s[@"ShowAmigaScroller"] boolValue] : YES y:250];
     _amigaScroller.tag = 304;
-    _amigaActivity = [self check:@"Disk activity reflection" value:s[@"AmigaDiskActivity"] ? [s[@"AmigaDiskActivity"] boolValue] : YES y:172];
-    _amigaActivity.tag = 305;
-    _amigaText = [self field:s[@"ScrollerText"] ?: @"GRUETZE RETROSAVER - WWW.GRUETZE-SOFTWARE.DE" label:@"Scrolling text" y:122];
+    _amigaText = [self field:s[@"ScrollerText"] ?: @"GRUETZE RETROSAVER - WWW.GRUETZE-SOFTWARE.DE" label:@"Scrolling text" y:192];
     _amigaText.tag = 306;
-    _amigaSpeed = [self field:[(s[@"ScrollerSpeed"] ?: @48) stringValue] label:@"Scroll speed" y:72];
-    _amigaWave = [self field:[(s[@"ScrollerWave"] ?: @20) stringValue] label:@"Wave height" y:22];
+    _amigaSpeed = [self field:[(s[@"ScrollerSpeed"] ?: @48) stringValue] label:@"Scroll speed" y:132];
+    _amigaWave = [self field:[(s[@"ScrollerWave"] ?: @20) stringValue] label:@"Wave height" y:72];
 
     _optionsBody = [self page:@"Monitor effects" tabs:tabs];
     BOOL aspect = s[@"KeepAspectRatio"] ? [s[@"KeepAspectRatio"] boolValue] : ![s[@"FillScreen"] boolValue];
@@ -607,11 +600,11 @@ static BOOL loadCore(NSBundle *bundle) {
         @"CompanyTagline": _tagline.stringValue}];
     [settings addEntriesFromDictionary:@{
         @"AmigaMode": _system.indexOfSelectedItem == 1 ? @YES : @NO,
-        @"AmigaBoot": @(_amigaBoot.indexOfSelectedItem),
+        @"AmigaBoot": @0,
         @"AmigaAnimation": @(_amigaDemo.indexOfSelectedItem == 1 ? 5 : _amigaDemo.indexOfSelectedItem == 2 ? 4 : _amigaDemo.indexOfSelectedItem == 3 ? 6 : 0),
         @"AmigaDurationSeconds": @(MAX(15,MIN(1800,_amigaDuration.integerValue))),
         @"ShowAmigaScroller": _amigaScroller.state == NSControlStateValueOn ? @YES : @NO,
-        @"AmigaDiskActivity": _amigaActivity.state == NSControlStateValueOn ? @YES : @NO,
+        @"AmigaDiskActivity": @NO,
         @"ScrollerText": [_amigaText.stringValue substringToIndex:MIN(4096,_amigaText.stringValue.length)],
         @"ScrollerSpeed": @(MAX(8,MIN(160,_amigaSpeed.doubleValue))),
         @"ScrollerWave": @(MAX(0,MIN(48,_amigaWave.doubleValue)))}];

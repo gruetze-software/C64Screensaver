@@ -1,4 +1,4 @@
-# Mac-Produktbilder für Gruetze RetroSaver 1.2.5
+# Mac-Produktbilder für Gruetze RetroSaver
 
 Geplante Serie, Reihenfolge nach Dateinamen:
 
@@ -28,5 +28,5 @@ Betriebssystemen ab. Der Mac-Buildlauf erzeugt außerdem ein separates Artefakt
 Gruetze-RetroSaver-Mac-Store-Screenshots. Die Original-Kickstart-Bilder werden in
 dieser Serie bewusst nicht gezeigt, während deren Nutzungsnachweise offen sind.
 
-Die Bilder stellen den aktuellen 1.2.5-Funktionsstand dar. Vor endgültiger Store-
+Die neue Mac-Serie für 1.2.6 enthält keine Kickstart-Auswahl mehr. Vor endgültiger Store-
 Einreichung müssen sie mit der eingereichten Sandbox-Version abgeglichen werden.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.6 — in development
+
+- macOS: exclude the historical Kickstart GIFs from both companion and native core binaries, remove startup/disk-reflection controls and migrate old startup choices to direct animation playback.
+- Windows/Linux: retain Kickstart 1.3/2.0/3.1, All Kickstarts rotation and disk reflection.
+
 ## 1.2.5 — 2026-11-02
 
 - Slim dialog scrollbars to 8px and slider rails to 2px; fix clipped circular thumbs in compact sliders.

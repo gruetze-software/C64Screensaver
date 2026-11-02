@@ -270,15 +270,15 @@ int main(int argc, char **argv) {
         NSPopUpButton *system = (NSPopUpButton *)findTag(amigaSheet.contentView,301);
         NSPopUpButton *boot = (NSPopUpButton *)findTag(amigaSheet.contentView,302);
         NSPopUpButton *demo = (NSPopUpButton *)findTag(amigaSheet.contentView,303);
-        if (system.numberOfItems != 2 || demo.numberOfItems != 4 || boot.numberOfItems != 5) return 37;
-        [system selectItemAtIndex:1]; [boot selectItemAtIndex:4]; [demo selectItemAtIndex:3];
+        if (system.numberOfItems != 2 || demo.numberOfItems != 4 || boot != nil || findTag(amigaSheet.contentView,305) != nil) return 37;
+        [system selectItemAtIndex:1]; [demo selectItemAtIndex:3];
         ((NSButton *)findTag(amigaSheet.contentView,304)).state = NSControlStateValueOff;
         ((NSTextField *)findTag(amigaSheet.contentView,306)).stringValue = @"NEO AMIGA TEST";
         for (NSView *control in allControls(amigaSheet.contentView))
             if ([control isKindOfClass:NSButton.class] && [((NSButton *)control).title isEqualToString:@"Save"])
                 [(NSButton *)control performClick:nil];
         NSDictionary *amigaSaved = [defaults dictionaryForKey:@"Settings"];
-        passed = passed && [amigaSaved[@"AmigaMode"] boolValue] && [amigaSaved[@"AmigaAnimation"] integerValue] == 6 && [amigaSaved[@"AmigaBoot"] integerValue] == 4
+        passed = passed && [amigaSaved[@"AmigaMode"] boolValue] && [amigaSaved[@"AmigaAnimation"] integerValue] == 6 && [amigaSaved[@"AmigaBoot"] integerValue] == 0
             && ![amigaSaved[@"ShowAmigaScroller"] boolValue] && [amigaSaved[@"ScrollerText"] isEqualToString:@"NEO AMIGA TEST"];
         passed = passed && hasPicture(view);
         [view stopAnimation];
