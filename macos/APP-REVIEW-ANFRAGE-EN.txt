@@ -1,0 +1,36 @@
+Subject: Mac App Store distribution of a companion app with an embedded native screensaver
+
+Hello App Review team,
+
+I am preparing Gruetze RetroSaver for the Mac App Store. The product consists of
+a macOS companion app for configuration and preview, plus a native .saver bundle
+using Apple's public ScreenSaver framework. It must remain a real system
+screensaver selected in macOS System Settings, not only a fullscreen animation.
+
+The current Developer ID distribution embeds a fixed .saver inside the app's
+Contents/Resources directory. When the user explicitly clicks Install / update
+system screensaver, the app passes this bundle to the standard macOS screensaver
+installer via /usr/bin/open. The user confirms the installation in the system
+installer. The app does not copy the module into Library folders itself, download
+additional executable code, or request administrator privileges directly.
+
+Before implementing the separate sandboxed App Store build, could you clarify:
+
+1. Is this user-confirmed installation of an embedded .saver compatible with
+   guidelines 2.4.5(ii) and 2.4.5(iv)?
+2. If not, is there a documented supported distribution mechanism for a genuine
+   system screensaver through a Mac App Store companion app?
+3. Are there additional packaging or review requirements for the embedded
+   screensaver and the handoff to the system installer?
+
+The existing Developer ID version is not sandboxed. We will separately validate
+App Sandbox permissions and the configuration exchange with the ScreenSaver host;
+we are not assuming that the current implementation is already Store-compliant.
+
+The planned product is a one-time paid app. We would like to establish the
+supported installation architecture before preparing the submission.
+
+Thank you,
+Christoph Schaefer
+Grütze-Software
+www.gruetze-software.de
