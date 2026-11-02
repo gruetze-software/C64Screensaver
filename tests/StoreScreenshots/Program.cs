@@ -55,7 +55,7 @@ void Advance(C64Scene scene, double seconds)
 async Task Scenes()
 {
     foreach (var (name, demo, seconds) in new[] {
-        ("01-c64-basic", (AmigaDemo?)null, 20.0),
+        ("01-c64-basic", (AmigaDemo?)null, 32.0),
         ("02-amiga-runner", (AmigaDemo?)AmigaDemo.Runner, 8.0),
         ("03-amiga-plasma", (AmigaDemo?)AmigaDemo.Plasma, 3.0),
         ("04-amiga-boing", (AmigaDemo?)AmigaDemo.Boing, 3.0) })
@@ -87,7 +87,7 @@ async Task Editors()
         await Task.Delay(250);
         var scene = window.GetVisualDescendants().OfType<C64Scene>().Single();
         scene.Initialize(s, true, Width, Height, new Random(64));
-        Advance(scene, amiga ? 3 : 20);
+        Advance(scene, amiga ? 3 : 32);
         Save((Control)window.Content!, amiga ? "06-amiga-companion" : "05-c64-companion");
         window.Close();
     }
@@ -105,14 +105,24 @@ async Task Editors()
 }
 void Save(Control view, string name)
 {
-    view.Width = Width; view.Height = Height;
-    view.Measure(new Size(Width, Height)); view.Arrange(new Rect(0, 0, Width, Height));
+    var owner = TopLevel.GetTopLevel(view) as Window;
+    Control target = view;
+    if (view is not C64Scene && owner != null)
+    {
+        // Render the full client area, including the content's original margin.
+        // Capturing the content root alone discards its outer layout offset.
+        owner.Content = null;
+        target = new Border { Background = owner.Background, Child = view };
+        owner.Content = target;
+    }
+    target.Width = Width; target.Height = Height;
+    target.Measure(new Size(Width, Height)); target.Arrange(new Rect(0, 0, Width, Height));
     using var capture = new RenderTargetBitmap(new PixelSize(Width, Height), new Vector(96, 96));
-    capture.Render(view);
+    capture.Render(target);
     using var bytes = new MemoryStream(); capture.Save(bytes, PngBitmapEncoderOptions.Default);
     using var bitmap = SKBitmap.Decode(bytes.ToArray()) ?? throw new Exception("Empty capture: " + name);
     using var surface = SKSurface.Create(new SKImageInfo(Width, Height, SKColorType.Rgb888x, SKAlphaType.Opaque));
-    var background = TopLevel.GetTopLevel(view) is Window owner && owner.Background is ISolidColorBrush brush
+    var background = owner?.Background is ISolidColorBrush brush
         ? new SKColor(brush.Color.R, brush.Color.G, brush.Color.B, brush.Color.A) : SKColors.Black;
     surface.Canvas.Clear(background); surface.Canvas.DrawBitmap(bitmap, 0, 0);
     using var image = surface.Snapshot(); using var png = image.Encode(SKEncodedImageFormat.Png, 100);
