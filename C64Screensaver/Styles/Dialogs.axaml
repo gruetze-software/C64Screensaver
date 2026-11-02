@@ -2,12 +2,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:C64Screensaver.Controls">
     <Style Selector="Window.dialog">
+        <Style.Resources>
+            <!-- Fluent reserves 15px above AND below a 20px thumb. With a
+                 compact 32px slider that cuts the circle; 6+20+6 fits exactly. -->
+            <x:Double x:Key="SliderTrackThemeHeight">2</x:Double>
+            <GridLength x:Key="SliderPreContentMargin">6</GridLength>
+            <GridLength x:Key="SliderPostContentMargin">6</GridLength>
+        </Style.Resources>
         <Setter Property="Background" Value="#151C21"/>
         <Setter Property="Foreground" Value="#EAF0F3"/>
         <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter"/>
         <Setter Property="FontSize" Value="14"/>
     </Style>
     <Style Selector="ScrollViewer.settingsScroll">
+        <Style.Resources>
+            <x:Double x:Key="ScrollBarSize">8</x:Double>
+            <x:Double x:Key="ScrollBarButtonArrowIconFontSize">6</x:Double>
+        </Style.Resources>
         <Setter Property="AllowAutoHide" Value="False"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
     </Style>

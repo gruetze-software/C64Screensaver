@@ -2,6 +2,8 @@
 
 ## 1.2.5 — in development
 
+- Slim dialog scrollbars to 8px and slider rails to 2px; fix clipped circular thumbs in compact sliders.
+
 - Reduce companion and monitor dialog sizes, shrink live previews and fit scaled display working areas; keep footer actions visible with scrollable editors.
 - Add a Close button to the companion.
 - Add All Kickstarts, rotating the original 1.3/2.0/3.1 prompts between animation runs, with synchronized CRT transitions and loading reflection.

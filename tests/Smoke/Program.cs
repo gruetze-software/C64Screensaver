@@ -519,13 +519,32 @@ foreach (bool amiga in new[] { false, true })
     var bar = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(scroller)
         .OfType<Avalonia.Controls.Primitives.ScrollBar>().Single(c => c.Orientation == Avalonia.Layout.Orientation.Vertical &&
             Avalonia.VisualTree.VisualExtensions.GetVisualAncestors(c).OfType<ScrollViewer>().FirstOrDefault() == scroller);
-    Check(bar.IsVisible && bar.Bounds.Width > 0, "Small editor has a visible vertical scrollbar");
+    Check(bar.IsVisible && bar.Bounds.Width > 0 && bar.Bounds.Width <= 8.5, "Small editor has a slim visible scrollbar");
     var barLeft = bar.TranslatePoint(default, small)!.Value.X;
     foreach (var field in descendants.Where(c => c.IsEffectivelyVisible && c is TextBox or ComboBox or NumericUpDown or Slider))
     {
         var origin = field.TranslatePoint(default, small)!.Value;
         Check(origin.X + field.Bounds.Width <= barLeft - 5,
             "Scrollbar has a separate gutter beyond the editor field: " + field.Name);
+    }
+    foreach (var slider in descendants.OfType<Slider>())
+    {
+        double originalValue = slider.Value;
+        foreach (double value in new[] { slider.Minimum, (slider.Minimum + slider.Maximum) / 2, slider.Maximum })
+        {
+            slider.Value = value;
+            Dispatcher.UIThread.RunJobs();
+            foreach (var thumb in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(slider)
+                .OfType<Avalonia.Controls.Primitives.Thumb>())
+            {
+                var point = thumb.TranslatePoint(default, slider)!.Value;
+                Check(point.X >= -.5 && point.Y >= -.5 && point.X + thumb.Bounds.Width <= slider.Bounds.Width + .5 &&
+                    point.Y + thumb.Bounds.Height <= slider.Bounds.Height + .5,
+                    "Complete round thumb fits compact slider at every position: " + slider.Name);
+            }
+        }
+        slider.Value = originalValue;
+        Dispatcher.UIThread.RunJobs();
     }
     var closeButton = descendants.OfType<Button>().Single(c => c.Name == "CloseCompanion");
     var closeOrigin = closeButton.TranslatePoint(default, small)!.Value;
