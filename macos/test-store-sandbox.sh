@@ -17,9 +17,11 @@ cp "$root/macos/Companion-Info.plist" "$app/Contents/Info.plist"
 plutil -replace CFBundleIdentifier -string de.gruetze-software.RetroSaver.SandboxProbe "$app/Contents/Info.plist"
 plutil -replace CFBundleExecutable -string StoreSandbox "$app/Contents/Info.plist"
 cp "$root/C64Screensaver/Assets/app-icon.icns" "$app/Contents/Resources/"
+source "$root/macos/store-layout.sh"
+retrosaver_store_layout "$app"
 while IFS= read -r -d '' native_file; do
   if [[ "$native_file" != "$app/Contents/MacOS/StoreSandbox" ]] && file "$native_file" | grep -q 'Mach-O'; then codesign --force --sign - "$native_file"; fi
-done < <(find "$app/Contents/MacOS" -type f -print0)
+done < <(find "$app/Contents/MacOS" "$app/Contents/Frameworks" -type f -print0)
 codesign --force --options runtime --entitlements "$root/macos/Store.entitlements" --sign - "$app"
 codesign --verify --deep --strict "$app"
 log="$out/probe.log"

@@ -22,6 +22,7 @@ Im Projektordner auf dem Mac:
 bash macos/build-store.sh test arm64 "Developer ID Application: Christoph Schaefer (8GZ7AD23D7)"
 ```
 
+Vorher die bisherige Begleitapp mit Cmd+Q vollständig beenden.
 Der Befehl baut beide Komponenten neu. Er verändert keine installierte App und
 lädt nichts hoch. Den am Ende ausgegebenen .app-Pfad im Finder öffnen.
 Die Test-App enthält dieselben Sandbox-Entitlements wie die spätere Store-App.
@@ -61,8 +62,10 @@ bash macos/build-store.sh store arm64 "Apple Distribution: Christoph Schaefer (8
 Das Skript prüft App-ID und Team-Zuordnung, bettet das Profil ein, signiert von
 innen nach außen und erstellt ein signiertes .pkg für /Applications. Die native
 Komponente liegt in dieser Variante unter Contents/PlugIns. Developer-ID-DMGs
-verwenden weiterhin ihren bisherigen Weg. Debugsymbole und Kickstart-Bilder
-werden nicht in Mac-Pakete aufgenommen.
+verwenden weiterhin ihren bisherigen Weg. Die Store-App wird in einem frischen Ordner aufgebaut. Native Bibliotheken
+liegen unter Frameworks, zusätzliche Daten unter Resources; relative Symlinks
+erhalten die .NET-Suchpfade. Das nicht benötigte createdump-Werkzeug wird entfernt.
+Debugsymbole und Kickstart-Bilder werden nicht in Mac-Pakete aufgenommen.
 
 ## Hochladen
 

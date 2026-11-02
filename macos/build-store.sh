@@ -33,20 +33,22 @@ if [[ "$mode" == store ]]; then
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $team" "$entitlements"
 fi
 bash "$root/macos/build-native.sh" "$arch"
-RETROSAVER_MAC_APP_STORE=1 bash "$root/macos/build-companion.sh" "$arch" --app-only
+RETROSAVER_MAC_APP_STORE=1 RETROSAVER_COMPANION_OUTPUT="$work/unsigned" bash "$root/macos/build-companion.sh" "$arch" --app-only
 app="$work/Gruetze RetroSaver.app"
-ditto "$root/artifacts/macos-companion/$rid/Gruetze RetroSaver.app" "$app"
+ditto "$work/unsigned/Gruetze RetroSaver.app" "$app"
 # Place loadable code at Apple's standard nested-code location.
 mkdir -p "$app/Contents/PlugIns"
 mv "$app/Contents/Resources/C64Screensaver.saver" "$app/Contents/PlugIns/"
 bundle="$app/Contents/PlugIns/C64Screensaver.saver"
 plutil -replace NSHumanReadableCopyright -string 'Copyright © 2026 Christoph Schaefer / Grütze-Software' "$app/Contents/Info.plist"
 if [[ "$mode" == store ]]; then cp "$profile" "$app/Contents/embedded.provisionprofile"; fi
+source "$root/macos/store-layout.sh"
+retrosaver_store_layout "$app"
 while IFS= read -r -d '' native_file; do
   if [[ "$native_file" != "$app/Contents/MacOS/c64screensaver" ]] && file "$native_file" | grep -q 'Mach-O'; then
     codesign --force --options runtime --sign "$identity" "$native_file"
   fi
-done < <(find "$app/Contents/MacOS" "$bundle/Contents/Frameworks" -type f -print0)
+done < <(find "$app/Contents/MacOS" "$app/Contents/Frameworks" "$bundle/Contents/Frameworks" -type f -print0)
 codesign --force --options runtime --sign "$identity" "$bundle"
 codesign --force --options runtime --entitlements "$entitlements" --sign "$identity" "$app"
 codesign --verify --deep --strict --verbose=2 "$app"

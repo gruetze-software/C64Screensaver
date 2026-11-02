@@ -11,7 +11,7 @@ case "$arch" in
 esac
 [[ "$(uname -s)" == Darwin ]] || { echo "Build on macOS." >&2; exit 1; }
 version="$(sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$root/C64Screensaver/C64Screensaver.csproj" | head -1)"
-out="$root/artifacts/macos-companion/$rid"
+out="${RETROSAVER_COMPANION_OUTPUT:-$root/artifacts/macos-companion/$rid}"
 app="$out/Gruetze RetroSaver.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 publish_options=(-p:MacAppStore=false)
