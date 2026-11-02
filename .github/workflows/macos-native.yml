@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test Store package permissions with private umask
+        run: bash macos/test-package-permissions.sh
       - name: Test App Store sandbox startup and denied external access
         timeout-minutes: 5
         run: bash macos/test-store-sandbox.sh ${{ matrix.arch }}

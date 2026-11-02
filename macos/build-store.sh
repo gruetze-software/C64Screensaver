@@ -1,5 +1,7 @@
 #!/bin/bash
 set -euo pipefail
+# Signature resources must not inherit a private login-shell umask.
+umask 022
 # Builds a separate candidate; never edits the installed app or uploads anything.
 # test: Developer ID / ad-hoc sandbox test. store: distribution-signed .pkg.
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -45,6 +47,8 @@ plutil -replace NSHumanReadableCopyright -string 'Copyright © 2026 Christoph Sc
 if [[ "$mode" == store ]]; then cp "$profile" "$app/Contents/embedded.provisionprofile"; fi
 source "$root/macos/store-layout.sh"
 retrosaver_store_layout "$app"
+source "$root/macos/package-permissions.sh"
+retrosaver_normalize_permissions "$app"
 while IFS= read -r -d '' native_file; do
   if [[ "$native_file" != "$app/Contents/MacOS/c64screensaver" ]] && file "$native_file" | grep -q 'Mach-O'; then
     codesign --force --options runtime --sign "$identity" "$native_file"
@@ -52,6 +56,7 @@ while IFS= read -r -d '' native_file; do
 done < <(find "$app/Contents/MacOS" "$app/Contents/Frameworks" "$bundle/Contents/Frameworks" -type f -print0)
 codesign --force --options runtime --sign "$identity" "$bundle"
 codesign --force --options runtime --entitlements "$entitlements" --sign "$identity" "$app"
+retrosaver_check_app_permissions "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 codesign -d --entitlements - "$app" > "$work/signed-entitlements.plist"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.app-sandbox' "$work/signed-entitlements.plist")" == true ]]
@@ -64,6 +69,7 @@ else
   pkg="$work/Gruetze-RetroSaver-$version-$arch.pkg"
   productbuild --component "$app" /Applications --sign "$installer" "$pkg"
   pkgutil --check-signature "$pkg"
+  retrosaver_check_package_permissions "$pkg" "$work/package-permissions"
   shasum -a 256 "$pkg" > "$work/SHA256SUMS.txt"
   echo "App Store candidate: $pkg"
   echo "Validate with Transporter. A valid signature does not establish App Review acceptance."

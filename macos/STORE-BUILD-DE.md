@@ -68,6 +68,16 @@ liegen unter Frameworks, zusätzliche Daten unter Resources; relative Symlinks
 erhalten die .NET-Suchpfade. Das nicht benötigte createdump-Werkzeug wird entfernt.
 Debugsymbole und Kickstart-Bilder werden nicht in Mac-Pakete aufgenommen.
 
+Der Store-Build setzt umask 022 und normalisiert die Rechte ausschließlich in
+seiner App-Kopie vor dem Signieren: Ordner sind durchsuchbar, Dateien für alle
+Benutzer lesbar, Programme weiter ausführbar. Insbesondere werden ein privat
+heruntergeladenes embedded.provisionprofile und alte CodeResources erfasst.
+Nach dem Signieren wird die App geprüft; nach productbuild werden zusätzlich die
+im tatsächlichen Paket gespeicherten BOM-Rechte geprüft. Fehler 90255 soll damit
+bereits lokal mit dem betroffenen Pfad statt erst in Transporter auffallen.
+Regressionstest: `bash macos/test-package-permissions.sh`.
+
+
 ## Hochladen
 
 Das .pkg in Apples **Transporter** hinzufügen, prüfen lassen und anschließend
