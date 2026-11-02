@@ -43,7 +43,7 @@ bundle="$app/Contents/PlugIns/C64Screensaver.saver"
 plutil -replace NSHumanReadableCopyright -string 'Copyright © 2026 Christoph Schaefer / Grütze-Software' "$app/Contents/Info.plist"
 if [[ "$mode" == store ]]; then cp "$profile" "$app/Contents/embedded.provisionprofile"; fi
 while IFS= read -r -d '' native_file; do
-  if file "$native_file" | grep -q 'Mach-O'; then
+  if [[ "$native_file" != "$app/Contents/MacOS/c64screensaver" ]] && file "$native_file" | grep -q 'Mach-O'; then
     codesign --force --options runtime --sign "$identity" "$native_file"
   fi
 done < <(find "$app/Contents/MacOS" "$bundle/Contents/Frameworks" -type f -print0)
