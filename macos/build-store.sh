@@ -40,6 +40,7 @@ ditto "$work/unsigned/Gruetze RetroSaver.app" "$app"
 mkdir -p "$app/Contents/PlugIns"
 mv "$app/Contents/Resources/C64Screensaver.saver" "$app/Contents/PlugIns/"
 bundle="$app/Contents/PlugIns/C64Screensaver.saver"
+plutil -replace LSApplicationCategoryType -string public.app-category.utilities "$app/Contents/Info.plist"
 plutil -replace NSHumanReadableCopyright -string 'Copyright © 2026 Christoph Schaefer / Grütze-Software' "$app/Contents/Info.plist"
 if [[ "$mode" == store ]]; then cp "$profile" "$app/Contents/embedded.provisionprofile"; fi
 source "$root/macos/store-layout.sh"

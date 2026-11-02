@@ -59,7 +59,8 @@ Erst nach erfolgreichem Sandbox-Test, mit dem tatsächlichen Profilpfad:
 bash macos/build-store.sh store arm64 "Apple Distribution: Christoph Schaefer (8GZ7AD23D7)" "$HOME/Downloads/Gruetze_RetroSaver_App_Store.provisionprofile" "3rd Party Mac Developer Installer: Christoph Schaefer (8GZ7AD23D7)"
 ```
 
-Das Skript prüft App-ID und Team-Zuordnung, bettet das Profil ein, signiert von
+Das Skript setzt die Mac-App-Kategorie Utilities und den Copyright-Eintrag,
+prüft App-ID und Team-Zuordnung, bettet das Profil ein, signiert von
 innen nach außen und erstellt ein signiertes .pkg für /Applications. Die native
 Komponente liegt in dieser Variante unter Contents/PlugIns. Developer-ID-DMGs
 verwenden weiterhin ihren bisherigen Weg. Die Store-App wird in einem frischen Ordner aufgebaut. Native Bibliotheken
