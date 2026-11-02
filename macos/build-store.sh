@@ -53,7 +53,7 @@ done < <(find "$app/Contents/MacOS" "$app/Contents/Frameworks" "$bundle/Contents
 codesign --force --options runtime --sign "$identity" "$bundle"
 codesign --force --options runtime --entitlements "$entitlements" --sign "$identity" "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
-codesign -d --entitlements :- "$app" > "$work/signed-entitlements.plist"
+codesign -d --entitlements - "$app" > "$work/signed-entitlements.plist"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.app-sandbox' "$work/signed-entitlements.plist")" == true ]]
 if [[ "$mode" == test ]]; then
   echo "Sandbox test app: $app"
