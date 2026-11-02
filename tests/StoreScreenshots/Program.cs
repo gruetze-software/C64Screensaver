@@ -109,7 +109,7 @@ void Save(Control view, string name)
     view.Measure(new Size(Width, Height)); view.Arrange(new Rect(0, 0, Width, Height));
     using var capture = new RenderTargetBitmap(new PixelSize(Width, Height), new Vector(96, 96));
     capture.Render(view);
-    using var bytes = new MemoryStream(); capture.Save(bytes);
+    using var bytes = new MemoryStream(); capture.Save(bytes, PngBitmapEncoderOptions.Default);
     using var bitmap = SKBitmap.Decode(bytes.ToArray()) ?? throw new Exception("Empty capture: " + name);
     using var surface = SKSurface.Create(new SKImageInfo(Width, Height, SKColorType.Rgb888x, SKAlphaType.Opaque));
     surface.Canvas.Clear(SKColors.Black); surface.Canvas.DrawBitmap(bitmap, 0, 0);
