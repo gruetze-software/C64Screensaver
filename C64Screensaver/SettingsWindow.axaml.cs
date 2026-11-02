@@ -67,7 +67,7 @@ public partial class SettingsWindow : Window
             PreviewScene.AdvancePreview(1.0 / 30, run);
             enlargedScene?.AdvancePreview(1.0 / 30, run);
         };
-        Opened += (_, _) => timer.Start();
+        Opened += (_, _) => { DialogSizing.FitToWorkingArea(this); timer.Start(); };
         Closed += (_, _) => { timer.Stop(); enlargedPreview?.Close(); PreviewScene.Clear(); };
     }
     private void SetEffects(SaverSettings s)

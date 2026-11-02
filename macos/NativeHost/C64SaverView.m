@@ -536,14 +536,14 @@ static BOOL loadCore(NSBundle *bundle) {
     _optionsBody = [self page:@"Amiga" tabs:tabs];
     _amigaBoot = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,335,510,30) pullsDown:NO];
     _amigaBoot.tag = 302;
-    [_amigaBoot addItemsWithTitles:@[@"Skip Kickstart", @"Kickstart 1.3", @"Kickstart 2.0", @"Kickstart 3.1"]];
-    [_amigaBoot selectItemAtIndex:MAX(0,MIN(3,s[@"AmigaBoot"] ? [s[@"AmigaBoot"] integerValue] : 1))];
+    [_amigaBoot addItemsWithTitles:@[@"Skip Kickstart", @"Kickstart 1.3", @"Kickstart 2.0", @"Kickstart 3.1", @"All Kickstarts (alternate)"]];
+    [_amigaBoot selectItemAtIndex:MAX(0,MIN(4,s[@"AmigaBoot"] ? [s[@"AmigaBoot"] integerValue] : 1))];
     [_optionsBody addSubview:_amigaBoot];
     _amigaDemo = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(20,290,510,30) pullsDown:NO];
     _amigaDemo.tag = 303;
-    [_amigaDemo addItemsWithTitles:@[@"Alternate Jump & run / Plasma", @"Jump & run", @"Plasma"]];
+    [_amigaDemo addItemsWithTitles:@[@"All animations", @"Jump & run", @"Plasma", @"Boing ball (classic Amiga)"]];
     NSInteger selectedDemo = [s[@"AmigaAnimation"] integerValue];
-    [_amigaDemo selectItemAtIndex:selectedDemo == 5 ? 1 : selectedDemo == 4 ? 2 : 0];
+    [_amigaDemo selectItemAtIndex:selectedDemo == 5 ? 1 : selectedDemo == 4 ? 2 : selectedDemo == 6 ? 3 : 0];
     [_optionsBody addSubview:_amigaDemo];
     _amigaDuration = [self field:[(s[@"AmigaDurationSeconds"] ?: @45) stringValue] label:@"Seconds / demo" y:245];
     _amigaScroller = [self check:@"Show scrolling text" value:s[@"ShowAmigaScroller"] ? [s[@"ShowAmigaScroller"] boolValue] : YES y:205];
@@ -608,7 +608,7 @@ static BOOL loadCore(NSBundle *bundle) {
     [settings addEntriesFromDictionary:@{
         @"AmigaMode": _system.indexOfSelectedItem == 1 ? @YES : @NO,
         @"AmigaBoot": @(_amigaBoot.indexOfSelectedItem),
-        @"AmigaAnimation": @(_amigaDemo.indexOfSelectedItem == 1 ? 5 : _amigaDemo.indexOfSelectedItem == 2 ? 4 : 0),
+        @"AmigaAnimation": @(_amigaDemo.indexOfSelectedItem == 1 ? 5 : _amigaDemo.indexOfSelectedItem == 2 ? 4 : _amigaDemo.indexOfSelectedItem == 3 ? 6 : 0),
         @"AmigaDurationSeconds": @(MAX(15,MIN(1800,_amigaDuration.integerValue))),
         @"ShowAmigaScroller": _amigaScroller.state == NSControlStateValueOn ? @YES : @NO,
         @"AmigaDiskActivity": _amigaActivity.state == NSControlStateValueOn ? @YES : @NO,

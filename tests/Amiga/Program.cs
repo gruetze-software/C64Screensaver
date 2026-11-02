@@ -33,7 +33,7 @@ foreach (var boot in new[] { AmigaBootStyle.Classic13, AmigaBootStyle.Purple20, 
     Check(Difference(first, demo) > 10000, "Startup proceeds to demo: " + boot);
 }
 settings.AmigaBoot = AmigaBootStyle.None;
-foreach (var effect in new[] { AmigaDemo.Runner, AmigaDemo.Plasma })
+foreach (var effect in new[] { AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing })
 {
     settings.AmigaAnimation = effect;
     using var before = renderer.CaptureFrame(settings, 2);
@@ -59,7 +59,7 @@ settings.AmigaBoot = AmigaBootStyle.Classic13;
 settings.PowerTransition = true;
 settings.AmigaDurationSeconds = 15;
 for (int i = 0; i < 10; i++)
-    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (i % 2 == 0 ? AmigaDemo.Runner : AmigaDemo.Plasma), "Playlist cycles all effects");
+    Check(AmigaFrameBuffer.CurrentDemo(settings, i * 21.42 + .001) == (new[] { AmigaDemo.Runner, AmigaDemo.Plasma, AmigaDemo.Boing }[i % 3]), "Playlist cycles all effects");
 Check(AmigaFrameBuffer.PowerTime(settings, 20.5) is > .49 and < .51, "CRT transition occurs after runtime");
 Check(AmigaFrameBuffer.PowerTime(settings, 21.43) == null, "CRT transition finishes on next boot");
 settings.AmigaAnimation = AmigaDemo.Plasma;
@@ -81,7 +81,7 @@ renderer.Dispose();
 bool rejected = false;
 try { using var invalid = renderer.CaptureFrame(settings, 0); } catch (ObjectDisposedException) { rejected = true; }
 Check(rejected, "Disposed renderer cannot draw");
-Console.WriteLine("PASS: three startup motifs, two animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
+Console.WriteLine("PASS: three startup motifs, three animated effects, scrolling text in every effect, playlist, transitions, settings validation and snapshot lifetime.");
 
 var reflectedSettings = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.Classic13, CrtEnabled = false };
 using (var originalBoot = AmigaFrameBuffer.Capture(reflectedSettings, .46))
@@ -162,3 +162,23 @@ foreach (int removed in new[] {1,2,3})
     Check(legacyDemo.AmigaAnimation == AmigaDemo.Cycle, "Removed selections migrate to the supported playlist");
 }
 Check((int)AmigaDemo.Runner == 5 && (int)AmigaDemo.Plasma == 4, "Existing supported settings keep their numeric identity");
+
+var allBoots = new SaverSettings { AmigaMode = true, AmigaBoot = AmigaBootStyle.All,
+    AmigaAnimation = AmigaDemo.Boing, AmigaDurationSeconds = 15, PowerTransition = true };
+double startupSlot = AmigaFrameBuffer.BootDuration(allBoots);
+double cycleLength = startupSlot + 15 + 1.42;
+for (int cycle = 0; cycle < 6; cycle++)
+{
+    var style = (AmigaBootStyle)(1 + cycle % 3);
+    double at = cycle * cycleLength + .1;
+    Check(AmigaFrameBuffer.CurrentBoot(allBoots, at) == style, "All Kickstarts rotates: " + style);
+    using var actual = AmigaFrameBuffer.Capture(allBoots, at);
+    using var expected = AmigaFrameBuffer.Capture(new SaverSettings { AmigaMode = true, AmigaBoot = style }, .1);
+    Check(Difference(actual, expected) == 0, "All mode preserves original artwork: " + style);
+    Check(AmigaFrameBuffer.StartupTime(allBoots, at) is > .09 and < .11, "Reflection tracks the startup slot");
+    Check(AmigaFrameBuffer.PowerTime(allBoots, cycle * cycleLength + startupSlot + 15.5) is > .49 and < .51,
+        "All Kickstarts preserves power transition timing");
+}
+allBoots.Validate();
+Check(allBoots.AmigaBoot == AmigaBootStyle.All && allBoots.AmigaAnimation == AmigaDemo.Boing, "New settings remain valid");
+Console.WriteLine("PASS: all Kickstarts rotate with original artwork and consistent transition/reflection timing.");

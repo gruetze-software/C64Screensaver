@@ -36,8 +36,8 @@ Mac binaries are distributed separately and are not part of this package.
 ## Features and support
 
 C64: ghost-typed BASIC, corrections, maze, company card and stars.
-Amiga: historical Kickstart startup images, autoplay Jump & run, Plasma and
-editable sine-wave scrolling text. Shared CRT presets, glow/spread, scanlines,
+Amiga: historical Kickstart startup images (individual or rotating), autoplay
+Jump & run, Plasma, classic-style Boing ball and editable sine-wave scrolling text. Shared CRT presets, glow/spread, scanlines,
 mask, curvature, softness and optional CRT power-off/on transitions.
 
 - [Full documentation and screenshots](https://github.com/gruetze-software/C64Screensaver#readme)

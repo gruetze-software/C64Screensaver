@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using SkiaSharp;
 namespace C64Screensaver;
 
-public enum AmigaBootStyle { None, Classic13, Purple20, Purple31 }
-public enum AmigaDemo { Cycle = 0, Runner = 5, Plasma = 4 }
+public enum AmigaBootStyle { None, Classic13, Purple20, Purple31, All }
+public enum AmigaDemo { Cycle = 0, Runner = 5, Plasma = 4, Boing = 6 }
 
 // Procedural demos with historical Kickstart screen captures; no ROM is loaded.
 public sealed class AmigaFrameBuffer : IDisposable
@@ -31,7 +31,24 @@ public sealed class AmigaFrameBuffer : IDisposable
         using var renderer = new AmigaFrameBuffer();
         return renderer.CaptureFrame(settings, time);
     }
-    public static double BootDuration(SaverSettings settings) => settings.AmigaBoot == AmigaBootStyle.None ? 0 : settings.AmigaBoot == AmigaBootStyle.Classic13 ? 5 : KickstartFrames.PlaybackSeconds(settings.AmigaBoot);
+    public static double BootDuration(SaverSettings settings) => settings.AmigaBoot switch
+    {
+        AmigaBootStyle.None => 0,
+        AmigaBootStyle.Classic13 => 5,
+        // A fixed slot keeps the timeline, transition and reflection in sync while
+        // giving every original animated prompt enough time to play completely.
+        AmigaBootStyle.All => Math.Max(5, Math.Max(KickstartFrames.PlaybackSeconds(AmigaBootStyle.Purple20),
+            KickstartFrames.PlaybackSeconds(AmigaBootStyle.Purple31))),
+        _ => KickstartFrames.PlaybackSeconds(settings.AmigaBoot)
+    };
+    public static AmigaBootStyle CurrentBoot(SaverSettings settings, double time)
+    {
+        if (settings.AmigaBoot != AmigaBootStyle.All) return settings.AmigaBoot;
+        double length = BootDuration(settings) + settings.AmigaDurationSeconds + (settings.PowerTransition ? 1.42 : 0);
+        return (AmigaBootStyle)(1 + (long)(Math.Max(0, time) / length) % 3);
+    }
+    private static AmigaDemo DemoAtCycle(SaverSettings settings, long cycle) => settings.AmigaAnimation != AmigaDemo.Cycle
+        ? settings.AmigaAnimation : (cycle % 3) switch { 0 => AmigaDemo.Runner, 1 => AmigaDemo.Plasma, _ => AmigaDemo.Boing };
     public static double? StartupTime(SaverSettings settings, double time)
     {
         double boot = BootDuration(settings);
@@ -51,8 +68,7 @@ public sealed class AmigaFrameBuffer : IDisposable
     public static AmigaDemo CurrentDemo(SaverSettings settings, double time)
     {
         double length = BootDuration(settings) + settings.AmigaDurationSeconds + (settings.PowerTransition ? 1.42 : 0);
-        return settings.AmigaAnimation == AmigaDemo.Cycle
-            ? ((long)(time / length) % 2 == 0 ? AmigaDemo.Runner : AmigaDemo.Plasma) : settings.AmigaAnimation;
+        return DemoAtCycle(settings, (long)(Math.Max(0, time) / length));
     }
     public SKImage CaptureFrame(SaverSettings settings, double time)
     {
@@ -64,12 +80,14 @@ public sealed class AmigaFrameBuffer : IDisposable
         double phase = time % length;
         bool revealNext = settings.PowerTransition && phase >= boot + settings.AmigaDurationSeconds + 1.02;
         double contentPhase = revealNext ? 0 : phase;
-        var demo = CurrentDemo(settings, time + (revealNext ? .4 : 0));
+        long cycle = (long)(time / length);
+        var demo = DemoAtCycle(settings, cycle + (revealNext ? 1 : 0));
+        if (demo == AmigaDemo.Boing) AmigaBoing.Prepare();
         if (demo == AmigaDemo.Runner) runner ??= new AmigaRunner();
         if (contentPhase < boot)
         {
             bootSurface ??= SKSurface.Create(new SKImageInfo(640, 400));
-            var original = KickstartFrames.At(settings.AmigaBoot, contentPhase);
+            var original = KickstartFrames.At(CurrentBoot(settings, (cycle + (revealNext ? 1 : 0)) * length + .000001), contentPhase);
             // Mark the surface dirty for a distinct snapshot: Avalonia can retain
             // multiple frame operations, each with independent image ownership.
             bootSurface.Canvas.Clear(SKColors.Black);
@@ -83,6 +101,7 @@ public sealed class AmigaFrameBuffer : IDisposable
             switch (demo)
             {
                 case AmigaDemo.Runner: runner!.Draw(canvas, demoTime, paint); break;
+                case AmigaDemo.Boing: AmigaBoing.Draw(canvas, demoTime, paint); break;
                 default: DrawPlasma(canvas, demoTime); break;
             }
             double scrollTime = Math.Floor(time / length) * settings.AmigaDurationSeconds

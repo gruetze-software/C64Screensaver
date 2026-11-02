@@ -1,4 +1,4 @@
-# Gruetze RetroSaver 1.2.4 on macOS
+# Gruetze RetroSaver 1.2.5 on macOS
 
 DMG creation uses diskutil image create blank/from; mounting and ejecting also
 use diskutil. A temporary APFS image preserves the volume name and payload

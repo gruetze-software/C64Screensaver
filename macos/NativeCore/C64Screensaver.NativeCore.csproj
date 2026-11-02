@@ -16,6 +16,7 @@
     <Compile Include="../../C64Screensaver/KickstartFrames.cs" Link="Shared/KickstartFrames.cs" />
     <EmbeddedResource Include="../../C64Screensaver/Assets/Runner/*.png" LogicalName="GruetzeRetroSaver.Runner.%(Filename)%(Extension)" />
     <Compile Include="../../C64Screensaver/RunnerArtwork.cs" Link="Shared/RunnerArtwork.cs" />
+    <Compile Include="../../C64Screensaver/AmigaBoing.cs" Link="Shared/AmigaBoing.cs" />
     <Compile Include="../../C64Screensaver/AmigaRunner.cs" Link="Shared/AmigaRunner.cs" />
     <Compile Include="../../C64Screensaver/AmigaFrameBuffer.cs" Link="Shared/AmigaFrameBuffer.cs" />
     <Compile Include="../../C64Screensaver/SaverSettings.cs" Link="Shared/SaverSettings.cs" />
