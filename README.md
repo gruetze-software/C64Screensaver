@@ -8,7 +8,7 @@ C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable
 
 Version 1.2.5 adds compact dialogs that fit the display's working area, a smaller
 preview, an explicit Close button, All Kickstarts rotation and a classic-style
-Boing ball. All animations cycles Jump & run, Plasma and Boing. 
+Boing ball. All animations cycles Jump & run, Plasma and Boing.
 
 ![Classic-style Boing ball](docs/images/amiga-boing.png)
 
