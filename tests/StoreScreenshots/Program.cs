@@ -117,6 +117,15 @@ void Save(Control view, string name)
     }
     target.Width = Width; target.Height = Height;
     target.Measure(new Size(Width, Height)); target.Arrange(new Rect(0, 0, Width, Height));
+    if (name == "07-monitor-effects")
+    {
+        var effectsScroll = target.GetVisualDescendants().OfType<ScrollViewer>()
+            .Where(s => s.Classes.Contains("settingsScroll"))
+            .OrderBy(s => s.TranslatePoint(default, target)!.Value.X).First();
+        effectsScroll.ScrollToEnd();
+        Dispatcher.UIThread.RunJobs();
+        effectsScroll.Arrange(effectsScroll.Bounds);
+    }
     using var capture = new RenderTargetBitmap(new PixelSize(Width, Height), new Vector(96, 96));
     capture.Render(target);
     using var bytes = new MemoryStream(); capture.Save(bytes, PngBitmapEncoderOptions.Default);
