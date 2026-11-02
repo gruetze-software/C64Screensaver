@@ -38,6 +38,16 @@ jobs:
         run: dotnet run --project tests/MacUi -c Release
       - name: Test shared companion and screensaver settings
         run: bash macos/test-shared-settings.sh
+      - name: Capture Mac product screenshots with isolated settings
+        if: matrix.arch == 'arm64'
+        run: dotnet run --project tests/StoreScreenshots -c Release
+      - uses: actions/upload-artifact@v4
+        if: matrix.arch == 'arm64'
+        with:
+          name: Gruetze-RetroSaver-Mac-Store-Screenshots
+          path: |
+            artifacts/store-screenshots/*.png
+            artifacts/store-screenshots/README.txt
       - uses: actions/upload-artifact@v4
         with:
           name: Gruetze-RetroSaver-macOS-${{ matrix.arch }}

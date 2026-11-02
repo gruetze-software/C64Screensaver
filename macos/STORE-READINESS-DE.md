@@ -54,8 +54,9 @@ Store-Produkte. Historische Anbieterrecherche: APP-STORE-PLAN-DE.md.
 
 ## Nächste konkrete Schritte
 
-1. Die Anfrage APP-REVIEW-ANFRAGE-EN.txt durch den Kontoinhaber an Apple senden.
-   Es wurde von diesem Projekt aus keine Nachricht an Apple gesendet.
+1. Reguläre Einreichung mit vollständigen schriftlichen App-Review-Informationen
+   vorbereiten. Eine Vorabanfrage oder ein Gespräch ist optional, keine Voraussetzung.
+   Die vorhandene Anfrage kann bei Bedarf als Vorlage dienen; nichts wurde versendet.
 2. Parallel die Nutzungsnachweise der historischen Bilder klären.
 3. Auf Basis des bestätigten Wegs einen getrennten Sandbox-/Store-Build erstellen
    und auf dem Neo mit echtem installierten .saver den Einstellungszugriff prüfen.
