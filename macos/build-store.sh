@@ -31,6 +31,11 @@ if [[ "$mode" == store ]]; then
   [[ "$appid" == "$team.de.gruetze-software.RetroSaver" ]] || { echo "Profile does not match this app." >&2; exit 2; }
   [[ "$identity" == *"($team)" ]] || { echo "Identity and profile teams do not match." >&2; exit 2; }
   [[ "$installer" == *"($team)" ]] || { echo "Installer and profile teams do not match." >&2; exit 2; }
+  # A renewed certificate can share its common name with the previous one.
+  # Match the profile's actual certificates against valid private-key identities,
+  # then pass an unambiguous SHA-1 fingerprint to codesign. Never delete keychain entries.
+  dotnet build "$root/tools/StoreIdentity/StoreIdentity.csproj" -c Release -o "$work/identity-tool" -warnaserror >&2
+  identity="$(dotnet "$work/identity-tool/StoreIdentity.dll" "$identity" "$work/profile.plist")"
   /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $appid" "$entitlements"
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $team" "$entitlements"
 fi

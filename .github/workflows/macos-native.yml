@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test duplicate signing identity selection
+        run: dotnet run --project tools/StoreIdentity -c Release -- --self-test
       - name: Test Store package permissions with private umask
         run: bash macos/test-package-permissions.sh
       - name: Test App Store sandbox startup and denied external access

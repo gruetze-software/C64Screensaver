@@ -60,6 +60,13 @@ Erst nach erfolgreichem Sandbox-Test, mit dem tatsächlichen Profilpfad:
 bash macos/build-store.sh store arm64 "Apple Distribution: Christoph Schaefer (8GZ7AD23D7)" "$HOME/Downloads/Gruetze_RetroSaver_App_Store.provisionprofile" "3rd Party Mac Developer Installer: Christoph Schaefer (8GZ7AD23D7)"
 ```
 
+Gleichnamige Apple-Distribution-Zertifikate sind erlaubt: Das Skript gleicht die
+Zertifikate im Profil mit den gültigen privaten Signatur-Identitäten ab und verwendet
+für codesign den eindeutigen Fingerabdruck. Sind mehrere vom Profil zugelassen,
+wird das aktive Zertifikat mit dem späteren Ablaufdatum gewählt. Schlüsselbund-
+Einträge werden nicht verändert. Fehlt eine passende Identität mit privatem
+Schlüssel, bricht der Build vor dem eigentlichen App-Bau mit einer Erklärung ab.
+
 Das Skript setzt die Mac-App-Kategorie Utilities und den Copyright-Eintrag,
 prüft App-ID und Team-Zuordnung, bettet das Profil ein, signiert von
 innen nach außen und erstellt ein signiertes .pkg für /Applications. Die native
