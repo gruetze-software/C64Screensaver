@@ -9,7 +9,7 @@
         <Border>
             <StackPanel Spacing="12" Margin="18,0,18,4">
                 <Image Name="ProductLogo" Width="72" Height="72" HorizontalAlignment="Center"
-                       RenderOptions.BitmapInterpolationMode="None"/>
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
                 <TextBlock Name="ProductName" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                 <TextBlock Text="READY. RUN." FontSize="15" TextAlignment="Center"/>
                 <TextBlock Text="Real BASIC programs draw an endless maze, a scrolling company card and a twinkling starfield."

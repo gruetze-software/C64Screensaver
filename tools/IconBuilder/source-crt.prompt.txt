@@ -1,0 +1,10 @@
+Gruetze RetroSaver CRT app icon — selected by the owner on 22 November 2026.
+Generated with the built-in image_gen tool, transparent background requested.
+The selected source is source-crt.png. IconBuilder exports PNG / ICO / ICNS
+without redesigning the chosen image. Company branding remains separate.
+
+Prompt:
+Use case: logo-brand. Asset type: one premium macOS desktop app icon concept for Gruetze RetroSaver, a real C64 and Amiga screensaver. Generate one square image with exactly one large rounded-square midnight-indigo app-icon tile, nearly filling the canvas with transparent space outside its rounded silhouette. Polished restrained tactile 3D icon design, clean readable shapes, warm/cool material contrast, professional independent software product. Subject: A single iconic 1980s CRT monitor, seen almost straight-on with very slight depth, filling most of the tile. Warm ivory housing with two very restrained controls. Deep C64 cobalt-blue curved glass screen, one large bright pale-blue BASIC block cursor and just two broad subtle scan lines. Beautiful restrained phosphor halo. No keyboard, no text. Bold simple silhouette and generous screen, immediately readable at small size. Constraints: single icon only, no mockup, no comparison sheet, no lettering, no captions, no watermark. Do not reproduce an Apple or Commodore corporate logo. Keep the graphic sharp and legible at 32 pixels; avoid busy details and excessive bloom.
+
+Reproduce platform exports:
+dotnet run --project tools/IconBuilder -c Release -- tools/IconBuilder/source-crt.png C64Screensaver/Assets
