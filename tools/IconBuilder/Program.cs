@@ -60,4 +60,4 @@ using (var output = File.Create(Path.Combine(args[1], "app-icon.icns")))
         BigInt(8 + item.Data.Length); output.Write(item.Data);
     }
 }
-Console.WriteLine("Generated transparent C64 product icon: PNG, seven-size ICO, seven-size ICNS.");
+Console.WriteLine("Generated transparent product icon: PNG, seven-size ICO, seven-size ICNS.");

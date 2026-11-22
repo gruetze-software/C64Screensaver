@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using System.Linq;
 namespace C64Screensaver;
 public sealed class CompanionWindow : Window
@@ -80,6 +81,7 @@ public sealed class CompanionWindow : Window
         var body = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(20) };
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("54,*,54") };
         var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 44, Height = 44 };
+        RenderOptions.SetBitmapInterpolationMode(appLogo, BitmapInterpolationMode.HighQuality);
         var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 26, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
         var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 44, Height = 44 };
         var companyInfo = new Button

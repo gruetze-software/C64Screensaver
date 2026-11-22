@@ -10,7 +10,7 @@
     <TextBlock Text="Monitor effects" FontSize="25" FontWeight="SemiBold"/>
     <TextBlock Text="Your C64. Your Amiga. Your monitor." Classes="hint"/>
    </StackPanel>
-   <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="None"/>
+   <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="HighQuality"/>
   </Grid>
   <Grid Grid.Row="1" ColumnDefinitions="*,350" ColumnSpacing="18">
      <ScrollViewer Classes="settingsScroll" HorizontalScrollBarVisibility="Disabled" Margin="0">
