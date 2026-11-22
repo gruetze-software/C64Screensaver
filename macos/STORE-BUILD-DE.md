@@ -1,6 +1,7 @@
 # Mac App Store: Sandbox-Test und signiertes Paket
 
-Stand: 2. November 2026, Entwicklung 1.2.6. Es wurde noch kein Store-Build
+Stand: 22. November 2026. Version 1.2.6 wurde im Mac App Store freigegeben.
+Die nächste Aktualisierung 1.2.7 wird vorbereitet; für sie wurde noch kein Build
 hochgeladen. Die echte .saver-Komponente bleibt Teil des Produkts; ihre
 Installation über den Apple-Systemdialog muss App Review beurteilen.
 
@@ -84,7 +85,7 @@ Das .pkg in Apples **Transporter** hinzufügen, prüfen lassen und anschließend
 hochladen. Das bisherige Developer-ID-DMG ist kein Store-Upload. Profilgültigkeit,
 Zertifikatszuordnung, Upload-Validierung und App Review sind zusätzliche Prüfungen;
 eine erfolgreiche lokale Signatur ersetzt sie nicht. Version in App Store Connect
-an 1.2.6 anpassen, wenn dieser Entwicklungsstand eingereicht wird.
+an 1.2.7 anpassen, wenn dieser Entwicklungsstand eingereicht wird.
 
 Die REST-API unterstützt Build-Uploads ebenfalls. Dafür wären zusätzliche
 App-Store-Connect-API-Zugangsdaten und ein JWT erforderlich. Für den ersten Upload

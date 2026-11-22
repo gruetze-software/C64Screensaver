@@ -1,14 +1,17 @@
 # Gruetze RetroSaver
 
+<img src="C64Screensaver/Assets/app-icon.png" width="96" alt="Gruetze RetroSaver CRT app icon">
+
 C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable CRT effects. Built with .NET 10 and Avalonia 12.
 
 ![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
-## New in 1.2.5
+## Next update: 1.2.7
 
-Version 1.2.5 adds compact dialogs that fit the display's working area, a smaller
-preview, an explicit Close button, All Kickstarts rotation and a classic-style
-Boing ball. All animations cycles Jump & run, Plasma and Boing.
+Version 1.2.7 is being prepared with a new CRT monitor app icon, clearer Mac Store
+screenshots rendered at 2560×1600, and a privacy-policy link in the information
+dialogs. The images below preview this development version. Published Windows/
+Linux downloads remain at 1.2.5; the Mac App Store version is currently 1.2.6.
 
 ![Classic-style Boing ball](docs/images/amiga-boing.png)
 
@@ -19,7 +22,7 @@ correct them with Backspace and finally type RUN. Choose an endless maze, an
 editable company card or a twinkling starfield. Cycle through all three or repeat
 one, with configurable runtime and optional border colour changes.
 
-**Amiga:** choose a Kickstart 1.3, 2.0 or 3.1 startup image, then enjoy an autoplay
+**Amiga:** on Windows/Linux, choose a Kickstart 1.3, 2.0 or 3.1 startup image, then enjoy an autoplay
 Jump & run with layered woodland parallax, colourful Plasma or a classic-style
 Boing ball. Cycle all three or repeat your favourite. All Kickstarts rotates
 the original startup prompts between runs. Edit, adjust or hide the sine-wave scrolling text;
@@ -67,18 +70,19 @@ helper or autostart entry and does not replace the password lock.
 
 ### macOS
 
-The upcoming macOS 1.2.6 removes historical Kickstart startup images and starts
-the selected animation directly. Windows/Linux retain the Kickstart selection.
+[Gruetze RetroSaver on the Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12)
 
-A native system screensaver and companion app are in development for Apple
-Silicon and Intel. The app contains the `.saver` and offers **Install / update
+The Mac app includes the native system screensaver and offers **Install / update
 system screensaver**. Both interfaces share settings; native rendering uses
-Metal when available, with a CPU fallback.
+Metal when available, with a CPU fallback. The sandboxed companion asks for
+explicit access to the shared settings folder. macOS starts the selected Amiga
+animation directly; Windows/Linux retain the historical Kickstart selection.
 
-Public GitHub releases contain **Windows/Linux downloads only**. Mac distribution
-through the App Store is planned; no Store version or purchase link is available
-yet. Developer builds and signing are documented in the [Mac guide](macos/README.md)
-and [Developer ID instructions](macos/APPLE-DEVELOPER-DE.md).
+Public GitHub releases contain **Windows/Linux downloads only**. Mac developer
+builds and signing are documented in the [Mac guide](macos/README.md),
+[Store build instructions](macos/STORE-BUILD-DE.md) and
+[Developer ID instructions](macos/APPLE-DEVELOPER-DE.md).
+See the [privacy policy](https://github.com/gruetze-software/C64Screensaver/blob/main/PRIVACY.md).
 
 ## Companion and settings
 
@@ -95,7 +99,7 @@ Start from Clean pixels, Subtle CRT, Classic monitor or Glowing CRT, then adjust
 each effect with the live preview. The enlarge button opens a bigger preview;
 F11 toggles its fullscreen view and Escape closes it.
 
-![Shared monitor effects with default values](docs/images/settings-monitor.png)
+![Shared monitor effects with a readable CRT preset](docs/images/settings-monitor.png)
 
 Choose original 4:3 proportions or stretch to the display. Stretch plus hidden
 border fills the monitor; 4:3 retains black bars on wide or portrait displays.

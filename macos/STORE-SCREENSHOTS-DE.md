@@ -31,5 +31,5 @@ Betriebssystemen ab. Der Mac-Buildlauf erzeugt außerdem ein separates Artefakt
 Gruetze-RetroSaver-Mac-Store-Screenshots. Die Original-Kickstart-Bilder werden in
 dieser Serie bewusst nicht gezeigt, während deren Nutzungsnachweise offen sind.
 
-Die neue Mac-Serie für 1.2.6 enthält keine Kickstart-Auswahl mehr. Vor endgültiger Store-
+Die neue Mac-Serie für 1.2.7 enthält keine Kickstart-Auswahl mehr. Vor endgültiger Store-
 Einreichung müssen sie mit der eingereichten Sandbox-Version abgeglichen werden.
