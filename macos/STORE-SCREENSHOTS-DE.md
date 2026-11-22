@@ -16,7 +16,10 @@ gesamten Desktops oder eines physischen Mac. Keine nachgebildeten Betriebssystem
 Fenster, Werbeüberlagerungen oder veränderten Bedienelemente. Es werden keine
 persönlichen Einstellungen geändert.
 
-PNG, 1280×800, RGB ohne Transparenz. Mac-freigegebene Bildgröße laut Apple:
+PNG, 2560×1600, RGB ohne Transparenz. Die App bleibt im Layout 1280×800 und
+wird mit 192 dpi direkt in doppelter Auflösung gerendert, nicht nachträglich
+vergrößert. Für die Aufnahmen: Glow 35 %, Ausbreitung 25 %, Weichzeichnung 3 %.
+Die CRT- und Pixelgrafik bleibt aus dem echten Renderer erhalten. Mac-freigegebene Bildgröße laut Apple:
 https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications
 
 Auf einem Mac reproduzieren:

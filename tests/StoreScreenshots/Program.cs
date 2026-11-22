@@ -11,6 +11,7 @@ using System.Text.Json;
 
 if (!OperatingSystem.IsMacOS()) throw new PlatformNotSupportedException("Capture on macOS for Mac product media.");
 const int Width = 1280, Height = 800;
+const int Scale = 2, PixelWidth = Width * Scale, PixelHeight = Height * Scale;
 string output = Path.GetFullPath("artifacts/store-screenshots");
 Directory.CreateDirectory(output);
 string configFile = Path.Combine(output, "isolated-settings.json");
@@ -29,7 +30,7 @@ return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont()
                 await Editors();
                 File.WriteAllText(Path.Combine(output, "README.txt"),
                     "Gruetze RetroSaver " + AppInfo.Version + " — Mac-rendered app views\n" +
-                    "1280 x 800 PNG, opaque RGB, English UI. Capture order follows filenames.\n" +
+                    "2560 x 1600 PNG at 2x scale, opaque RGB, English UI. Capture order follows filenames.\n" +
                     "Frames use the product's C64Scene and CRT renderer; editors use the actual companion/monitor views.\n" +
                     "Native Avalonia platform on macOS; offscreen view capture, not a desktop screen recording.\n" +
                     "Isolated settings only; personal settings are not reset. No marketing overlays or Kickstart artwork.\n" +
@@ -43,8 +44,8 @@ return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont()
 
 SaverSettings Look() => new()
 {
-    Curvature = 18, Glow = 65, GlowSpread = 55, ScanlineStrength = 18,
-    MaskStrength = 5, Softness = 12, Vignette = 15, Flicker = 0,
+    Curvature = 18, Glow = 35, GlowSpread = 25, ScanlineStrength = 18,
+    MaskStrength = 5, Softness = 3, Vignette = 15, Flicker = 0,
     KeepAspectRatio = true, PowerTransition = false, NativeRenderQuality = 2,
     AmigaBoot = AmigaBootStyle.None, ScrollerText = "GRUETZE RETROSAVER - WELCOME TO THE AMIGA!", ScrollerWave = 10
 };
@@ -126,16 +127,16 @@ void Save(Control view, string name)
         Dispatcher.UIThread.RunJobs();
         effectsScroll.Arrange(effectsScroll.Bounds);
     }
-    using var capture = new RenderTargetBitmap(new PixelSize(Width, Height), new Vector(96, 96));
+    using var capture = new RenderTargetBitmap(new PixelSize(PixelWidth, PixelHeight), new Vector(96 * Scale, 96 * Scale));
     capture.Render(target);
     using var bytes = new MemoryStream(); capture.Save(bytes, PngBitmapEncoderOptions.Default);
     using var bitmap = SKBitmap.Decode(bytes.ToArray()) ?? throw new Exception("Empty capture: " + name);
-    using var surface = SKSurface.Create(new SKImageInfo(Width, Height, SKColorType.Rgb888x, SKAlphaType.Opaque));
+    using var surface = SKSurface.Create(new SKImageInfo(PixelWidth, PixelHeight, SKColorType.Rgb888x, SKAlphaType.Opaque));
     var background = owner?.Background is ISolidColorBrush brush
         ? new SKColor(brush.Color.R, brush.Color.G, brush.Color.B, brush.Color.A) : SKColors.Black;
     surface.Canvas.Clear(background); surface.Canvas.DrawBitmap(bitmap, 0, 0);
     using var image = surface.Snapshot(); using var png = image.Encode(SKEncodedImageFormat.Png, 100);
     string path = Path.Combine(output, name + ".png");
     using var file = File.Create(path); png.SaveTo(file);
-    Console.WriteLine("Captured " + name + " 1280x800 on macOS");
+    Console.WriteLine("Captured " + name + " 2560x1600 at 2x scale on macOS");
 }
