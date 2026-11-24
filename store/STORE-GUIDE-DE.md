@@ -1,8 +1,8 @@
 # Snap Store und Microsoft Store vorbereiten
 
 Windows und Linux bleiben kostenlos. Der Mac App Store und dessen Signierung bleiben getrennt.
-Arbeitsbranch: `codex/windows-snap-store`, auf Basis des aktuellen Mac-Build-Zweigs.
-Noch keine neue Version in einem Store veröffentlicht.
+Version: **1.3.0**. Nach Veröffentlichung vom aktuellen `main` bauen.
+Die Paket-Builds veröffentlichen nicht automatisch in den Stores.
 
 ## Microsoft Store
 

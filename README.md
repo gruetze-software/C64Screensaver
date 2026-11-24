@@ -6,7 +6,7 @@ C64 BASIC and Amiga-inspired animations, a shared companion app and adjustable C
 
 <a href="https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12"><img src="docs/images/mac-app-store-badge.svg" alt="Download on the Mac App Store" height="48"></a>
 
-[Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
+[Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/latest) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
 
 ## Screenshots
 
@@ -32,7 +32,7 @@ message, speed and wave movement. Windows/Linux also offer historical Kickstart
 startup screens; the Mac edition starts the animation directly. See the
 [artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
 
-**Your monitor:** adjust glow, scanlines, curvature, phosphor mask, softness and
+**Your monitor:** choose Original, Glow, Classic CRT or Old TV, then adjust glow, scanlines, curvature, phosphor mask, softness and
 picture proportions with a live preview. Optional CRT power transitions collapse
 the image into a line and glowing dot. Playback and text settings are separate
 from the shared monitor effects.
@@ -44,7 +44,7 @@ emulator and does not load PRG files.
 
 ### Windows and Linux — free
 
-[Download the Windows / Linux ZIP packages](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5)
+[Download the Windows / Linux ZIP packages](https://github.com/gruetze-software/C64Screensaver/releases/latest)
 
 Self-contained packages are available for x64 and ARM64. Extract the whole ZIP
 into a permanent folder and keep its files together. No separate .NET installation
