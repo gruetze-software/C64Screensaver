@@ -35,8 +35,6 @@ picture proportions with a live preview. Optional CRT power transitions collapse
 the image into a line and glowing dot. Playback and text settings are separate
 from the shared monitor effects.
 
-<img src="docs/images/retrosaver-animated-icon.gif" width="128" height="128" alt="C64 startup screen with blinking cursor, rolling CRT bands and glass reflection">
-
 The C64 interpreter implements a limited BASIC V2 subset; it is not a full machine
 emulator and does not load PRG files.
 
