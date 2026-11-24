@@ -290,9 +290,9 @@ using (var crt = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "borderless-crt.
     }
 }
 using (var icon = SkiaSharp.SKBitmap.Decode(Path.GetFullPath(Path.Combine(output, "../../C64Screensaver/Assets/app-icon.png"))))
-    Check(icon.Width == 1024 && icon.Height == 1024 && icon.GetPixel(0, 0).Alpha == 255
-        && icon.GetPixel(1023, 0).Alpha == 255 && icon.GetPixel(0, 1023).Alpha == 255
-        && icon.GetPixel(1023, 1023).Alpha == 255, "Edge-to-edge RetroSaver product icon");
+    Check(icon.Width == 1024 && icon.Height == 1024 && icon.GetPixel(0, 0).Alpha == 0
+        && icon.GetPixel(1023, 0).Alpha == 0 && icon.GetPixel(0, 1023).Alpha == 0
+        && icon.GetPixel(1023, 1023).Alpha == 0, "Owner-provided transparent RetroSaver product icon");
 CaptureScene("starfield", 0, new SaverSettings { Programs = ProgramSelection.Stars }, true);
 CaptureScene("stars-borderless", 0, new SaverSettings { Programs = ProgramSelection.Stars, FillScreen = true }, true, 1280, 720);
 Capture(new SettingsWindow(), "settings");
@@ -326,9 +326,9 @@ var previewDialog = new SettingsWindow(previewConfig);
 Check(previewDialog.FindControl<TextBlock>("VersionLabel") != null, "Shared monitor dialog loads");
 previewDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 2;
 Check(previewDialog.FindControl<CheckBox>("CrtCheckBox")!.IsChecked == true &&
-    previewDialog.FindControl<Slider>("CurvatureSlider")!.Value == 45, "Classic preset applies controls");
+    previewDialog.FindControl<Slider>("CurvatureSlider")!.Value == 18, "Classic preset applies controls");
 previewDialog.FindControl<Slider>("CurvatureSlider")!.Value = 66;
-Check(previewDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex == 3, "Manual slider adjustment selects Custom");
+Check(previewDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex == 4, "Manual slider adjustment selects Custom");
 Check(!previewConfig.Settings.CrtEnabled && previewConfig.Settings.Curvature == 48,
     "Live preview does not mutate saved configuration");
 Check(previewDialog.FindControl<NumericUpDown>("DurationInput") == null, "Runtime belongs in the companion, not the monitor dialog");
@@ -496,14 +496,22 @@ using (var glowing = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "glowing-crt
     }
     Check(haloPixels > 500, "Bloom spreads light into dark pixels around the text");
 }
+foreach (var preset in new[] { MonitorPreset.Original, MonitorPreset.Glow, MonitorPreset.ClassicCrt, MonitorPreset.OldTv })
+{
+    var selected = MonitorPresets.Create(preset);
+    Check(MonitorPresets.Match(selected) == preset, "Saved picture style is recognized: " + preset);
+    Check(selected.Flicker == 0, "Preset flicker is opt-in: " + preset);
+}
+var glowOnly = MonitorPresets.Create(MonitorPreset.Glow);
+Check(glowOnly.CrtEnabled && !glowOnly.Scanlines && glowOnly.Curvature == 0 && glowOnly.MaskStrength == 0 && glowOnly.Softness == 0 && glowOnly.Vignette == 0, "Glow is actually glow-only");
 var glowDialog = new SettingsWindow(new ConfigManager(configPath) { Settings = new SaverSettings() });
-glowDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 4;
-Check(glowDialog.FindControl<Slider>("GlowSlider")!.Value == 85 &&
-    glowDialog.FindControl<Slider>("GlowSpreadSlider")!.Value == 65 &&
-    glowDialog.FindControl<Slider>("FlickerSlider")!.Value == 0, "Glowing CRT preset has broad stable bloom");
+glowDialog.FindControl<ComboBox>("PresetCombo")!.SelectedIndex = 1;
+Check(glowDialog.FindControl<Slider>("GlowSlider")!.Value == 65 &&
+    glowDialog.FindControl<Slider>("GlowSpreadSlider")!.Value == 50 &&
+    glowDialog.FindControl<Slider>("FlickerSlider")!.Value == 0, "Glow preset has broad stable bloom");
 glowDialog.Height = 1000;
 Capture(glowDialog, "glowing-settings");
-Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glowing CRT preset.");
+Console.WriteLine("PASS: broad bloom, dark-pixel halo and Glow preset.");
 
 CompanionUi();
 

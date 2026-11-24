@@ -11,14 +11,16 @@ $release = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } el
 New-Item -ItemType Directory -Path $release -Force | Out-Null
 dotnet build (Join-Path $root 'C64Screensaver.sln') -c Release --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed' }
-# Preserve the curated hero image; the smoke suite writes a diagnostic with the same name.
-$heroPath = Join-Path $root 'docs/images/glowing-crt.png'
-$heroBytes = [IO.File]::ReadAllBytes($heroPath)
+# Smoke captures are diagnostics; preserve all curated README artwork.
+$curatedImages = @{}
+Get-ChildItem -LiteralPath (Join-Path $root 'docs/images') -File -Filter '*.png' | ForEach-Object {
+    $curatedImages[$_.FullName] = [IO.File]::ReadAllBytes($_.FullName)
+}
 try {
     dotnet run --project (Join-Path $root 'tests/Smoke/Smoke.csproj') -c Release --no-build
     if ($LASTEXITCODE -ne 0) { throw 'Release checks failed' }
 } finally {
-    [IO.File]::WriteAllBytes($heroPath, $heroBytes)
+    foreach ($path in $curatedImages.Keys) { [IO.File]::WriteAllBytes($path, $curatedImages[$path]) }
 }
 $archives = @()
 foreach ($runtime in ($Runtimes | Select-Object -Unique)) {

@@ -1,8 +1,6 @@
-Gruetze RetroSaver CRT icon — revised 24 November 2026.
-Edited with the built-in image_gen tool (opaque background).
-
-Prompt:
-Keep the approved beige CRT monitor and its details unchanged. Replace the rounded purple backing tile and transparent exterior with a seamless dark indigo background filling the entire square. No rounded corners, inset tile, rim, border, bevel, outer shadow or transparency. macOS supplies the icon shape. Preserve blue glass, cyan cursor, amber power light, vents and pedestal. No text.
-
-Reproduce platform exports (do not add transparent inset padding):
-dotnet run --project tools/IconBuilder -c Release -- tools/IconBuilder/source-crt.png C64Screensaver/Assets --full-bleed
+Gruetze RetroSaver icon: owner-supplied transparent artwork, adopted for 1.3.0.
+Use icon_main.png and the supplied icon_128/256/512/1024.png files.
+PNG/ICO/ICNS export preserves the supplied size variants and transparency.
+No additional tile, rim, background or padding is added.
+Rebuild: dotnet run --project tools/IconBuilder -c Release -- tools/IconBuilder/icon_1024.png C64Screensaver/Assets --provided-sizes
+Earlier generated sources remain in Git history; do not regenerate this owner edit.

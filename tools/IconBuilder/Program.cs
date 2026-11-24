@@ -2,9 +2,10 @@ using System.Buffers.Binary;
 using System.Text;
 using SkiaSharp;
 
-if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "--full-bleed"))
-    throw new ArgumentException("Usage: IconBuilder source.png output-directory [--full-bleed]");
+if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "--full-bleed" && args[2] != "--provided-sizes"))
+    throw new ArgumentException("Usage: IconBuilder source.png output-directory [--full-bleed|--provided-sizes]");
 bool fullBleed = args.Length == 3;
+bool providedSizes = fullBleed && args[2] == "--provided-sizes";
 using var bitmap = SKBitmap.Decode(args[0]) ?? throw new IOException("Cannot read source icon");
 using var source = SKImage.FromBitmap(bitmap);
 int left = bitmap.Width, top = bitmap.Height, right = 0, bottom = 0;
@@ -20,6 +21,13 @@ if (fullBleed && bitmap.Width != bitmap.Height)
     throw new InvalidDataException("Full-bleed icon source must be square");
 byte[] Png(int size)
 {
+    string supplied = Path.Combine(Path.GetDirectoryName(args[0])!, $"icon_{size}.png");
+    if (providedSizes && File.Exists(supplied))
+    {
+        using var check = SKBitmap.Decode(supplied);
+        if (check.Width != size || check.Height != size) throw new InvalidDataException("Wrong owner-provided icon size: " + supplied);
+        return File.ReadAllBytes(supplied);
+    }
     using var surface = SKSurface.Create(new SKImageInfo(size, size));
     surface.Canvas.Clear(SKColors.Transparent);
     float scale = size * (fullBleed ? 1f : 0.9f) / Math.Max(content.Width, content.Height);

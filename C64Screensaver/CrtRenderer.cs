@@ -136,7 +136,14 @@ half4 main(float2 pos) {
     float edgeAA = clamp(min(min(uv.x,1.0-uv.x)*size.x,min(uv.y,1.0-uv.y)*size.y)*pixelScale,0.0,1.0);
     edgeAA = mix(1.0,edgeAA,edgeFade);
     float2 at = uv * size;
-    float3 crisp = picture.eval(float2(floor(at.x) + 0.5,at.y)).rgb;
+    // Reconstruct a sharp texel with one output pixel of edge coverage.
+    // Snapping directly with floor(at.x) makes curved border edges jump by
+    // entire source columns. This keeps text crisp without those stair steps.
+    float xFootprint = clamp((1.0 + curvature * 0.12 * q.y*q.y) / max(pixelScale,0.1),0.001,1.0);
+    float xCell = floor(at.x - 0.5);
+    float xFraction = at.x - 0.5 - xCell;
+    float xCoverage = smoothstep(0.5 - xFootprint*0.5,0.5 + xFootprint*0.5,xFraction);
+    float3 crisp = picture.eval(float2(xCell + 0.5 + xCoverage,at.y)).rgb;
     float3 smoothColor = picture.eval(at).rgb;
     float3 color = mix(crisp,smoothColor,softness);
     float3 linear = pow(max(color,float3(0)),float3(2.2));

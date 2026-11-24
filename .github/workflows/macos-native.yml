@@ -1,7 +1,7 @@
 name: macOS builds
 on:
   push:
-    branches: [main, codex/macos-native-screensaver, codex/macos-integrated-package, codex/macos-diskutil, codex/scrollbar-spacing]
+    branches: [main, codex/windows-snap-store, codex/macos-native-screensaver, codex/macos-integrated-package, codex/macos-diskutil, codex/scrollbar-spacing]
   workflow_dispatch:
     inputs:
       screenshots_only:
@@ -39,6 +39,8 @@ jobs:
         run: bash macos/test-store-sandbox.sh ${{ matrix.arch }}
       - name: Test Amiga startup and animations
         run: dotnet run --project tests/Amiga -c Release
+      - name: Test curved CRT edge coverage
+        run: dotnet run --project tests/CrtEdges -c Release
       - name: Test managed C ABI
         run: dotnet run --project tests/NativeBridge -c Release
       - name: Measure CPU render budgets

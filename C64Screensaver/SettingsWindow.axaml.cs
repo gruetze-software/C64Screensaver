@@ -25,35 +25,24 @@ public partial class SettingsWindow : Window
         LogoImage.Source = SpriteAssets.Instance.Logo;
         VersionLabel.Text = AppInfo.DisplayName;
         Apply(config.Settings);
-        PresetCombo.SelectedIndex = !config.Settings.CrtEnabled ? 0 : (CrtParameters.From(config.Settings) with { FillScreen = false, KeepAspectRatio = true }) == CrtParameters.From(new SaverSettings()) ? 1 : 3;
+        PresetCombo.SelectedIndex = (int)MonitorPresets.Match(config.Settings);
         if (config.LastError != null) StatusLabel.Text = "Could not load settings. Defaults are being used.";
         foreach (var slider in EffectSliders)
             slider.PropertyChanged += (_, e) =>
             {
                 if (e.Property.Name == nameof(Slider.Value) && !loading)
-                { PresetCombo.SelectedIndex = 3; RefreshPreview(); }
+                { PresetCombo.SelectedIndex = (int)MonitorPreset.Custom; RefreshPreview(); }
             };
-        CrtCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = 3; RefreshPreview(); } };
-        ScanlinesCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = 3; RefreshPreview(); } };
+        CrtCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = (int)MonitorPreset.Custom; RefreshPreview(); } };
+        ScanlinesCheckBox.IsCheckedChanged += (_, _) => { if (!loading) { PresetCombo.SelectedIndex = (int)MonitorPreset.Custom; RefreshPreview(); } };
         PowerTransitionCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RestartPreview(); };
         AspectCombo.SelectionChanged += (_, _) => { if (!loading) RefreshPreview(); };
         FillScreenCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RefreshPreview(); };
         PreviewProgramCheckBox.IsCheckedChanged += (_, _) => { if (!loading) RestartPreview(); };
         PresetCombo.SelectionChanged += (_, _) =>
         {
-            if (loading || PresetCombo.SelectedIndex == 3) return;
-            var preset = new SaverSettings();
-            if (PresetCombo.SelectedIndex == 0) preset.CrtEnabled = false;
-            else if (PresetCombo.SelectedIndex == 2)
-            {
-                preset.Curvature = 45; preset.ScanlineStrength = 55; preset.MaskStrength = 38;
-                preset.Softness = 30; preset.Glow = 28; preset.Vignette = 40;
-            }
-            if (PresetCombo.SelectedIndex == 4)
-            {
-                preset.Curvature = 25; preset.ScanlineStrength = 25; preset.MaskStrength = 10;
-                preset.Softness = 20; preset.Glow = 85; preset.GlowSpread = 65; preset.Vignette = 35;
-            }
+            if (loading || PresetCombo.SelectedIndex < 0 || PresetCombo.SelectedIndex == (int)MonitorPreset.Custom) return;
+            var preset = MonitorPresets.Create((MonitorPreset)PresetCombo.SelectedIndex);
             loading = true;
             SetEffects(preset);
             loading = false;
@@ -113,6 +102,7 @@ public partial class SettingsWindow : Window
             SoftnessLabel, GlowLabel, GlowSpreadLabel, VignetteLabel, FlickerLabel };
         var sliders = EffectSliders;
         for (int i = 0; i < sliders.Length; i++) labels[i].Text = $"{sliders[i].Value:F0}%";
+        PresetDescription.Text = MonitorPresets.Description((MonitorPreset)PresetCombo.SelectedIndex);
         PowerPreviewButton.IsEnabled = previewSettings.PowerTransition;
         EffectsPanel.IsEnabled = previewSettings.CrtEnabled;
         CurvatureSlider.IsEnabled = !previewSettings.FillScreen;
@@ -174,7 +164,7 @@ public partial class SettingsWindow : Window
     private void Reset_Click(object? sender, RoutedEventArgs e)
     {
         Apply(new SaverSettings());
-        PresetCombo.SelectedIndex = 1;
+        PresetCombo.SelectedIndex = (int)MonitorPreset.ClassicCrt;
         RestartPreview();
     }
 }

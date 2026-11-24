@@ -176,6 +176,14 @@ int main(int argc, char **argv) {
                 quality = (NSPopUpButton *)control;
         if (!quality || quality.numberOfItems != 3) return 27;
         [quality selectItemAtIndex:1];
+        NSPopUpButton *style = [view valueForKey:@"monitorPreset"];
+        if (style.numberOfItems != 5) return 40;
+        [style selectItemAtIndex:1]; [NSApp sendAction:style.action to:style.target from:style];
+        if ([(NSSlider *)[view valueForKey:@"glow"] doubleValue] != 65 || [(NSSlider *)[view valueForKey:@"scanlines"] doubleValue] != 0) return 41;
+        [style selectItemAtIndex:3]; [NSApp sendAction:style.action to:style.target from:style];
+        if ([(NSSlider *)[view valueForKey:@"phosphor"] doubleValue] != 25) return 42;
+        [style selectItemAtIndex:2]; [NSApp sendAction:style.action to:style.target from:style];
+
         for (NSInteger tag = 1; tag <= 4; tag++) {
             NSSlider *slider = (NSSlider *)findTag(sheet.contentView,tag);
             if (![slider isKindOfClass:NSSlider.class]) return 23;

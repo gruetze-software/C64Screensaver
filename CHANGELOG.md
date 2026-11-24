@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11-24
 
-- Remove the CRT icon’s inset rounded tile, outer rim and transparent padding; export edge-to-edge square artwork so macOS controls the icon shape.
+- Smooth curved CRT border edges without blurring the C64 pixels or raising render-resolution budgets.
+- Add clear Original, Glow, Classic CRT and Old TV picture styles, with Custom for manual adjustments; restore recognized styles when reopening settings.
+- Keep all presets stable by default: brightness flicker remains opt-in. Glow disables curvature, scanlines, mask and vignette.
+- Apply the same styles in the companion and native macOS fallback options.
+- Use the owner's transparent CRT icons across Windows, Linux, macOS and Store assets.
+- Add Windows MSIX and strict Snap builds, native Windows screensaver export, updated Store screenshots and English Linux setup documentation.
 
 ## 1.2.7 — 2026-11-24
 

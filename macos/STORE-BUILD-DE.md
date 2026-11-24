@@ -1,9 +1,13 @@
 # Mac App Store: Sandbox-Test und signiertes Paket
 
-Stand: 22. November 2026. Version 1.2.6 wurde im Mac App Store freigegeben.
-Die nächste Aktualisierung 1.2.7 wird vorbereitet; für sie wurde noch kein Build
-hochgeladen. Die echte .saver-Komponente bleibt Teil des Produkts; ihre
-Installation über den Apple-Systemdialog muss App Review beurteilen.
+Stand: 24. November 2026. Die nächste Aktualisierung ist **1.3.0**.
+Sie enthält geglättete CRT-Kanten, die Bildstile Original / Glow / Classic CRT /
+Old TV und die vom Eigentümer bereitgestellten transparenten Icons.
+Begleit-App und eingebetteter System-Bildschirmschoner werden zusammen neu gebaut.
+
+Nach `git pull` muss `C64Screensaver/C64Screensaver.csproj` Version 1.3.0 zeigen.
+Der native Saver trägt Version 1.3.0 und Build 18. Private Signierschlüssel bleiben
+auf dem Mac; CI liefert nur Test-Builds, kein einreichbares signiertes Store-Paket.
 
 ## Voraussetzungen auf dem Mac
 
@@ -92,7 +96,7 @@ Das .pkg in Apples **Transporter** hinzufügen, prüfen lassen und anschließend
 hochladen. Das bisherige Developer-ID-DMG ist kein Store-Upload. Profilgültigkeit,
 Zertifikatszuordnung, Upload-Validierung und App Review sind zusätzliche Prüfungen;
 eine erfolgreiche lokale Signatur ersetzt sie nicht. Version in App Store Connect
-an 1.2.7 anpassen, wenn dieser Entwicklungsstand eingereicht wird.
+an 1.3.0 anpassen, wenn dieser Entwicklungsstand eingereicht wird.
 
 Die REST-API unterstützt Build-Uploads ebenfalls. Dafür wären zusätzliche
 App-Store-Connect-API-Zugangsdaten und ein JWT erforderlich. Für den ersten Upload

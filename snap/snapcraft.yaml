@@ -17,7 +17,7 @@ description: |
 grade: stable
 confinement: strict
 license: MIT
-icon: C64Screensaver/Assets/app-icon.png
+icon: tools/IconBuilder/icon_512.png
 website: https://www.gruetze-software.de
 source-code: https://github.com/gruetze-software/C64Screensaver
 issues: https://github.com/gruetze-software/C64Screensaver/issues

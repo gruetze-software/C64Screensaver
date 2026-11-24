@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test curved CRT edge coverage
+        run: dotnet run --project tests/CrtEdges -c Release
       - name: Check screensaver export without changing Windows settings
         run: dotnet run --project tests/StorePackaging -c Release
       - name: Build SDK-validated Microsoft Store candidate
