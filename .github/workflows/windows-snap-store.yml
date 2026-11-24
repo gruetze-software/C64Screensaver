@@ -50,10 +50,15 @@ jobs:
       - name: Prepare native self-contained Linux payload
         run: bash scripts/prepare-snap.sh ${{ matrix.arch }}
       - name: Capture Linux product media
+        timeout-minutes: 5
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y xvfb libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1
           xvfb-run -a dotnet run --project tests/StoreScreenshots -c Release -- artifacts/linux-store/screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-store-media-${{ matrix.arch }}
+          path: artifacts/linux-store/screenshots/*.png
       - uses: snapcore/action-build@v1
         id: build
       - name: Check package layout and desktop metadata

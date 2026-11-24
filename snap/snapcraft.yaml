@@ -27,7 +27,7 @@ platforms:
 apps:
   gruetze-retrosaver:
     command: bin/launch
-    desktop: snap/gui/gruetze-retrosaver.desktop
+    desktop: gui/gruetze-retrosaver.desktop
     extensions: [gnome]
     plugs: [desktop, desktop-legacy, wayland, x11, opengl]
   screensaver:

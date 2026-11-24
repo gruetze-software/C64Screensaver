@@ -30,7 +30,7 @@ Für einen lokalen Installationstest muss ein passendes Testzertifikat verwendet
 
 ## Snap Store
 
-Vorgesehener technischer Name: **gruetze-retrosaver**. Er muss im vorhandenen Konto reserviert sein: https://dashboard.snapcraft.io/register-snap/ . Eine manuelle Namensprüfung durch Canonical kann erforderlich sein. Falls ein anderer Name reserviert wurde, `name`, App-Name, Desktop-Datei/Exec und Dokumentation gemeinsam anpassen. Eine Reservierung wird nicht automatisch ausgeführt.
+Technischer Name: **gruetze-retrosaver**. Der Name ist laut Kontoinhaber bereits reserviert. Falls ein anderer Name reserviert wurde, `name`, App-Name, Desktop-Datei/Exec und Dokumentation gemeinsam anpassen. Eine Reservierung wird nicht automatisch ausgeführt.
 
 Auf Ubuntu 24.04 oder mit dem GitHub-Workflow bauen. Lokal werden .NET 10 und Snapcraft benötigt. Snapcraft verwendet für das Paket eine Ubuntu-Buildumgebung (z.B. LXD); nicht ungefragt die lokale Systeminstallation ändern.
 
@@ -54,15 +54,14 @@ snap connections gruetze-retrosaver
 
 Wayland und X11 separat ausprobieren; Vollbild verlassen, Einstellungen speichern, App neu starten. Keine devmode/classic-Ausnahme als Ersatz für den strict-Test verwenden. GNOME/Wayland bietet keine Einbindung fremder System-Bildschirmschoner. Unter anderen Desktops gilt `docs/SCREEN-SAVER-SETUP.md`. Der Snap startet nicht selbständig bei Inaktivität und verändert keine Sperreinstellungen.
 
-Nach erfolgreichem lokalen Test kann der Kontoinhaber einen Testkanal verwenden:
+Der erste Upload kann zunächst ohne Kanal-Freigabe erfolgen:
 
 ```bash
 snapcraft login
-snapcraft register gruetze-retrosaver
-snapcraft upload gruetze-retrosaver_VERSION_amd64.snap --release=edge
+snapcraft upload gruetze-retrosaver_VERSION_amd64.snap
 ```
 
-`register` nur ausführen, wenn der Name noch nicht im eigenen Konto reserviert ist. Anmeldung und eine eventuell angezeigte Vereinbarung selbst abschließen. Danach ARM64 ebenfalls in edge hochladen. Mit `snapcraft status gruetze-retrosaver` die Architektur-Zuordnung prüfen. Erst nach Desktop-Tests die konkreten Revisionen nach stable freigeben; `grade: stable` im YAML veröffentlicht nichts von selbst.
+Der Name ist bereits reserviert; nicht erneut registrieren. Anmeldung selbst abschließen. Danach ARM64 ebenfalls ohne `--release` hochladen. Erst nach dem lokalen strict-Test die konkreten Revisionen in edge freigeben. Mit `snapcraft status gruetze-retrosaver` die Architektur-Zuordnung prüfen. Erst nach Desktop-Tests die konkreten Revisionen nach stable freigeben; `grade: stable` im YAML veröffentlicht nichts von selbst.
 
 ## Bilder und Texte
 
@@ -82,7 +81,7 @@ Die Aufnahmen verwenden eine isolierte JSON-Datei und ändern keine persönliche
 
 ## Noch vor der Einreichung zu klären
 
-- Microsoft-Produktidentität ist eingetragen (Store-ID 9N4KJ5XNRXBJ); den Snap-Namen `gruetze-retrosaver` noch im Konto reservieren.
+- Microsoft-Produktidentität ist eingetragen (Store-ID 9N4KJ5XNRXBJ); Snap-Name `gruetze-retrosaver` ist laut Kontoinhaber reserviert.
 - Installations-, Update- und System-Screensaver-Test des signierten/Store-installierten Windows-Pakets; strict-Snap auf einem echten Desktop testen.
 - Kickstart-Grafiken bleiben wie gewünscht nur in Windows/Linux enthalten. Die MIT-Lizenz des Programmcodes erteilt keine Lizenz für diese historischen Drittanbieterbilder (siehe KICKSTART-CREDITS.md). Vor öffentlicher Store-Freigabe müssen die nötigen Nutzungsrechte vorliegen; andernfalls Store-Builds ebenfalls ohne diese Grafiken erstellen. Die Vorbereitung behauptet keine Store-Freigabe dieser Inhalte.
 

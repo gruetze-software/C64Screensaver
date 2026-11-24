@@ -290,7 +290,9 @@ using (var crt = SkiaSharp.SKBitmap.Decode(Path.Combine(output, "borderless-crt.
     }
 }
 using (var icon = SkiaSharp.SKBitmap.Decode(Path.GetFullPath(Path.Combine(output, "../../C64Screensaver/Assets/app-icon.png"))))
-    Check(icon.Width == 1024 && icon.GetPixel(0, 0).Alpha == 0, "Transparent C64 product icon");
+    Check(icon.Width == 1024 && icon.Height == 1024 && icon.GetPixel(0, 0).Alpha == 255
+        && icon.GetPixel(1023, 0).Alpha == 255 && icon.GetPixel(0, 1023).Alpha == 255
+        && icon.GetPixel(1023, 1023).Alpha == 255, "Edge-to-edge RetroSaver product icon");
 CaptureScene("starfield", 0, new SaverSettings { Programs = ProgramSelection.Stars }, true);
 CaptureScene("stars-borderless", 0, new SaverSettings { Programs = ProgramSelection.Stars, FillScreen = true }, true, 1280, 720);
 Capture(new SettingsWindow(), "settings");
