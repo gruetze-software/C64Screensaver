@@ -65,7 +65,7 @@ install or configure it. Keep it beside the executable and dependencies. The Sto
 companion provides an explicit **Install / update system screensaver** button.
 
 **Linux screensaver:** automatic activation depends on the desktop. Follow the
-[English Linux setup guide](docs/LINUX-SCREENSAVER.md) for Lubuntu/X11 and other
+[English Linux setup guide](docs/LINUX-SCREENSAVER.md) for Ubuntu, Linux Mint and other
 desktops. RetroSaver does not install an idle watcher or replace the password lock;
 the X11 setup does not work on GNOME/Wayland.
 

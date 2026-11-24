@@ -11,7 +11,7 @@ they have not been tested on native Linux desktop or macOS hardware.
 
 ## Linux Snap: quick start
 
-For a short English walkthrough, see [Lubuntu/X11 and other Linux desktops](LINUX-SCREENSAVER.md).
+For a short English walkthrough, see [Ubuntu, Linux Mint and other Linux desktops](LINUX-SCREENSAVER.md).
 Open the companion with `gruetze-retrosaver`; start fullscreen with
 `/snap/bin/gruetze-retrosaver.screensaver`. On an X11 session, an external idle
 launcher can run `/snap/bin/gruetze-retrosaver.screensaver --x11` after inactivity.
