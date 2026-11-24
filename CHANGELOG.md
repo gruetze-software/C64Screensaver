@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.2.7 — in development
+## Unreleased
+
+- Remove the CRT icon’s inset rounded tile, outer rim and transparent padding; export edge-to-edge square artwork so macOS controls the icon shape.
+
+## 1.2.7 — 2026-11-24
 
 - Replace the small keyboard app icon with the selected CRT monitor artwork across PNG, Windows ICO and macOS ICNS; use high-quality downsampling in dialogs.
 - Capture Mac Store media directly at 2560×1600 (2× UI scale), with less glow spread and horizontal softness for clearer screenshots.
