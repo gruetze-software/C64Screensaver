@@ -20,7 +20,7 @@ public partial class AboutWindow : Window
     private async void OpenLink(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: string target } ||
-            (target != AppInfo.RepositoryUrl && target != AppInfo.CompanyUrl && target != AppInfo.KofiUrl)) return;
+            (target != AppInfo.RepositoryUrl && target != AppInfo.CompanyUrl && target != AppInfo.KofiUrl && target != AppInfo.PrivacyUrl)) return;
         try
         {
             LinkStatus.Text = await Launcher.LaunchUriAsync(new Uri(target))

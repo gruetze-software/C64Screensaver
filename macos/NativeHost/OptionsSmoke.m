@@ -21,19 +21,24 @@ static NSURL *openedCompanion;
 
 static BOOL hasPicture(ScreenSaverView *view) {
     NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
-    while (![view valueForKey:@"image"] && deadline.timeIntervalSinceNow > 0)
+    do {
+        NSImage *image = [view valueForKey:@"image"];
+        CGImageRef cg = image ? [image CGImageForProposedRect:NULL context:nil hints:nil] : NULL;
+        if (cg) {
+            CFDataRef data = CGDataProviderCopyData(CGImageGetDataProvider(cg));
+            const UInt8 *bytes = CFDataGetBytePtr(data);
+            BOOL colored = NO;
+            for (CFIndex i = 0; i + 3 < CFDataGetLength(data); i += 4)
+                if (bytes[i] || bytes[i+1] || bytes[i+2]) { colored = YES; break; }
+            CFRelease(data);
+            if (colored) return YES;
+        }
+        // The CRT power-on transition intentionally starts black. Wait for an
+        // actual colored frame, rather than failing on its first black image.
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.01]];
-    NSImage *image = [view valueForKey:@"image"];
-    if (!image) return NO;
-    CGImageRef cg = [image CGImageForProposedRect:NULL context:nil hints:nil];
-    if (!cg) return NO;
-    CFDataRef data = CGDataProviderCopyData(CGImageGetDataProvider(cg));
-    const UInt8 *bytes = CFDataGetBytePtr(data);
-    BOOL colored = NO;
-    for (CFIndex i = 0; i + 3 < CFDataGetLength(data); i += 4)
-        if (bytes[i] || bytes[i+1] || bytes[i+2]) { colored = YES; break; }
-    CFRelease(data);
-    return colored;
+    } while (deadline.timeIntervalSinceNow > 0);
+    NSLog(@"Preview timed out: image=%@ failed=%@", [view valueForKey:@"image"], [view valueForKey:@"failed"]);
+    return NO;
 }
 
 // Loads the real bundle, creates its options independently of any preview window,
@@ -171,6 +176,14 @@ int main(int argc, char **argv) {
                 quality = (NSPopUpButton *)control;
         if (!quality || quality.numberOfItems != 3) return 27;
         [quality selectItemAtIndex:1];
+        NSPopUpButton *style = [view valueForKey:@"monitorPreset"];
+        if (style.numberOfItems != 5) return 40;
+        [style selectItemAtIndex:1]; [NSApp sendAction:style.action to:style.target from:style];
+        if ([(NSSlider *)[view valueForKey:@"glow"] doubleValue] != 65 || [(NSSlider *)[view valueForKey:@"scanlines"] doubleValue] != 0) return 41;
+        [style selectItemAtIndex:3]; [NSApp sendAction:style.action to:style.target from:style];
+        if ([(NSSlider *)[view valueForKey:@"phosphor"] doubleValue] != 25) return 42;
+        [style selectItemAtIndex:2]; [NSApp sendAction:style.action to:style.target from:style];
+
         for (NSInteger tag = 1; tag <= 4; tag++) {
             NSSlider *slider = (NSSlider *)findTag(sheet.contentView,tag);
             if (![slider isKindOfClass:NSSlider.class]) return 23;

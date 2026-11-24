@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Gruetze RetroSaver
+Comment=C64 BASIC and Amiga animations with adjustable CRT glow
+Exec=gruetze-retrosaver
+Icon=${SNAP}/meta/gui/icon.png
+Terminal=false
+Categories=Graphics;Amusement;

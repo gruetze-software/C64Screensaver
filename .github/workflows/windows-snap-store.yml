@@ -1,0 +1,81 @@
+name: Windows and Snap Store candidates
+on:
+  push:
+    branches: [codex/windows-snap-store]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-snap-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test curved CRT edge coverage
+        run: dotnet run --project tests/CrtEdges -c Release
+      - name: Check screensaver export without changing Windows settings
+        run: dotnet run --project tests/StorePackaging -c Release
+      - name: Build SDK-validated Microsoft Store candidate
+        shell: pwsh
+        run: ./scripts/build-windows-store.ps1 -IdentityFile store/windows/store-identity.json
+      - name: Capture Windows product media
+        run: dotnet run --project tests/StoreScreenshots -c Release -p:WindowsStore=true -- artifacts/windows-store/screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-store-candidate
+          path: |
+            artifacts/windows-store/**/*.msixbundle
+            artifacts/windows-store/**/SHA256SUMS.txt
+            artifacts/windows-store/**/READ-ME-FIRST.txt
+            artifacts/windows-store/**/listing-assets/*.png
+            artifacts/windows-store/screenshots/*.png
+  snap:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Prepare native self-contained Linux payload
+        run: bash scripts/prepare-snap.sh ${{ matrix.arch }}
+      - name: Capture Linux product media
+        timeout-minutes: 5
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libfontconfig1 libx11-6 libice6 libsm6 libxrandr2 libxi6 libxcursor1
+          xvfb-run -a dotnet run --project tests/StoreScreenshots -c Release -- artifacts/linux-store/screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-store-media-${{ matrix.arch }}
+          path: artifacts/linux-store/screenshots/*.png
+      - uses: snapcore/action-build@v1
+        id: build
+      - name: Check package layout and desktop metadata
+        run: |
+          unsquashfs -ll "${{ steps.build.outputs.snap }}" > snap-contents.txt
+          unsquashfs -cat "${{ steps.build.outputs.snap }}" meta/snap.yaml > built-snap.yaml
+          grep -q 'name: gruetze-retrosaver' built-snap.yaml
+          grep -q 'confinement: strict' built-snap.yaml
+          if grep -E '\.(pdb|dbg|dylib|scr|icns)$' snap-contents.txt; then exit 1; fi
+          sha256sum "${{ steps.build.outputs.snap }}" > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snap-${{ matrix.arch }}-candidate
+          path: |
+            ${{ steps.build.outputs.snap }}
+            SHA256SUMS.txt
+            built-snap.yaml
+            artifacts/linux-store/screenshots/*.png

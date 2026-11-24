@@ -1,0 +1,5 @@
+{
+  "Name": "COPY Package/Identity/Name FROM PARTNER CENTER",
+  "Publisher": "COPY Package/Identity/Publisher FROM PARTNER CENTER",
+  "PublisherDisplayName": "COPY Package/Properties/PublisherDisplayName FROM PARTNER CENTER"
+}

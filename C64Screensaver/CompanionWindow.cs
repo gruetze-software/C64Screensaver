@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using System.Linq;
 namespace C64Screensaver;
 public sealed class CompanionWindow : Window
@@ -54,6 +55,26 @@ public sealed class CompanionWindow : Window
         close.Click += (_, _) => Close();
         var actions = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var button in new[] { settings, run, save, about, close }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
+#if WINDOWS_STORE
+        if (OperatingSystem.IsWindows())
+        {
+            var install = new Button { Name = "InstallWindowsScreensaver", Content = "Install / update system screensaver", Margin = new Thickness(0, 0, 12, 8) };
+            install.Click += async (_, _) =>
+            {
+                install.IsEnabled = false;
+                try
+                {
+                    config.SaveSettings();
+                    string path = await System.Threading.Tasks.Task.Run(() => WindowsScreensaver.Prepare());
+                    WindowsScreensaver.OpenInstaller(path);
+                    status.Text = "Choose Gruetze RetroSaver in Windows Screen Saver Settings and apply your preferred timeout. Exported files remain in your local AppData until removed manually.";
+                }
+                catch (Exception ex) { status.Text = "Could not prepare the system screensaver: " + ex.Message; }
+                finally { install.IsEnabled = true; }
+            };
+            actions.Children.Insert(0, install);
+        }
+#endif
         if (OperatingSystem.IsMacOS())
         {
             var install = new Button { Name = "InstallMacScreensaver", Content = "Install / update system screensaver" };
@@ -65,6 +86,8 @@ public sealed class CompanionWindow : Window
                 // The system installer handles installation and update confirmation.
                 string saver = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory,
                     "..", "Resources", "C64Screensaver.saver"));
+                if (!System.IO.Directory.Exists(saver)) saver = System.IO.Path.GetFullPath(System.IO.Path.Combine(
+                    AppContext.BaseDirectory, "..", "PlugIns", "C64Screensaver.saver"));
                 if (!System.IO.Directory.Exists(saver)) { status.Text = "Use the complete Mac app from the DMG to install the screensaver."; return; }
                 try
                 {
@@ -78,6 +101,7 @@ public sealed class CompanionWindow : Window
         var body = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), Margin = new Thickness(20) };
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("54,*,54") };
         var appLogo = new Image { Source = SpriteAssets.Instance.Logo, Width = 44, Height = 44 };
+        RenderOptions.SetBitmapInterpolationMode(appLogo, BitmapInterpolationMode.HighQuality);
         var title = new TextBlock { Text = "Gruetze RetroSaver", FontSize = 26, FontWeight = FontWeight.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0) };
         var companyLogo = new Image { Source = SpriteAssets.Instance.CompanyLogo, Width = 44, Height = 44 };
         var companyInfo = new Button
@@ -228,11 +252,11 @@ public sealed class CompanionWindow : Window
         // Reload another process's saves when returning to the companion. Clone first,
         // because setting controls fires handlers that update the live settings object.
         DateTime savedStamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
-        Activated += (_, _) =>
+        void ReloadEditor()
         {
             if (!OperatingSystem.IsMacOS() || OwnedWindows.Any(w => w.IsVisible)) return;
             DateTime stamp = System.IO.File.GetLastWriteTimeUtc(config.ConfigPath);
-            if (stamp == savedStamp || !System.IO.File.Exists(config.ConfigPath)) return;
+            if (!System.IO.File.Exists(config.ConfigPath)) return;
             savedStamp = stamp;
             config.LoadSettings();
             if (config.LastError != null) { status.Text = "Could not reload: " + config.LastError; return; }
@@ -251,13 +275,37 @@ public sealed class CompanionWindow : Window
             text.Text = loaded.ScrollerText; speed.Value = loaded.ScrollerSpeed; wave.Value = loaded.ScrollerWave;
             config.Settings = loaded;
             Restart();
+        }
+        if (StoreSettingsAccess.Required)
+        {
+            var grant = new Button { Name = "GrantSettingsFolder", Content = "Connect settings folder", Margin = new Thickness(0, 0, 12, 8) };
+            ToolTip.SetTip(grant, "Select Macintosh HD → Users → Shared to share settings with the system screensaver.");
+            grant.Click += async (_, _) => {
+                try {
+                    if (!await StoreSettingsAccess.ChooseAsync(this)) return;
+                    if (System.IO.File.Exists(config.ConfigPath)) ReloadEditor();
+                    else { ReadEditor(); config.SaveSettings(); }
+                    status.Text = config.LastError == null ? "Shared settings connected." : config.LastError;
+                } catch (Exception ex) { status.Text = "Could not connect settings: " + ex.Message; }
+            };
+            actions.Children.Add(grant);
+        }
+        Activated += (_, _) => {
+            if (!StoreSettingsAccess.Granted) return;
+            if (System.IO.File.GetLastWriteTimeUtc(config.ConfigPath) != savedStamp) ReloadEditor();
         };
         Restart();
-        Opened += (_, _) => {
+        Opened += async (_, _) => {
             DialogSizing.FitToWorkingArea(this);
-            if (OperatingSystem.IsMacOS() && !System.IO.File.Exists(config.ConfigPath))
+            if (StoreSettingsAccess.Required) {
+                try {
+                    if (await StoreSettingsAccess.RestoreAsync(this)) ReloadEditor();
+                    else status.Text = "Connect settings folder: select Macintosh HD → Users → Shared. Only this user's RetroSaver settings are written there.";
+                } catch (Exception ex) { status.Text = "Reconnect the settings folder: " + ex.Message; }
+            }
+            if (OperatingSystem.IsMacOS() && StoreSettingsAccess.Granted && !System.IO.File.Exists(config.ConfigPath))
                 status.Text = config.SaveSettings() ? "Shared screensaver settings are ready." : "Could not prepare shared settings: " + config.LastError;
-            running = true; clock.Start(); RequestAnimationFrame(Animate); };
+            if (IsVisible) { running = true; clock.Start(); RequestAnimationFrame(Animate); } };
         Closed += (_, _) => { running = false; clock.Stop(); scene.Clear(); foreach (var preview in previews.ToArray()) preview.Close(); };
     }
     public void OpenMonitorSettings()

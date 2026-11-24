@@ -15,4 +15,5 @@ $arch = if ($Runtime -eq 'linux-x64') { 'amd64' } else { 'arm64' }
 [IO.File]::WriteAllText((Join-Path $output 'BUILD-VERSION'), $version)
 [IO.File]::WriteAllText((Join-Path $output 'BUILD-ARCH'), $arch)
 Copy-Item -LiteralPath (Join-Path $root 'LICENSE') -Destination $output
+Copy-Item -LiteralPath (Join-Path $root 'C64Screensaver/Assets/Kickstart/CREDITS.md') -Destination (Join-Path $output 'KICKSTART-CREDITS.md')
 Write-Host "Prepared $arch. On Ubuntu: chmod +x snap/local/publish/c64screensaver snap/local/launcher/launch; snapcraft --platform $arch"

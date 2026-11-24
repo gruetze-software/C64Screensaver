@@ -2,7 +2,10 @@ using System.Buffers.Binary;
 using System.Text;
 using SkiaSharp;
 
-if (args.Length != 2) throw new ArgumentException("Usage: IconBuilder source.png output-directory");
+if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "--full-bleed" && args[2] != "--provided-sizes"))
+    throw new ArgumentException("Usage: IconBuilder source.png output-directory [--full-bleed|--provided-sizes]");
+bool fullBleed = args.Length == 3;
+bool providedSizes = fullBleed && args[2] == "--provided-sizes";
 using var bitmap = SKBitmap.Decode(args[0]) ?? throw new IOException("Cannot read source icon");
 using var source = SKImage.FromBitmap(bitmap);
 int left = bitmap.Width, top = bitmap.Height, right = 0, bottom = 0;
@@ -11,12 +14,23 @@ for (int y = 0; y < bitmap.Height; y++)
         if (bitmap.GetPixel(x, y).Alpha > 8)
         { left = Math.Min(left, x); top = Math.Min(top, y); right = Math.Max(right, x + 1); bottom = Math.Max(bottom, y + 1); }
 if (right <= left || bottom <= top) throw new InvalidDataException("Source icon is empty");
-var content = new SKRect(left, top, right, bottom);
+var content = fullBleed
+    ? new SKRect(0, 0, bitmap.Width, bitmap.Height)
+    : new SKRect(left, top, right, bottom);
+if (fullBleed && bitmap.Width != bitmap.Height)
+    throw new InvalidDataException("Full-bleed icon source must be square");
 byte[] Png(int size)
 {
+    string supplied = Path.Combine(Path.GetDirectoryName(args[0])!, $"icon_{size}.png");
+    if (providedSizes && File.Exists(supplied))
+    {
+        using var check = SKBitmap.Decode(supplied);
+        if (check.Width != size || check.Height != size) throw new InvalidDataException("Wrong owner-provided icon size: " + supplied);
+        return File.ReadAllBytes(supplied);
+    }
     using var surface = SKSurface.Create(new SKImageInfo(size, size));
     surface.Canvas.Clear(SKColors.Transparent);
-    float scale = size * 0.9f / Math.Max(content.Width, content.Height);
+    float scale = size * (fullBleed ? 1f : 0.9f) / Math.Max(content.Width, content.Height);
     float w = content.Width * scale, h = content.Height * scale;
     var destination = SKRect.Create((size - w) / 2, (size - h) / 2, w, h);
     surface.Canvas.DrawImage(source, content, destination, new SKSamplingOptions(SKCubicResampler.Mitchell));
@@ -60,4 +74,4 @@ using (var output = File.Create(Path.Combine(args[1], "app-icon.icns")))
         BigInt(8 + item.Data.Length); output.Write(item.Data);
     }
 }
-Console.WriteLine("Generated transparent C64 product icon: PNG, seven-size ICO, seven-size ICNS.");
+Console.WriteLine("Generated product icon: PNG, seven-size ICO, seven-size ICNS.");

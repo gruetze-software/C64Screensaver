@@ -1,0 +1,6 @@
+Gruetze RetroSaver icon: owner-supplied transparent artwork, adopted for 1.3.0.
+Use icon_main.png and the supplied icon_128/256/512/1024.png files.
+PNG/ICO/ICNS export preserves the supplied size variants and transparency.
+No additional tile, rim, background or padding is added.
+Rebuild: dotnet run --project tools/IconBuilder -c Release -- tools/IconBuilder/icon_1024.png C64Screensaver/Assets --provided-sizes
+Earlier generated sources remain in Git history; do not regenerate this owner edit.

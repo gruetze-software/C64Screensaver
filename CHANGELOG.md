@@ -1,6 +1,22 @@
 # Changelog
 
-## 1.2.6 — in development
+## 1.3.0 — 2026-11-24
+
+- Smooth curved CRT border edges without blurring the C64 pixels or raising render-resolution budgets.
+- Add clear Original, Glow, Classic CRT and Old TV picture styles, with Custom for manual adjustments; restore recognized styles when reopening settings.
+- Keep all presets stable by default: brightness flicker remains opt-in. Glow disables curvature, scanlines, mask and vignette.
+- Apply the same styles in the companion and native macOS fallback options.
+- Use the owner's transparent CRT icons across Windows, Linux, macOS and Store assets.
+- Add Windows MSIX and strict Snap builds, native Windows screensaver export, updated Store screenshots and English Linux setup documentation.
+
+## 1.2.7 — 2026-11-24
+
+- Replace the small keyboard app icon with the selected CRT monitor artwork across PNG, Windows ICO and macOS ICNS; use high-quality downsampling in dialogs.
+- Capture Mac Store media directly at 2560×1600 (2× UI scale), with less glow spread and horizontal softness for clearer screenshots.
+- Add the published privacy-policy link to both information dialogs and update About branding for C64 and Amiga.
+- Keep companion and native screensaver version metadata aligned for the next Store submission.
+
+## 1.2.6 — macOS App Store build
 
 - macOS: exclude the historical Kickstart GIFs from both companion and native core binaries, remove startup/disk-reflection controls and migrate old startup choices to direct animation playback.
 - Windows/Linux: retain Kickstart 1.3/2.0/3.1, All Kickstarts rotation and disk reflection.

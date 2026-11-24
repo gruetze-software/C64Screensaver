@@ -10,7 +10,7 @@
     <TextBlock Text="Monitor effects" FontSize="25" FontWeight="SemiBold"/>
     <TextBlock Text="Your C64. Your Amiga. Your monitor." Classes="hint"/>
    </StackPanel>
-   <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="None"/>
+   <Image Name="LogoImage" Grid.Column="1" Width="56" Height="56" RenderOptions.BitmapInterpolationMode="HighQuality"/>
   </Grid>
   <Grid Grid.Row="1" ColumnDefinitions="*,350" ColumnSpacing="18">
      <ScrollViewer Classes="settingsScroll" HorizontalScrollBarVisibility="Disabled" Margin="0">
@@ -83,14 +83,16 @@
        <local:C64Scene Name="PreviewScene" Height="140" PreviewDetails="True"/>
       </Border>
       <TextBlock Name="PreviewHint" Classes="hint"/>
-      <TextBlock Text="Monitor preset" Classes="hint"/>
+      <TextBlock Text="Picture style" Classes="hint"/>
       <ComboBox Name="PresetCombo" HorizontalAlignment="Stretch">
-       <ComboBoxItem Content="Clean pixels · all effects off"/>
-       <ComboBoxItem Content="Subtle CRT · stable and clear"/>
-       <ComboBoxItem Content="Classic monitor · more texture"/>
+       <ComboBoxItem Content="Original"/>
+       <ComboBoxItem Content="Glow"/>
+       <ComboBoxItem Content="Classic CRT"/>
+       <ComboBoxItem Content="Old TV"/>
        <ComboBoxItem Content="Custom"/>
-       <ComboBoxItem Content="Glowing CRT · broad phosphor halo"/>
       </ComboBox>
+      <TextBlock Name="PresetDescription" Classes="hint"/>
+
      </StackPanel>
     </Border>
     <Border Classes="card">

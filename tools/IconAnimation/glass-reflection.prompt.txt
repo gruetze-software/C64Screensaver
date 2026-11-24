@@ -1,0 +1,3 @@
+Reflection plate created with the built-in image_gen tool, edit mode, opaque background.
+Prompt: Change ONLY the blue glass display contents: remove the cyan block cursor and both horizontal luminous scanline bands. Preserve the upper-left light reflection, curved glossy glass shading and dark edges. Keep monitor geometry, beige case, pedestal, controls, indicator and square purple background unchanged. No text, cursor or stripes. This is a clean reflection plate for animation compositing, not a redesign.
+Only the glass region of this plate is used; the housing and background in the final animation come from the approved app-icon.png.

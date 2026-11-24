@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.2.6</Version>
+    <Version>1.3.0</Version>
     <AssemblyName>c64screensaver</AssemblyName>
-    <AssemblyVersion>1.2.6.0</AssemblyVersion>
-    <FileVersion>1.2.6.0</FileVersion>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
     <Authors>Grütze-Software</Authors>
     <Product>Gruetze RetroSaver</Product>
     <ApplicationIcon>Assets/app-icon.ico</ApplicationIcon>
@@ -23,6 +23,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <DefineConstants Condition="'$(WindowsStore)' == 'true'">$(DefineConstants);WINDOWS_STORE</DefineConstants>
+    <DefineConstants Condition="'$(MacAppStore)' == 'true'">$(DefineConstants);MAC_APP_STORE</DefineConstants>
     <IncludeKickstartArtwork>true</IncludeKickstartArtwork>
     <IncludeKickstartArtwork Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('osx-')) or ('$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX')))">false</IncludeKickstartArtwork>
     <DefineConstants Condition="'$(IncludeKickstartArtwork)' == 'false'">$(DefineConstants);NO_KICKSTART_ARTWORK</DefineConstants>

@@ -55,6 +55,7 @@ public sealed class CompanyInfoWindow : Window
             return button;
         }
         content.Children.Add(Link("www.gruetze-software.de", AppInfo.CompanyUrl));
+        content.Children.Add(Link("Privacy policy", AppInfo.PrivacyUrl));
         var coffee = Link("Support on Ko-fi ☕", AppInfo.KofiUrl);
         coffee.Classes.Add("primary");
         content.Children.Add(coffee);

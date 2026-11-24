@@ -15,3 +15,12 @@ snap/local/publish/
 !docs/images/amiga-plasma-scroller.png
 
 !docs/images/amiga-jump-and-run.png
+
+# Local Apple signing material (never commit).
+*.p12
+*.p8
+*.provisionprofile
+*.mobileprovision
+
+# Public animated README artwork.
+!docs/images/retrosaver-animated-icon.gif

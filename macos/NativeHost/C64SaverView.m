@@ -78,7 +78,8 @@ static BOOL loadCore(NSBundle *bundle) {
     NSView *_optionsBody;
     NSTabView *_settingsTabs;
     NSArray<NSButton *> *_settingsTabButtons;
-    NSPopUpButton *_program, *_quality, *_borderColors, *_system, *_amigaDemo;
+    NSPopUpButton *_program, *_quality, *_borderColors, *_system, *_amigaDemo, *_monitorPreset;
+    NSDictionary *_monitorOverrides;
     NSButton *_amigaScroller;
     NSTextField *_amigaText, *_amigaDuration, *_amigaSpeed, *_amigaWave;
     NSButton *_aspect, *_border, *_fullScreen, *_power;
@@ -422,8 +423,33 @@ static BOOL loadCore(NSBundle *bundle) {
     return slider;
 }
 - (void)sliderChanged:(NSSlider *)sender {
+    [_monitorPreset selectItemAtIndex:4];
     NSTextField *percent = (NSTextField *)[sender.superview viewWithTag:sender.tag + 100];
     percent.stringValue = [NSString stringWithFormat:@"%.0f%%",sender.doubleValue];
+}
+- (NSDictionary *)monitorPresetValues:(NSInteger)index {
+    BOOL glow = index == 1, old = index == 3;
+    return @{@"CrtEnabled": @(index != 0), @"Scanlines": @(!glow),
+        @"Curvature": @(glow ? 0 : old ? 45 : 18),
+        @"ScanlineStrength": @(glow ? 0 : old ? 55 : 22),
+        @"MaskStrength": @(glow ? 0 : old ? 25 : 8),
+        @"Softness": @(glow ? 0 : old ? 22 : 12),
+        @"Glow": @(glow ? 65 : old ? 45 : 12),
+        @"GlowSpread": @(glow || old ? 50 : 30),
+        @"Vignette": @(glow ? 0 : old ? 40 : 15), @"Flicker": @0};
+}
+- (void)monitorPresetChanged:(id)sender {
+    NSInteger index = _monitorPreset.indexOfSelectedItem;
+    if (index < 0 || index > 3) return;
+    _monitorOverrides = [self monitorPresetValues:index];
+    NSArray *sliders = @[_phosphor, _glow, _spread, _scanlines];
+    NSArray *keys = @[@"MaskStrength", @"Glow", @"GlowSpread", @"ScanlineStrength"];
+    for (NSUInteger i = 0; i < sliders.count; i++) {
+        NSSlider *slider = sliders[i]; slider.doubleValue = [_monitorOverrides[keys[i]] doubleValue];
+        slider.enabled = index != 0;
+        NSTextField *percent = (NSTextField *)[slider.superview viewWithTag:slider.tag + 100];
+        percent.stringValue = [NSString stringWithFormat:@"%.0f%%",slider.doubleValue];
+    }
 }
 - (void)fullScreenChanged:(id)sender {
     BOOL full = _fullScreen.state == NSControlStateValueOn;
@@ -557,10 +583,27 @@ static BOOL loadCore(NSBundle *bundle) {
     _border = [self check:@"Borderless picture" value:border y:265];
     _border.target = self; _border.action = @selector(fullScreenChanged:);
     [self fullScreenChanged:nil];
+    [self label:@"Picture style" frame:NSMakeRect(20,225,155,24) font:[NSFont systemFontOfSize:13]];
+    _monitorPreset = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(180,225,270,26) pullsDown:NO];
+    [_monitorPreset addItemsWithTitles:@[@"Original", @"Glow", @"Classic CRT", @"Old TV", @"Custom"]];
+    _monitorPreset.target = self; _monitorPreset.action = @selector(monitorPresetChanged:);
+    [_optionsBody addSubview:_monitorPreset];
+    _monitorOverrides = nil;
+    NSInteger selectedStyle = 4;
+    if (s[@"CrtEnabled"] && ![s[@"CrtEnabled"] boolValue]) selectedStyle = 0;
+    else for (NSInteger i = 1; i <= 3; i++) {
+        NSDictionary *preset = [self monitorPresetValues:i];
+        NSDictionary *defaults = [self monitorPresetValues:2];
+        BOOL same = YES;
+        for (NSString *key in preset) if (![(s[key] ?: defaults[key]) isEqual:preset[key]]) { same = NO; break; }
+        if (same) { selectedStyle = i; break; }
+    }
+    [_monitorPreset selectItemAtIndex:selectedStyle];
     _phosphor = [self slider:@"Phosphor mask" value:[s[@"MaskStrength"] ?: @8 doubleValue] y:190 tag:1];
     _glow = [self slider:@"Phosphor glow" value:[s[@"Glow"] ?: @12 doubleValue] y:145 tag:2];
     _spread = [self slider:@"Glow spread" value:[s[@"GlowSpread"] ?: @30 doubleValue] y:100 tag:3];
     _scanlines = [self slider:@"Scanline strength" value:[s[@"ScanlineStrength"] ?: @22 doubleValue] y:55 tag:4];
+    if (selectedStyle == 0) for (NSSlider *slider in @[_phosphor, _glow, _spread, _scanlines]) slider.enabled = NO;
     NSTextField *monitorHint = [self label:@"Fine-tune the tube from a clear picture to a softly glowing CRT. All effects range from 0 to 100%."
         frame:NSMakeRect(20,5,510,35) font:[NSFont systemFontOfSize:12]];
     monitorHint.textColor = NSColor.secondaryLabelColor;
@@ -587,6 +630,7 @@ static BOOL loadCore(NSBundle *bundle) {
 - (void)saveOptions:(id)sender {
     BOOL full = _fullScreen.state == NSControlStateValueOn;
     NSMutableDictionary *settings = [[self settings] mutableCopy];
+    if (_monitorOverrides) [settings addEntriesFromDictionary:_monitorOverrides];
     [settings addEntriesFromDictionary:@{@"Programs": @(_program.indexOfSelectedItem),
         @"ProgramDurationSeconds": @(MAX(15,MIN(1800,_duration.integerValue))),
         @"KeepAspectRatio": !full && _aspect.state == NSControlStateValueOn ? @YES : @NO,
