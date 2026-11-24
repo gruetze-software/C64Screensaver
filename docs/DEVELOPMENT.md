@@ -39,4 +39,3 @@ win-arm64, linux-x64 and linux-arm64. Publishing locally does not upload a relea
 
 See the [changelog](../CHANGELOG.md), [CRT research](CRT-RESEARCH.md) and
 [Mac performance notes](../macos/PERFORMANCE.md).
-
