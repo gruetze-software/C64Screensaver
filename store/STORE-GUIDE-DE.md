@@ -7,11 +7,11 @@ Noch keine neue Version in einem Store veröffentlicht.
 ## Microsoft Store
 
 1. Im Partner Center eine Windows-App mit dem Namen **Gruetze RetroSaver** reservieren. Für dieses Paket den MSIX/AppX-Weg verwenden, nicht den EXE/MSI-Installer-Weg.
-2. Unter Produktverwaltung → Produktidentität die drei öffentlichen Werte in eine Kopie von `store/windows/store-identity.example.json` eintragen: Name, Publisher und PublisherDisplayName. Exakt übernehmen, einschließlich Großschreibung. Es handelt sich nicht um Passwörter.
+2. Die gelieferten öffentlichen Produktdaten sind bereits in `store/windows/store-identity.json` eingetragen. Zum Prüfen oder späteren Ändern: Unter Produktverwaltung → Produktidentität stehen die drei Werte Name, Publisher und PublisherDisplayName. Exakt übernehmen, einschließlich Großschreibung. Es handelt sich nicht um Passwörter.
 3. Auf Windows mit .NET 10 und Windows 10/11 SDK bauen:
 
 ```powershell
-pwsh -File scripts/build-windows-store.ps1 -IdentityFile C:/Pfad/store-identity.json
+pwsh -File scripts/build-windows-store.ps1 -IdentityFile store/windows/store-identity.json
 ```
 
 Das Skript erzeugt ein x64/ARM64-MSIX-Bundle, Logos, SHA256SUMS und Build-Protokolle in einem neuen Unterordner von `artifacts/windows-store`. Es validiert beide Manifeste mit MakeAppx. Debugsymbole und fremde Plattformdateien werden abgewiesen. Das Bundle für den Store bleibt unsigniert; Microsoft signiert bei Annahme. Für diesen Weg brauchst du kein zusätzlich gekauftes Codesignatur-Zertifikat.
@@ -30,7 +30,7 @@ Für einen lokalen Installationstest muss ein passendes Testzertifikat verwendet
 
 ## Snap Store
 
-Vorgesehener technischer Name: **gruetze-retrosaver**. Er muss im vorhandenen Konto reserviert sein. Falls ein anderer Name reserviert wurde, `name`, App-Name, Desktop-Datei/Exec und Dokumentation gemeinsam anpassen. Eine Reservierung wird nicht automatisch ausgeführt.
+Vorgesehener technischer Name: **gruetze-retrosaver**. Er muss im vorhandenen Konto reserviert sein: https://dashboard.snapcraft.io/register-snap/ . Eine manuelle Namensprüfung durch Canonical kann erforderlich sein. Falls ein anderer Name reserviert wurde, `name`, App-Name, Desktop-Datei/Exec und Dokumentation gemeinsam anpassen. Eine Reservierung wird nicht automatisch ausgeführt.
 
 Auf Ubuntu 24.04 oder mit dem GitHub-Workflow bauen. Lokal werden .NET 10 und Snapcraft benötigt. Snapcraft verwendet für das Paket eine Ubuntu-Buildumgebung (z.B. LXD); nicht ungefragt die lokale Systeminstallation ändern.
 
@@ -82,7 +82,7 @@ Die Aufnahmen verwenden eine isolierte JSON-Datei und ändern keine persönliche
 
 ## Noch vor der Einreichung zu klären
 
-- Echte Microsoft-Produktidentität und reservierter Snap-Name eintragen.
+- Microsoft-Produktidentität ist eingetragen (Store-ID 9N4KJ5XNRXBJ); den Snap-Namen `gruetze-retrosaver` noch im Konto reservieren.
 - Installations-, Update- und System-Screensaver-Test des signierten/Store-installierten Windows-Pakets; strict-Snap auf einem echten Desktop testen.
 - Kickstart-Grafiken bleiben wie gewünscht nur in Windows/Linux enthalten. Die MIT-Lizenz des Programmcodes erteilt keine Lizenz für diese historischen Drittanbieterbilder (siehe KICKSTART-CREDITS.md). Vor öffentlicher Store-Freigabe müssen die nötigen Nutzungsrechte vorliegen; andernfalls Store-Builds ebenfalls ohne diese Grafiken erstellen. Die Vorbereitung behauptet keine Store-Freigabe dieser Inhalte.
 

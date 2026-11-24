@@ -18,14 +18,14 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Check screensaver export without changing Windows settings
         run: dotnet run --project tests/StorePackaging -c Release
-      - name: Build validated test-identity MSIX bundle
+      - name: Build SDK-validated Microsoft Store candidate
         shell: pwsh
-        run: ./scripts/build-windows-store.ps1 -TestIdentity
+        run: ./scripts/build-windows-store.ps1 -IdentityFile store/windows/store-identity.json
       - name: Capture Windows product media
         run: dotnet run --project tests/StoreScreenshots -c Release -p:WindowsStore=true -- artifacts/windows-store/screenshots
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-store-test-bundle
+          name: windows-store-candidate
           path: |
             artifacts/windows-store/**/*.msixbundle
             artifacts/windows-store/**/SHA256SUMS.txt

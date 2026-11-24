@@ -6,12 +6,12 @@ C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable
 
 ![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
-## Next update: 1.2.7
+## Mac App Store 1.2.7
 
-Version 1.2.7 is being prepared with a new CRT monitor app icon, clearer Mac Store
-screenshots rendered at 2560×1600, and a privacy-policy link in the information
-dialogs. The images below preview this development version. Published Windows/
-Linux downloads remain at 1.2.5; the Mac App Store version is currently 1.2.6.
+The Mac edition is available in the [Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12).
+Windows and Linux ZIP downloads remain free at 1.2.5. Microsoft Store and Snap Store
+packages are being prepared; see the [store build and submission guide](store/STORE-GUIDE-DE.md).
+The corrected edge-to-edge icon is prepared for the next app update.
 
 ![Classic-style Boing ball](docs/images/amiga-boing.png)
 
