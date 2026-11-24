@@ -63,6 +63,8 @@ do not copy the SCR file alone into a system folder. Standard `/s`, `/c` and
 
 ### Linux integration
 
+[Kurzanleitung auf Deutsch: Lubuntu/X11 und andere Linux-Desktops](docs/LINUX-SCREENSAVER-DE.md).
+
 Automatic activation depends on the desktop environment. See the
 [setup guide](docs/SCREEN-SAVER-SETUP.md) for X11 and other desktop integrations,
 including the limitations on GNOME/Wayland. RetroSaver does not install an idle
