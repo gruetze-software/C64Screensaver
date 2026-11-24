@@ -20,4 +20,4 @@ Linux Snap: Die Begleit-App und die Vollbildanimation funktionieren unabhängig 
 
 Ein unabhängiges Projekt von Grütze-Software, ohne Verbindung zu Commodore oder Amiga. Historische Grafiken behalten ihre ursprünglichen Rechte und Quellenangaben.
 
-Einrichtung unter Linux: https://github.com/gruetze-software/C64Screensaver/blob/codex/windows-snap-store/docs/LINUX-SCREENSAVER-DE.md
+Einrichtung unter Linux: https://github.com/gruetze-software/C64Screensaver/blob/codex/windows-snap-store/docs/LINUX-SCREENSAVER.md

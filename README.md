@@ -1,166 +1,114 @@
+![Gruetze RetroSaver — C64 and Amiga with CRT glow](store/snap/banner.png)
+
 # Gruetze RetroSaver
 
-<img src="docs/images/retrosaver-animated-icon.gif" width="256" height="256" alt="Gruetze RetroSaver: C64 startup screen with blinking cursor and slowly rolling CRT bands">
+C64 BASIC and Amiga-inspired animations, a shared companion app and adjustable CRT effects.
 
-C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable CRT effects. Built with .NET 10 and Avalonia 12.
+[Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12) · [Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
+
+## Screenshots
 
 ![C64 BASIC with phosphor glow](docs/images/glowing-crt.png)
 
-## Mac App Store 1.2.7
-
-The Mac edition is available in the [Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12).
-Windows and Linux ZIP downloads remain free at 1.2.5. Microsoft Store and Snap Store
-packages are being prepared; see the [store build and submission guide](store/STORE-GUIDE-DE.md).
-The corrected edge-to-edge icon is prepared for the next app update.
-
-![Classic-style Boing ball](docs/images/amiga-boing.png)
+| Amiga Jump & run | Classic-style Boing ball |
+| --- | --- |
+| ![Jump & run with layered backgrounds](docs/images/amiga-jump-and-run.png) | ![Bouncing checker ball](docs/images/amiga-boing.png) |
+| **Plasma and scrolling text** | **Amiga companion** |
+| ![Colourful plasma with a sine scroller](docs/images/amiga-plasma-scroller.png) | ![Amiga playback and scrolling-text settings](docs/images/retrosaver-companion.png) |
+| **C64 companion** | **Shared monitor effects** |
+| ![C64 BASIC and company-card controls](docs/images/settings-playback.png) | ![CRT effects and live preview](docs/images/settings-monitor.png) |
 
 ## Two retro worlds
 
-**Commodore 64:** watch an invisible typist enter BASIC line by line, make mistakes,
-correct them with Backspace and finally type RUN. Choose an endless maze, an
-editable company card or a twinkling starfield. Cycle through all three or repeat
-one, with configurable runtime and optional border colour changes.
+**Commodore 64:** an invisible typist enters BASIC, corrects mistakes and types RUN.
+Choose an endless maze, a personalised company card or a twinkling starfield.
+Adjust typing speed, runtime and optional border colour changes.
 
-**Amiga:** on Windows/Linux, choose a Kickstart 1.3, 2.0 or 3.1 startup image, then enjoy an autoplay
-Jump & run with layered woodland parallax, colourful Plasma or a classic-style
-Boing ball. Cycle all three or repeat your favourite. All Kickstarts rotates
-the original startup prompts between runs. Edit, adjust or hide the sine-wave scrolling text;
-add a subtle disk-activity reflection during startup. No Kickstart ROM is loaded.
-See [artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
+**Amiga:** enjoy an autoplay Jump & run through layered woodland, colourful Plasma
+or a red-and-white Boing ball. Cycle through all three and customise the scrolling
+message, speed and wave movement. Windows/Linux also offer historical Kickstart
+startup screens; the Mac edition starts the animation directly. See the
+[artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
 
-![Amiga jump-and-run with scrolling text](docs/images/amiga-jump-and-run.png)
+**Your monitor:** adjust glow, scanlines, curvature, phosphor mask, softness and
+picture proportions with a live preview. Optional CRT power transitions collapse
+the image into a line and glowing dot. Playback and text settings are separate
+from the shared monitor effects.
 
-## Download 1.2.5
+<img src="docs/images/retrosaver-animated-icon.gif" width="128" height="128" alt="C64 startup screen with blinking cursor, rolling CRT bands and glass reflection">
 
-[Download Gruetze RetroSaver 1.2.5](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5)
+The C64 interpreter implements a limited BASIC V2 subset; it is not a full machine
+emulator and does not load PRG files.
 
-Free, self-contained ZIP packages are available for **Windows and Linux**, on
-x64 and ARM64. No separate .NET installation is needed. Extract the entire ZIP
-before starting; keep its files together. Verify downloads with SHA256SUMS.txt.
+## Download and start
 
-| Platform | Open companion | Start animation |
+### Windows and Linux — free
+
+[Download the Windows / Linux ZIP packages](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5)
+
+Self-contained packages are available for x64 and ARM64. Extract the whole ZIP
+into a permanent folder and keep its files together. No separate .NET installation
+is required. Microsoft Store and Snap Store packages are being prepared.
+
+| ZIP package | Open companion | Start fullscreen |
 | --- | --- | --- |
 | Windows | `c64screensaver.exe` | `c64screensaver.exe --fullscreen` |
 | Linux | `./c64screensaver` | `./c64screensaver --fullscreen` |
 
-The executable retains its historical filename for compatibility. The application
-and download packages are named **Gruetze RetroSaver**.
 On Linux, first run `chmod +x c64screensaver`. A graphical desktop and the native
-libraries required by Avalonia/Skia are needed. Use `--x11` or `--wayland` to
-select the backend; Wayland currently uses one display.
+Avalonia/Skia libraries are required. Use `--x11` or `--wayland` to select a backend;
+Wayland currently uses one display. The executable keeps its historical filename.
 
-Fullscreen exits on mouse movement, click or keypress after a short launch grace
-period. Escape closes windowed previews; F toggles frame statistics.
-Additional commands: `--settings`, `--windowed`, `--about`.
+For the Snap package, use `gruetze-retrosaver` for settings and
+`gruetze-retrosaver.screensaver` for fullscreen animation.
 
-### Windows screensaver
+**Windows screensaver:** right-click the ZIP package's `c64screensaver.scr` to
+install or configure it. Keep it beside the executable and dependencies. The Store
+companion provides an explicit **Install / update system screensaver** button.
 
-Right-click the included `c64screensaver.scr` to install or configure it using
-Windows screensaver options. Keep it beside the executable and all dependencies;
-do not copy the SCR file alone into a system folder. Standard `/s`, `/c` and
-`/p HWND` switches are supported.
+**Linux screensaver:** automatic activation depends on the desktop. Follow the
+[English Linux setup guide](docs/LINUX-SCREENSAVER.md) for Lubuntu/X11 and other
+desktops. RetroSaver does not install an idle watcher or replace the password lock;
+the X11 setup does not work on GNOME/Wayland.
 
-### Linux integration
-
-[Kurzanleitung auf Deutsch: Lubuntu/X11 und andere Linux-Desktops](docs/LINUX-SCREENSAVER-DE.md).
-
-Automatic activation depends on the desktop environment. See the
-[setup guide](docs/SCREEN-SAVER-SETUP.md) for X11 and other desktop integrations,
-including the limitations on GNOME/Wayland. RetroSaver does not install an idle
-helper or autostart entry and does not replace the password lock.
+Move the mouse, click or press a key to exit fullscreen. Escape closes windowed
+previews; F toggles frame statistics. Other commands: `--settings`, `--windowed`, `--about`.
 
 ### macOS
 
-[Gruetze RetroSaver on the Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12)
+[Get Gruetze RetroSaver on the Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12)
 
-The Mac app includes the native system screensaver and offers **Install / update
-system screensaver**. Both interfaces share settings; native rendering uses
-Metal when available, with a CPU fallback. The sandboxed companion asks for
-explicit access to the shared settings folder. macOS starts the selected Amiga
-animation directly; Windows/Linux retain the historical Kickstart selection.
+The companion includes the native system screensaver. Choose C64 or Amiga, save
+your settings, then click **Install / update system screensaver** and select it in
+macOS Screen Saver settings. The app and saver share settings; the companion asks
+for access to the shared settings folder. Native rendering uses Metal when
+available, with a CPU fallback.
 
-Public GitHub releases contain **Windows/Linux downloads only**. Mac developer
-builds and signing are documented in the [Mac guide](macos/README.md),
-[Store build instructions](macos/STORE-BUILD-DE.md) and
-[Developer ID instructions](macos/APPLE-DEVELOPER-DE.md).
-See the [privacy policy](https://github.com/gruetze-software/C64Screensaver/blob/main/PRIVACY.md).
-
-## Companion and settings
-
-Select C64 or Amiga in the companion. Each system has its own playback and text
-controls; settings are saved independently of the shared monitor effects.
-
-![Amiga companion with editable scrolling text](docs/images/retrosaver-companion.png)
-
-![C64 companion with BASIC and company-card controls](docs/images/settings-playback.png)
-
-**Monitor effects** offers curvature, scanlines, phosphor mask, horizontal
-softness, glow strength and spread, darkened corners and optional flicker.
-Start from Clean pixels, Subtle CRT, Classic monitor or Glowing CRT, then adjust
-each effect with the live preview. The enlarge button opens a bigger preview;
-F11 toggles its fullscreen view and Escape closes it.
-
-![Shared monitor effects with a readable CRT preset](docs/images/settings-monitor.png)
-
-Choose original 4:3 proportions or stretch to the display. Stretch plus hidden
-border fills the monitor; 4:3 retains black bars on wide or portrait displays.
-Hiding the border removes curvature. Flicker defaults to zero. Optional CRT
-power transitions collapse the image into a line and glowing dot between programs.
-Reset in Monitor effects preserves both systems' playback and text settings.
-
-On macOS, Screen Saver Options opens the installed companion, or a native fallback
-with General, C64, Amiga and Monitor effects tabs. Move the app to Applications
-before installing its embedded screensaver. Mac DMGs include English Read me.txt.
-
-The C64 interpreter implements a limited BASIC V2 subset and a 40×25 character
-screen with 8×8 glyphs. This is not a full machine emulator; PRG files are not loaded.
+Public GitHub releases contain Windows/Linux downloads only. For Mac developer
+builds and signing, see the [Mac guide](macos/README.md).
 
 ## Build and test
 
-Requires the .NET 10 SDK. Package versions are fixed in the project file.
+Requires the .NET 10 SDK.
 
 ```sh
 dotnet build C64Screensaver.sln -c Release
 dotnet run --project tests/Smoke -c Release
 ```
 
-The smoke suite checks BASIC execution, ghost typing, rotation, settings,
-proportions, CRT transitions, live previews and editor layout. It also regenerates
-README dialog screenshots using isolated settings, without resetting personal
-preferences. Additional Amiga and native bridge tests are in `tests/Amiga` and
-`tests/NativeBridge`. Mac CI checks the native options, lifecycle, Metal rendering,
-real fullscreen and packaged DMG on Apple Silicon and Intel.
-
-To deliberately reset personal settings and capture defaults, use the optional
-`--release-screenshots` smoke argument. Previous settings are backed up in
-`artifacts/user-settings-before-release.json`.
-
-## Prepare release packages
-
-```powershell
-pwsh scripts/release.ps1
-```
-
-Builds and tests Release, then creates Windows/Linux ZIPs and SHA-256 checksums
-in `artifacts/release/1.2.5`. Download packages include a short offline guide and
-credits; screenshots and Mac developer instructions stay in the repository.
-Publish output excludes dependency debug symbols as well as application symbols.
-Use `-OutputDirectory artifacts/package-audit/optimized` for separate trial packages.
-For one platform use
-`pwsh scripts/publish.ps1 -Runtime win-x64`. Public release targets are win-x64,
-win-arm64, linux-x64 and linux-arm64. Publishing locally does not upload a release.
-
-See the [changelog](CHANGELOG.md), [CRT research](docs/CRT-RESEARCH.md) and
-[Mac performance notes](macos/PERFORMANCE.md).
+See [development and packaging](docs/DEVELOPMENT.md) for release commands and
+additional checks, or the [store submission guide](https://github.com/gruetze-software/C64Screensaver/blob/codex/windows-snap-store/store/STORE-GUIDE-DE.md) for
+Microsoft Store and Snap packages.
 
 ## Credits and license
 
 Created by [Grütze-Software](https://www.gruetze-software.de).
-Settings/About styling and C64 breadbox artwork originate in the owner's
-GruetzeToaster project. The company logo appears in About. The CRT shader is an
-original implementation; emulator references are documented in the research notes.
+The company logo appears in About. Settings styling originates in the owner's
+GruetzeToaster project. The CRT renderer is an original implementation; see the
+[research notes](docs/CRT-RESEARCH.md).
 
-MIT license; see [LICENSE](LICENSE). Kickstart captures have separate
+[MIT license](LICENSE). Historical Kickstart graphics have separate
 [artwork credits](C64Screensaver/Assets/Kickstart/CREDITS.md).
 Independent project, not affiliated with Commodore.
+
+[Privacy policy](https://github.com/gruetze-software/C64Screensaver/blob/main/PRIVACY.md) · [Changelog](CHANGELOG.md)
