@@ -29,6 +29,8 @@ var framebuffer = new C64FrameBuffer();
 var settings = new SaverSettings { PowerTransition = false, CycleColors = false };
 using var cursorOn = framebuffer.Capture(session, settings, 0);
 using var cursorOff = framebuffer.Capture(session, settings, 0.6);
+using (var png = cursorOn.Encode(SKEncodedImageFormat.Png, 100))
+using (var file = File.Create(Path.Combine(args[1], "c64-boot-screen.png"))) png.SaveTo(file);
 var start = new ProcessStartInfo("ffmpeg") { RedirectStandardInput = true, UseShellExecute = false };
 foreach (var arg in new[] { "-y", "-hide_banner", "-loglevel", "error", "-f", "rawvideo", "-pixel_format", "bgra", "-video_size", "1024x1024", "-framerate", "24", "-i", "pipe:0", "-an", "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", Path.Combine(args[1], "RetroSaver-animated-icon.mp4") }) start.ArgumentList.Add(arg);
 using var encoder = Process.Start(start) ?? throw new IOException("Cannot start ffmpeg");
