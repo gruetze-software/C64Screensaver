@@ -4,7 +4,9 @@
 
 C64 BASIC and Amiga-inspired animations, a shared companion app and adjustable CRT effects.
 
-[Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12) · [Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
+<a href="https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12"><img src="docs/images/mac-app-store-badge.svg" alt="Download on the Mac App Store" height="48"></a>
+
+[Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/tag/v1.2.5) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
 
 ## Screenshots
 
@@ -74,7 +76,7 @@ previews; F toggles frame statistics. Other commands: `--settings`, `--windowed`
 
 ### macOS
 
-[Get Gruetze RetroSaver on the Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12)
+<a href="https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12"><img src="docs/images/mac-app-store-badge.svg" alt="Download on the Mac App Store" height="48"></a>
 
 The companion includes the native system screensaver. Choose C64 or Amiga, save
 your settings, then click **Install / update system screensaver** and select it in
