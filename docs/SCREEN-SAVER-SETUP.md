@@ -9,6 +9,16 @@ together in a permanent directory. Replace example paths with your real path.
 These external integrations are documented from their maintainers' manuals;
 they have not been tested on native Linux desktop or macOS hardware.
 
+## Linux Snap: quick start
+
+For a short English walkthrough, see [Lubuntu/X11 and other Linux desktops](LINUX-SCREENSAVER.md).
+Open the companion with `gruetze-retrosaver`; start fullscreen with
+`/snap/bin/gruetze-retrosaver.screensaver`. On an X11 session, an external idle
+launcher can run `/snap/bin/gruetze-retrosaver.screensaver --x11` after inactivity.
+The Snap does not register itself as an XScreenSaver module or install an idle
+daemon. Keep the desktop password lock enabled and start the animation earlier
+than blanking/locking. The original ZIP commands below remain valid for ZIP installs.
+
 ## Flathub and Snap Store search
 
 Checked on **2026-10-24**, using both store search catalogs and upstream feature
@@ -97,7 +107,7 @@ test of this application's package. Keep the normal screen lock enabled.
 
 Gruetze RetroSaver now has a native `.saver` embedded in its companion app.
 The Mac developer DMG is built separately; public GitHub releases contain only
-Windows and Linux packages. App Store distribution is planned and is not live yet.
+Windows and Linux packages. The Mac edition is available through the [Mac App Store](https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12).
 
 1. Move **Gruetze RetroSaver.app** from the DMG to Applications and open it.
 2. Choose C64 or Amiga, configure playback and monitor effects, then save.

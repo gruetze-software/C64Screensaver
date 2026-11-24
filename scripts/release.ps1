@@ -35,6 +35,7 @@ foreach ($runtime in ($Runtimes | Select-Object -Unique)) {
     New-Item -ItemType Directory -Path $docs -Force | Out-Null
     $setup = (Get-Content -LiteralPath (Join-Path $root 'docs/SCREEN-SAVER-SETUP.md') -Raw).Replace('(../macos/', '(https://github.com/gruetze-software/C64Screensaver/blob/main/macos/')
     $setup | Set-Content -LiteralPath (Join-Path $docs 'SCREEN-SAVER-SETUP.md') -Encoding utf8
+    Copy-Item -LiteralPath (Join-Path $root 'docs/LINUX-SCREENSAVER.md') -Destination $docs
     Copy-Item -LiteralPath (Join-Path $root 'C64Screensaver/Assets/Kickstart/CREDITS.md') -Destination (Join-Path $docs 'KICKSTART-CREDITS.md')
     # Fail before archiving if dependencies start copying debug symbols again.
     $symbols = Get-ChildItem -LiteralPath $stage -Recurse -File | Where-Object { $_.Extension -in @('.pdb','.dbg') }
