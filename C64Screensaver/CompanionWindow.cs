@@ -55,6 +55,26 @@ public sealed class CompanionWindow : Window
         close.Click += (_, _) => Close();
         var actions = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var button in new[] { settings, run, save, about, close }) { button.Margin = new Thickness(0, 0, 12, 8); actions.Children.Add(button); }
+#if WINDOWS_STORE
+        if (OperatingSystem.IsWindows())
+        {
+            var install = new Button { Name = "InstallWindowsScreensaver", Content = "Install / update system screensaver", Margin = new Thickness(0, 0, 12, 8) };
+            install.Click += async (_, _) =>
+            {
+                install.IsEnabled = false;
+                try
+                {
+                    config.SaveSettings();
+                    string path = await System.Threading.Tasks.Task.Run(() => WindowsScreensaver.Prepare());
+                    WindowsScreensaver.OpenInstaller(path);
+                    status.Text = "Choose Gruetze RetroSaver in Windows Screen Saver Settings and apply your preferred timeout. Exported files remain in your local AppData until removed manually.";
+                }
+                catch (Exception ex) { status.Text = "Could not prepare the system screensaver: " + ex.Message; }
+                finally { install.IsEnabled = true; }
+            };
+            actions.Children.Insert(0, install);
+        }
+#endif
         if (OperatingSystem.IsMacOS())
         {
             var install = new Button { Name = "InstallMacScreensaver", Content = "Install / update system screensaver" };

@@ -13,10 +13,10 @@ public class ConfigManager
 
     [DllImport("libSystem.B.dylib", EntryPoint = "getuid")]
     private static extern uint GetUserId();
-    public static string DefaultConfigPath => OperatingSystem.IsMacOS()
-        ? Environment.GetEnvironmentVariable("GRUETZE_RETROSAVER_SETTINGS_PATH")
-            ?? $"/Users/Shared/GruetzeRetroSaver-{GetUserId()}/settings.json"
-        : LegacyConfigPath;
+    public static string DefaultConfigPath => Environment.GetEnvironmentVariable("GRUETZE_RETROSAVER_SETTINGS_PATH")
+        ?? (OperatingSystem.IsMacOS()
+            ? $"/Users/Shared/GruetzeRetroSaver-{GetUserId()}/settings.json"
+            : LegacyConfigPath);
     private static string LegacyConfigPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "C64Screensaver", "settings.json");
 

@@ -9,10 +9,10 @@ using C64Screensaver;
 using SkiaSharp;
 using System.Text.Json;
 
-if (!OperatingSystem.IsMacOS()) throw new PlatformNotSupportedException("Capture on macOS for Mac product media.");
+string platform = OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "macOS" : "Linux";
 const int Width = 1280, Height = 800;
 const int Scale = 2, PixelWidth = Width * Scale, PixelHeight = Height * Scale;
-string output = Path.GetFullPath("artifacts/store-screenshots");
+string output = Path.GetFullPath(args.Length > 0 ? args[0] : "artifacts/store-screenshots");
 Directory.CreateDirectory(output);
 string configFile = Path.Combine(output, "isolated-settings.json");
 Environment.SetEnvironmentVariable("GRUETZE_RETROSAVER_SETTINGS_PATH", configFile);
@@ -29,10 +29,10 @@ return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont()
                 await Scenes();
                 await Editors();
                 File.WriteAllText(Path.Combine(output, "README.txt"),
-                    "Gruetze RetroSaver " + AppInfo.Version + " — Mac-rendered app views\n" +
+                    "Gruetze RetroSaver " + AppInfo.Version + " — " + platform + "-rendered app views\n" +
                     "2560 x 1600 PNG at 2x scale, opaque RGB, English UI. Capture order follows filenames.\n" +
                     "Frames use the product's C64Scene and CRT renderer; editors use the actual companion/monitor views.\n" +
-                    "Native Avalonia platform on macOS; offscreen view capture, not a desktop screen recording.\n" +
+                    "Native Avalonia platform on " + platform + "; offscreen view capture, not a desktop screen recording.\n" +
                     "Isolated settings only; personal settings are not reset. No marketing overlays or Kickstart artwork.\n" +
                     "Recheck these views against the final sandboxed Store build before submission.\n");
                 File.Delete(configFile);
@@ -138,5 +138,5 @@ void Save(Control view, string name)
     using var image = surface.Snapshot(); using var png = image.Encode(SKEncodedImageFormat.Png, 100);
     string path = Path.Combine(output, name + ".png");
     using var file = File.Create(path); png.SaveTo(file);
-    Console.WriteLine("Captured " + name + " 2560x1600 at 2x scale on macOS");
+    Console.WriteLine("Captured " + name + " 2560x1600 at 2x scale on " + platform);
 }

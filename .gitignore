@@ -21,3 +21,6 @@ snap/local/publish/
 *.p8
 *.provisionprofile
 *.mobileprovision
+
+# Public animated README artwork.
+!docs/images/retrosaver-animated-icon.gif

@@ -1,6 +1,6 @@
 # Gruetze RetroSaver
 
-<img src="C64Screensaver/Assets/app-icon.png" width="96" alt="Gruetze RetroSaver CRT app icon">
+<img src="docs/images/retrosaver-animated-icon.gif" width="256" height="256" alt="Gruetze RetroSaver: C64 startup screen with blinking cursor and slowly rolling CRT bands">
 
 C64 BASIC and Amiga demo screensavers with a shared companion app and adjustable CRT effects. Built with .NET 10 and Avalonia 12.
 

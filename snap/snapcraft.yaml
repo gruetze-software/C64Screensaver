@@ -1,23 +1,36 @@
-name: c64screensaver
+name: gruetze-retrosaver
 base: core24
 adopt-info: c64screensaver
-summary: C64 and Amiga animations with adjustable CRT glow
+summary: C64 BASIC, Amiga animations and glowing CRT effects
 description: |
-  Watch BASIC being typed, corrected and executed on a simulated C64.
-  Gruetze RetroSaver includes a maze, editable company card, starfield,
-  Amiga Copper bars, an editable sine scroller and adjustable CRT bloom.
-  This is a fullscreen animation application, not a screen locker.
-grade: devel
+  Gruetze RetroSaver brings classic home-computer atmosphere to your desktop.
+  Watch C64 BASIC being typed, corrected and executed, or enjoy Amiga-inspired
+  Jump & run, Plasma and a bouncing checker ball with your own scrolling text.
+  Adjust phosphor glow, scanlines, curvature and picture proportions in the
+  companion app, then start a fullscreen preview.
+
+  This snap does not replace your desktop's lock screen or automatically start
+  when idle. Automatic screensaver integration depends on your desktop and
+  compositor. GNOME on Wayland does not support third-party system screensavers.
+  See the setup guide linked on the project website for other desktops.
+grade: stable
 confinement: strict
 license: MIT
 icon: C64Screensaver/Assets/app-icon.png
+website: https://www.gruetze-software.de
+source-code: https://github.com/gruetze-software/C64Screensaver
+issues: https://github.com/gruetze-software/C64Screensaver/issues
 platforms:
   amd64:
   arm64:
 apps:
-  c64screensaver:
+  gruetze-retrosaver:
     command: bin/launch
-    desktop: snap/gui/c64screensaver.desktop
+    desktop: snap/gui/gruetze-retrosaver.desktop
+    extensions: [gnome]
+    plugs: [desktop, desktop-legacy, wayland, x11, opengl]
+  screensaver:
+    command: bin/launch --fullscreen
     extensions: [gnome]
     plugs: [desktop, desktop-legacy, wayland, x11, opengl]
 parts:
