@@ -5,6 +5,7 @@
 C64 BASIC and Amiga-inspired animations, a shared companion app and adjustable CRT effects.
 
 <a href="https://apps.apple.com/us/app/gruetze-retrosaver/id6829820538?mt=12"><img src="docs/images/mac-app-store-badge.svg" alt="Download on the Mac App Store" height="48"></a>
+<a href="https://apps.microsoft.com/detail/9N4KJ5XNRXBJ"><img src="docs/images/microsoft-store-badge.svg" alt="Get it from Microsoft" height="48"></a>
 
 [Free Windows / Linux downloads](https://github.com/gruetze-software/C64Screensaver/releases/latest) · [Linux screensaver setup](docs/LINUX-SCREENSAVER.md)
 
@@ -48,7 +49,7 @@ emulator and does not load PRG files.
 
 Self-contained packages are available for x64 and ARM64. Extract the whole ZIP
 into a permanent folder and keep its files together. No separate .NET installation
-is required. Microsoft Store and Snap Store packages are being prepared.
+is required. The Windows edition is also available in the [Microsoft Store](https://apps.microsoft.com/detail/9N4KJ5XNRXBJ). Snap Store packages are being prepared.
 
 | ZIP package | Open companion | Start fullscreen |
 | --- | --- | --- |
